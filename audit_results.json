@@ -1,0 +1,107 @@
+{
+  "total": 20,
+  "passed": 20,
+  "failed": 0,
+  "details": [
+    {
+      "name": "Archivo .env Configurado",
+      "status": "pass",
+      "category": "Configuración"
+    },
+    {
+      "name": "Base de Datos Existente",
+      "status": "pass",
+      "category": "Sistema"
+    },
+    {
+      "name": "Stripe Keys Detectadas",
+      "status": "pass",
+      "category": "Integración"
+    },
+    {
+      "name": "Sistema de Emails (Mock/SMTP)",
+      "status": "pass",
+      "category": "Integración"
+    },
+    {
+      "name": "Archivos Críticos Frontend",
+      "status": "pass",
+      "category": "Archivos"
+    },
+    {
+      "name": "Conexión DB (Lectura)",
+      "status": "pass",
+      "category": "Base de Datos"
+    },
+    {
+      "name": "Tabla Usuarios Existe",
+      "status": "pass",
+      "category": "Base de Datos"
+    },
+    {
+      "name": "Tabla Órdenes Existe",
+      "status": "pass",
+      "category": "Base de Datos"
+    },
+    {
+      "name": "Usuario Admin Creado",
+      "status": "pass",
+      "category": "Seguridad"
+    },
+    {
+      "name": "Productos/Cursos Disponibles",
+      "status": "pass",
+      "category": "Negocio"
+    },
+    {
+      "name": "API Health Check",
+      "status": "pass",
+      "category": "API"
+    },
+    {
+      "name": "API Settings",
+      "status": "pass",
+      "category": "API"
+    },
+    {
+      "name": "API Auth Endpoint",
+      "status": "pass",
+      "category": "API"
+    },
+    {
+      "name": "API Products endpoint",
+      "status": "pass",
+      "category": "API"
+    },
+    {
+      "name": "Recursos Estáticos (Assets)",
+      "status": "pass",
+      "category": "Servidor"
+    },
+    {
+      "name": "Seguridad de Headers",
+      "status": "pass",
+      "category": "Seguridad"
+    },
+    {
+      "name": "Membresías Configuradas",
+      "status": "pass",
+      "category": "Negocio"
+    },
+    {
+      "name": "Prevención Inyección SQL (Simulado)",
+      "status": "pass",
+      "category": "Seguridad"
+    },
+    {
+      "name": "Validez Webhook Secret",
+      "status": "pass",
+      "category": "Integración"
+    },
+    {
+      "name": "Tiempo de Respuesta Global (<500ms)",
+      "status": "pass",
+      "category": "Performance"
+    }
+  ]
+}
