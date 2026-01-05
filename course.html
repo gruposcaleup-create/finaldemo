@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Curso | Gonzalo Juárez López Jr.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandPink: '#ec4899',
+                        brandPinkHover: '#db2777',
+                        bgDark: '#0a0a0a',
+                        cardDark: '#171717',
+                        borderDark: '#262626'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body x-data="courseViewer()" x-init="init()" class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="h-[70px] border-b border-borderDark flex items-center justify-between px-6 bg-bgDark z-20">
+        <div class="flex items-center gap-4">
+            <a href="panel.html"
+                class="p-2 hover:bg-white/5 rounded-full transition-colors text-zinc-400 hover:text-white">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="font-semibold text-sm sm:text-base truncate max-w-[200px] sm:max-w-md"
+                x-text="course ? course.title : 'Cargando...'"></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="hidden sm:block text-xs text-zinc-400">
+                Progreso: <span class="text-white font-medium" x-text="progress + '%'"></span>
+            </div>
+            <div class="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div class="h-full bg-brandPink transition-all duration-500" :style="'width: ' + progress + '%'"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- Main Content (Video) -->
+        <main class="flex-1 flex flex-col overflow-y-auto bg-black relative">
+            <div class="flex-1 flex items-center justify-center bg-black relative group">
+                <template x-if="currentModule">
+                    <div class="w-full h-full relative">
+                        <!-- Video Embed (Placeholder for now, supports YouTube/Vimeo) -->
+                        <iframe x-show="currentModule.videoUrl" :src="getEmbedUrl(currentModule.videoUrl)"
+                            class="w-full h-full absolute inset-0" frameborder="0" allow="autoplay; fullscreen"
+                            allowfullscreen>
+                        </iframe>
+
+                        <!-- Fallback if no video -->
+                        <div x-show="!currentModule.videoUrl"
+                            class="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1">
+                                <circle cx="12" cy="12" r="10" />
+                                <polygon points="10 8 16 12 10 16 10 8" />
+                            </svg>
+                            <p>Selecciona una lección para comenzar</p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Content Info -->
+            <div class="p-8 max-w-4xl mx-auto w-full space-y-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2"
+                            x-text="currentModule ? currentModule.title : 'Bienvenido al curso'"></h2>
+                        <p class="text-zinc-400 text-sm" x-text="course ? course.desc : ''"></p>
+                    </div>
+                    <button @click="markCompleted()" x-show="currentModule"
+                        class="px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors border"
+                        :class="isCompleted(currentModule?.id) ? 'bg-green-500/10 text-green-500 border-green-500/50' : 'bg-white text-black hover:bg-zinc-200 border-transparent'">
+                        <svg x-show="isCompleted(currentModule?.id)" width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span x-text="isCompleted(currentModule?.id) ? 'Completado' : 'Marcar como visto'"></span>
+                    </button>
+                </div>
+
+                <!-- Resources Tab -->
+                <div class="pt-6 border-t border-zinc-800">
+                    <h3 class="font-semibold mb-4 text-sm">Recursos de la lección</h3>
+                    <div class="grid gap-3">
+                        <template x-if="currentModule && currentModule.resources && currentModule.resources.length > 0">
+                            <template x-for="res in currentModule.resources">
+                                <a :href="res.url" target="_blank"
+                                    class="flex items-center gap-3 p-3 rounded-lg border border-borderDark bg-cardDark hover:bg-white/5 transition-colors group">
+                                    <div
+                                        class="p-2 bg-zinc-800 rounded text-zinc-400 group-hover:text-white transition-colors">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="12" y1="18" x2="12" y2="12" />
+                                            <line x1="9" y1="15" x2="15" y2="15" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium" x-text="res.name || 'Recurso descargable'">
+                                        </div>
+                                        <div class="text-[10px] text-zinc-500">Click para descargar</div>
+                                    </div>
+                                </a>
+                            </template>
+                        </template>
+                        <div x-show="!currentModule || !currentModule.resources || currentModule.resources.length === 0"
+                            class="text-zinc-500 text-sm">
+                            No hay recursos adjuntos a esta lección.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Playlist -->
+        <aside class="w-80 bg-bgDark border-l border-borderDark flex flex-col z-10 hidden lg:flex">
+            <div class="p-4 border-b border-borderDark">
+                <h3 class="font-semibold text-sm">Contenido del Curso</h3>
+                <p class="text-[10px] text-zinc-400 mt-1" x-text="(course?.modules?.length || 0) + ' lecciones'"></p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                <template x-for="(module, index) in (course?.modules || [])" :key="index">
+                    <button @click="loadModule(module)"
+                        class="w-full text-left p-4 hover:bg-white/5 transition-colors border-b border-zinc-900 group relative"
+                        :class="currentModule === module ? 'bg-white/10' : ''">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-0.5">
+                                <div class="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] text-zinc-500"
+                                    :class="isCompleted(module.id) ? 'bg-green-500 border-green-500 text-black' : ''">
+                                    <svg x-show="isCompleted(module.id)" width="12" height="12" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    <span x-show="!isCompleted(module.id)" x-text="index + 1"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-medium group-hover:text-brandPink transition-colors"
+                                    x-text="module.title"></h4>
+                                <p class="text-[10px] text-zinc-500 mt-1" x-text="module.duration || 'Video'"></p>
+                            </div>
+                        </div>
+                    </button>
+                </template>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Mobile Module List Drawer (Optional) -->
+
+    <script src="./api.js"></script>
+    <script>
+        function courseViewer() {
+            return {
+                course: null,
+                currentModule: null,
+                progress: 0,
+                completedModules: [],
+
+                async init() {
+                    const params = new URLSearchParams(window.location.search);
+                    const courseId = params.get('id');
+                    if (!courseId) {
+                        alert('Curso no especificado');
+                        window.location.href = 'panel.html';
+                        return;
+                    }
+
+                    // Load User Progress
+                    // TODO: Load from API
+
+                    try {
+                        const allCourses = await window.API.apiGetProducts(); // Reuse public list or specific endpoint
+                        this.course = allCourses.find(c => c.id == courseId);
+
+                        if (!this.course) {
+                            // Fallback: Check purchased specific endpoint if not public
+                            const myCourses = await window.API.apiGetMyPurchasedCourses();
+                            this.course = myCourses.courses.find(c => c.id == courseId);
+                        }
+
+                        if (this.course && this.course.modules && this.course.modules.length > 0) {
+                            this.currentModule = this.course.modules[0];
+                        }
+                    } catch (e) {
+                        console.error("Error loading course", e);
+                    }
+                },
+
+                loadModule(module) {
+                    this.currentModule = module;
+                },
+
+                isCompleted(moduleId) {
+                    return this.completedModules.includes(moduleId);
+                },
+
+                markCompleted() {
+                    if (!this.currentModule) return;
+                    if (!this.completedModules.includes(this.currentModule.id)) {
+                        this.completedModules.push(this.currentModule.id);
+                        this.calculateProgress();
+                        // Save to API
+                        // window.API.apiUpdateProgress(...)
+                    }
+                },
+
+                calculateProgress() {
+                    if (!this.course || !this.course.modules) return;
+                    this.progress = Math.round((this.completedModules.length / this.course.modules.length) * 100);
+                },
+
+                getEmbedUrl(url) {
+                    if (!url) return '';
+                    // Simple YouTube/Vimeo converter
+                    if (url.includes('youtube.com/watch')) {
+                        return url.replace('watch?v=', 'embed/');
+                    }
+                    if (url.includes('youtu.be')) {
+                        const id = url.split('/').pop();
+                        return `https://www.youtube.com/embed/${id}`;
+                    }
+                    return url;
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -97,8 +97,10 @@ if (typeof window !== 'undefined') {
       localStorage.setItem('currentUser', JSON.stringify(u));
     }
 
-    async function apiGetCourses() {
-      return request('/courses');
+    async function apiGetCourses(search = '') {
+      let url = '/courses';
+      if (search) url += `?search=${encodeURIComponent(search)}`;
+      return request(url);
     }
 
     async function apiGetSettings() {
@@ -110,8 +112,10 @@ if (typeof window !== 'undefined') {
     }
 
     // --- Products/Courses ---
-    async function apiGetProducts() {
-      const courses = await request('/courses');
+    async function apiGetProducts(search = '') {
+      let url = '/courses';
+      if (search) url += `?search=${encodeURIComponent(search)}`;
+      const courses = await request(url);
       return courses.map(c => ({ ...c, name: c.title }));
     }
 
@@ -323,7 +327,11 @@ if (typeof window !== 'undefined') {
     async function apiUpdateMemberStatus(email, status) {
       return await request(`/users/${email}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
     }
-    async function apiGetOrders() { return await request('/orders'); }
+    async function apiGetOrders() {
+      const user = _currentUser();
+      if (!user) return [];
+      return await request(`/orders?userId=${user.id}`);
+    }
     async function apiDeleteOrder(id) { return await request(`/orders/${id}`, { method: 'DELETE' }); }
 
     // --- Dashboard ---

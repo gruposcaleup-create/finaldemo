@@ -261,22 +261,38 @@ app.post('/api/auth/reset', async (req, res) => {
 app.put('/api/users/password', (req, res) => {
     const { email, currentPassword, newPassword } = req.body;
 
-    // First verify current
-    db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, currentPassword], (err, row) => {
+    // 1. Get User by Email
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+        if (!row) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        // Update
-        db.run('UPDATE users SET password = ? WHERE email = ?', [newPassword, email], function (err) {
+        // 2. Compare Current Password with Hash
+        const match = await bcrypt.compare(currentPassword, row.password);
+        if (!match) return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+
+        // 3. Hash New Password
+        const newHash = await bcrypt.hash(newPassword, 10);
+
+        // 4. Update
+        db.run('UPDATE users SET password = ? WHERE email = ?', [newHash, email], function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Contraseña actualizada' });
         });
     });
 });
 
-// 4. Cursos: Listar (Público)
+// 4. Cursos: Listar (Público) con Búsqueda
 app.get('/api/courses', (req, res) => {
-    db.all(`SELECT * FROM courses WHERE status = 'active'`, [], (err, rows) => {
+    const { search } = req.query;
+    let query = "SELECT * FROM courses WHERE status = 'active'";
+    let params = [];
+
+    if (search) {
+        query += " AND (title LIKE ? OR desc LIKE ?)";
+        params.push(`%${search}%`, `%${search}%`);
+    }
+
+    db.all(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         // Parse modulesData
         const courses = rows.map(c => ({
@@ -591,7 +607,10 @@ app.post('/api/checkout/verify-session', async (req, res) => {
 
 
 app.get('/api/orders', (req, res) => {
-    db.all(`SELECT * FROM orders ORDER BY createdAt DESC`, [], (err, rows) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: 'User ID required' });
+
+    db.all(`SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC`, [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows.map(r => ({ ...r, items: JSON.parse(r.items || '[]') })));
     });

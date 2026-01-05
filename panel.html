@@ -260,7 +260,7 @@
                     <h3 class="text-center text-sm font-semibold">Mis Cursos Comprados</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <template x-for="curso in cursosComprados" :key="curso.id">
-                            <div
+                            <div @click="window.location.href='course.html?id=' + curso.id"
                                 class="border border-borderDark rounded-2xl bg-card hover:border-zinc-600 transition-colors cursor-pointer overflow-hidden group">
                                 <div class="relative overflow-hidden h-32">
                                     <img :src="curso.image || 'https://images.unsplash.com/photo-1579389082245-8811edd6877f?q=80&w=2070&auto=format&fit=crop'"

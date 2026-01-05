@@ -162,7 +162,7 @@
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                <input type="text"
+                <input type="text" x-model.debounce.500ms="searchQuery" @input="loadProducts()"
                     class="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-borderDark rounded-lg leading-5 bg-card text-zinc-300 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-0 sm:text-sm text-xs transition-colors"
                     placeholder="Buscar curso...">
             </div>
@@ -363,12 +363,18 @@
         return {
             products: [],
             loading: true,
+            searchQuery: '',
             isLoggedIn() {
                 return window.API && window.API.isLoggedIn ? window.API.isLoggedIn() : false;
             },
             async loadProducts() {
                 try {
-                    const response = await (window.API ? window.API.apiGetProducts() : (window.__loadAPI && (await window.__loadAPI()).apiGetProducts()));
+                    this.loading = true;
+                    // Use Search Query if present
+                    const api = window.API || (window.__loadAPI ? await window.__loadAPI() : null);
+                    if (!api) return;
+
+                    const response = await api.apiGetProducts(this.searchQuery);
                     this.products = Array.isArray(response) ? response : response.data || [];
                 } catch (err) {
                     console.error('Error loading products:', err);
