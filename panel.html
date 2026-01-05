@@ -340,8 +340,8 @@
                                         <td class="text-center py-3"
                                             x-text="new Date(res.createdAt).toLocaleDateString()"></td>
                                         <td class="text-center pr-2 py-3">
-                                            <a :href="res.url || '#'" target="_blank"
-                                                class="hover:text-brandPink flex justify-center">
+                                            <a :href="res.url || ('/api/resources/' + res.id + '/download')"
+                                                target="_blank" class="hover:text-brandPink flex justify-center">
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2">
                                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
