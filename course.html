@@ -70,24 +70,34 @@
         <!-- Main Content (Video) -->
         <main class="flex-1 flex flex-col overflow-y-auto bg-black relative">
             <div class="flex-1 flex items-center justify-center bg-black relative group">
-                <template x-if="currentModule">
+                <template x-if="currentLesson">
                     <div class="w-full h-full relative">
-                        <!-- Video Embed (Placeholder for now, supports YouTube/Vimeo) -->
-                        <iframe x-show="currentModule.videoUrl" :src="getEmbedUrl(currentModule.videoUrl)"
-                            class="w-full h-full absolute inset-0" frameborder="0" allow="autoplay; fullscreen"
-                            allowfullscreen>
+                        <!-- Case 1: Raw Iframe Code pasted by user -->
+                        <div x-show="isIframe(currentLesson.url)" x-html="currentLesson.url"
+                            class="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full border-none">
+                        </div>
+
+                        <!-- Case 2: URL to be converted to Embed -->
+                        <iframe x-show="!isIframe(currentLesson.url) && currentLesson.url"
+                            :src="getEmbedUrl(currentLesson.url)" class="w-full h-full absolute inset-0" frameborder="0"
+                            allow="autoplay; fullscreen" allowfullscreen>
                         </iframe>
 
                         <!-- Fallback if no video -->
-                        <div x-show="!currentModule.videoUrl"
+                        <div x-show="!currentLesson.url"
                             class="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1">
                                 <circle cx="12" cy="12" r="10" />
                                 <polygon points="10 8 16 12 10 16 10 8" />
                             </svg>
-                            <p>Selecciona una lección para comenzar</p>
+                            <p>Esta lección no tiene video disponible</p>
                         </div>
+                    </div>
+                </template>
+                <template x-if="!currentLesson">
+                    <div class="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
+                        <p>Selecciona una lección</p>
                     </div>
                 </template>
             </div>
@@ -96,18 +106,18 @@
             <div class="p-8 max-w-4xl mx-auto w-full space-y-6">
                 <div class="flex items-start justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold mb-2"
-                            x-text="currentModule ? currentModule.title : 'Bienvenido al curso'"></h2>
-                        <p class="text-zinc-400 text-sm" x-text="course ? course.desc : ''"></p>
+                        <h2 class="text-2xl font-bold mb-2" x-text="currentLesson ? currentLesson.title : 'Bienvenido'">
+                        </h2>
+                        <p class="text-zinc-400 text-sm" x-text="currentModuleTitle || ''"></p>
                     </div>
-                    <button @click="markCompleted()" x-show="currentModule"
+                    <button @click="markCompleted()" x-show="currentLesson"
                         class="px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors border"
-                        :class="isCompleted(currentModule?.id) ? 'bg-green-500/10 text-green-500 border-green-500/50' : 'bg-white text-black hover:bg-zinc-200 border-transparent'">
-                        <svg x-show="isCompleted(currentModule?.id)" width="16" height="16" viewBox="0 0 24 24"
+                        :class="isCompleted(currentLesson?.id) ? 'bg-green-500/10 text-green-500 border-green-500/50' : 'bg-white text-black hover:bg-zinc-200 border-transparent'">
+                        <svg x-show="isCompleted(currentLesson?.id)" width="16" height="16" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <span x-text="isCompleted(currentModule?.id) ? 'Completado' : 'Marcar como visto'"></span>
+                        <span x-text="isCompleted(currentLesson?.id) ? 'Completado' : 'Marcar como visto'"></span>
                     </button>
                 </div>
 
@@ -115,8 +125,8 @@
                 <div class="pt-6 border-t border-zinc-800">
                     <h3 class="font-semibold mb-4 text-sm">Recursos de la lección</h3>
                     <div class="grid gap-3">
-                        <template x-if="currentModule && currentModule.resources && currentModule.resources.length > 0">
-                            <template x-for="res in currentModule.resources">
+                        <template x-if="currentLesson && currentLesson.resources && currentLesson.resources.length > 0">
+                            <template x-for="res in currentLesson.resources">
                                 <a :href="res.url" target="_blank"
                                     class="flex items-center gap-3 p-3 rounded-lg border border-borderDark bg-cardDark hover:bg-white/5 transition-colors group">
                                     <div
@@ -137,7 +147,7 @@
                                 </a>
                             </template>
                         </template>
-                        <div x-show="!currentModule || !currentModule.resources || currentModule.resources.length === 0"
+                        <div x-show="!currentLesson || !currentLesson.resources || currentLesson.resources.length === 0"
                             class="text-zinc-500 text-sm">
                             No hay recursos adjuntos a esta lección.
                         </div>
@@ -150,32 +160,41 @@
         <aside class="w-80 bg-bgDark border-l border-borderDark flex flex-col z-10 hidden lg:flex">
             <div class="p-4 border-b border-borderDark">
                 <h3 class="font-semibold text-sm">Contenido del Curso</h3>
-                <p class="text-[10px] text-zinc-400 mt-1" x-text="(course?.modules?.length || 0) + ' lecciones'"></p>
+                <p class="text-[10px] text-zinc-400 mt-1" x-text="(totalLessons) + ' lecciones'"></p>
             </div>
 
             <div class="flex-1 overflow-y-auto">
-                <template x-for="(module, index) in (course?.modules || [])" :key="index">
-                    <button @click="loadModule(module)"
-                        class="w-full text-left p-4 hover:bg-white/5 transition-colors border-b border-zinc-900 group relative"
-                        :class="currentModule === module ? 'bg-white/10' : ''">
-                        <div class="flex items-start gap-3">
-                            <div class="mt-0.5">
-                                <div class="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] text-zinc-500"
-                                    :class="isCompleted(module.id) ? 'bg-green-500 border-green-500 text-black' : ''">
-                                    <svg x-show="isCompleted(module.id)" width="12" height="12" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="3">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    <span x-show="!isCompleted(module.id)" x-text="index + 1"></span>
+                <template x-for="(module, mIndex) in (course?.modules || [])" :key="module.id || mIndex">
+                    <div>
+                        <div class="px-4 py-2 bg-zinc-900/50 text-[10px] font-bold text-zinc-500 uppercase tracking-wider border-b border-borderDark/50"
+                            x-text="module.title"></div>
+
+                        <template x-for="(lesson, lIndex) in (module.lessons || [])" :key="lesson.id || lIndex">
+                            <button @click="loadLesson(lesson, module.title)"
+                                class="w-full text-left p-4 hover:bg-white/5 transition-colors border-b border-zinc-900 group relative"
+                                :class="currentLesson === lesson ? 'bg-white/10' : ''">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5">
+                                        <div class="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] text-zinc-500"
+                                            :class="isCompleted(lesson.id) ? 'bg-green-500 border-green-500 text-black' : ''">
+                                            <svg x-show="isCompleted(lesson.id)" width="12" height="12"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                            <span x-show="!isCompleted(lesson.id)" x-text="lIndex + 1"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-medium group-hover:text-brandPink transition-colors"
+                                            x-text="lesson.title"></h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[10px] text-zinc-500">Video</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-medium group-hover:text-brandPink transition-colors"
-                                    x-text="module.title"></h4>
-                                <p class="text-[10px] text-zinc-500 mt-1" x-text="module.duration || 'Video'"></p>
-                            </div>
-                        </div>
-                    </button>
+                            </button>
+                        </template>
+                    </div>
                 </template>
             </div>
         </aside>
@@ -189,9 +208,11 @@
         function courseViewer() {
             return {
                 course: null,
-                currentModule: null,
+                currentLesson: null,
+                currentModuleTitle: '',
                 progress: 0,
-                completedModules: [],
+                completedModules: [], // This actually stores LESSON IDs (renaming it would be better but keeping for compat)
+                totalLessons: 0,
 
                 async init() {
                     const params = new URLSearchParams(window.location.search);
@@ -202,13 +223,10 @@
                         return;
                     }
 
-                    // Load User Progress
-                    // TODO: Load from API
-
                     try {
                         let courseFound = null;
 
-                        // Try Loading My Courses first to get Progress
+                        // Try Loading My Courses first
                         try {
                             const myCourses = await window.API.apiGetMyPurchasedCourses();
                             const purchased = myCourses.courses.find(c => c.id == courseId);
@@ -226,32 +244,45 @@
 
                         this.course = courseFound;
 
-                        if (this.course && this.course.modules && this.course.modules.length > 0) {
-                            this.currentModule = this.course.modules[0];
+                        // Calculate totals and select first lesson
+                        if (this.course && this.course.modules) {
+                            let first = true;
+                            let count = 0;
+                            this.course.modules.forEach(m => {
+                                if (m.lessons && m.lessons.length > 0) {
+                                    count += m.lessons.length;
+                                    if (first) {
+                                        this.loadLesson(m.lessons[0], m.title);
+                                        first = false;
+                                    }
+                                }
+                            });
+                            this.totalLessons = count;
                         }
+
                     } catch (e) {
                         console.error("Error loading course", e);
                     }
                 },
 
-                loadModule(module) {
-                    this.currentModule = module;
+                loadLesson(lesson, modTitle) {
+                    this.currentLesson = lesson;
+                    this.currentModuleTitle = modTitle;
                 },
 
-                isCompleted(moduleId) {
-                    return this.completedModules.includes(moduleId);
+                isCompleted(lessonId) {
+                    return this.completedModules.includes(lessonId);
                 },
 
                 async markCompleted() {
-                    if (!this.currentModule) return;
-                    if (!this.completedModules.includes(this.currentModule.id)) {
-                        this.completedModules.push(this.currentModule.id);
+                    if (!this.currentLesson) return;
+                    if (!this.completedModules.includes(this.currentLesson.id)) {
+                        this.completedModules.push(this.currentLesson.id);
                         this.calculateProgress();
 
-                        // Save to API
                         try {
+                            // Saving progress
                             await window.API.apiUpdateProgress(this.course.id, this.progress, 0.5, this.completedModules);
-                            console.log("Progress saved");
                         } catch (e) {
                             console.error("Error saving progress", e);
                         }
@@ -259,8 +290,8 @@
                 },
 
                 calculateProgress() {
-                    if (!this.course || !this.course.modules) return;
-                    this.progress = Math.round((this.completedModules.length / this.course.modules.length) * 100);
+                    if (this.totalLessons === 0) return;
+                    this.progress = Math.round((this.completedModules.length / this.totalLessons) * 100);
                 },
 
                 isIframe(url) {
