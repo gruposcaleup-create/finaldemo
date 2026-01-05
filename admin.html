@@ -1276,7 +1276,7 @@
             try {
                 const user = await window.API.apiLogin(email, pass);
                 console.log('Login result:', user);
-                if (user && user.role === 'admin') {
+                if (user && (user.role === 'admin' || user.role === 'editor')) {
                     state.currentUser = user;
                     document.getElementById('login-view').classList.add('hide');
                     document.getElementById('app-layout').classList.remove('hide');
