@@ -426,6 +426,7 @@ if (typeof window !== 'undefined') {
       apiUpdateMemberStatus,
       apiUpdateUserStatus: apiUpdateMemberStatus, // Alias for component compatibility
       apiUpdateUserRole, // New
+      apiDeleteUser: async function (id) { return await request(`/users/${id}`, { method: 'DELETE' }); },
       apiGetCourses: apiGetCourses,
       apiGetOrders,
       apiDeleteOrder,

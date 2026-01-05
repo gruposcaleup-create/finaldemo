@@ -782,6 +782,25 @@ app.put('/api/users/:id/status', (req, res) => {
     });
 });
 
+// Update User Role (Admin)
+app.put('/api/users/:id/role', (req, res) => {
+    const { role } = req.body;
+    const validRoles = ['user', 'admin', 'editor'];
+    if (!validRoles.includes(role)) return res.status(400).json({ error: 'Rol inválido' });
+
+    db.run(`UPDATE users SET role = ? WHERE id = ?`, [role, req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    db.run('DELETE FROM users WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 // Create User (Admin)
 app.post('/api/users', async (req, res) => {
     const { email, password, firstName, lastName, role } = req.body;
