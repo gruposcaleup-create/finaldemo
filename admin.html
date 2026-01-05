@@ -100,12 +100,12 @@
             <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-xs sm:text-sm font-medium mb-1">Email</label>
-                    <input type="email" id="email" value="admin@julg.com"
+                    <input type="email" id="email"
                         class="w-full p-2 border rounded-md focus:ring-2 focus:ring-slate-400 outline-none text-sm">
                 </div>
                 <div class="relative">
                     <label class="block text-xs sm:text-sm font-medium mb-1">Contraseña</label>
-                    <input type="password" id="password" value="admin"
+                    <input type="password" id="password"
                         class="w-full p-2 border rounded-md focus:ring-2 focus:ring-slate-400 outline-none pr-10 text-sm">
                     <button type="button" onclick="togglePassword()" class="absolute right-3 top-8 text-gray-400"><i
                             data-lucide="eye" class="h-4 w-4"></i></button>
@@ -113,7 +113,8 @@
                 <button type="submit"
                     class="w-full bg-slate-900 text-white py-2 rounded-md hover:bg-slate-800 transition text-sm font-medium">Iniciar
                     Sesión</button>
-                <p class="text-[10px] sm:text-xs text-center text-gray-400 mt-2">Usuario: admin@julg.com / Pass: admin
+                <p class="text-[10px] sm:text-xs text-center text-gray-400 mt-2">
+                    Ingresa tus credenciales asignadas.
                 </p>
             </form>
         </div>
@@ -366,20 +367,31 @@
 
             <div id="view-members" class="view-section hide fade-in">
                 <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-bold">Miembros</h1>
-                    <div class="relative"><i data-lucide="search"
-                            class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i><input type="text"
-                            placeholder="Buscar..." class="pl-9 p-2 border rounded-md w-64 text-sm"
-                            onkeyup="filterMembers(this.value)"></div>
+                    <div>
+                        <h1 class="text-3xl font-bold">Miembros</h1>
+                        <p class="text-gray-500 text-sm">Gestiona usuarios y administradores.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="relative"><i data-lucide="search"
+                                class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i><input type="text"
+                                placeholder="Buscar..." class="pl-9 p-2 border rounded-md w-64 text-sm"
+                                onkeyup="filterMembers(this.value)">
+                        </div>
+                        <button onclick="openCreateUserModal()"
+                            class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800">
+                            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Nuevo Usuario
+                        </button>
+                    </div>
                 </div>
                 <div class="bg-white rounded-lg border shadow-sm overflow-hidden overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="p-4">Usuario</th>
+                                <th class="p-4">Rol</th>
                                 <th class="p-4">Estado</th>
-                                <th class="p-4">Cursos Comprados</th>
-                                <th class="p-4">Total Gastado</th>
+                                <th class="p-4">Cursos</th>
+                                <th class="p-4">Gastado</th>
                                 <th class="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -416,7 +428,7 @@
                 </div>
             </div>
 
-            <!-- Modal Recursos Actualizado -->
+            <!-- Modal Recursos -->
             <dialog id="resource-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
                 <div class="p-6">
                     <h3 class="text-lg font-bold mb-4">Subir Nuevo Recurso</h3>
@@ -446,6 +458,67 @@
                     </div>
                 </div>
             </dialog>
+
+            <!-- Modal Crear Usuario -->
+            <dialog id="create-user-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold mb-4">Crear Nuevo Usuario</h3>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm mb-1">Nombre</label>
+                                <input type="text" id="new-user-firstname" class="w-full border p-2 rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Apellido</label>
+                                <input type="text" id="new-user-lastname" class="w-full border p-2 rounded">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Email</label>
+                            <input type="email" id="new-user-email" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Contraseña</label>
+                            <input type="password" id="new-user-password" class="w-full border p-2 rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Rol</label>
+                            <select id="new-user-role" class="w-full border p-2 rounded bg-white">
+                                <option value="user">Usuario</option>
+                                <option value="admin">Administrador</option>
+                                <option value="editor">Editor</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end gap-2 mt-6">
+                            <button onclick="document.getElementById('create-user-modal').close()"
+                                class="px-4 py-2 border rounded">Cancelar</button>
+                            <button onclick="createNewUser()"
+                                class="px-4 py-2 bg-slate-900 text-white rounded flex items-center gap-2">Crear</button>
+                        </div>
+                    </div>
+                </div>
+            </dialog>
+
+            <!-- Modal Cambio de Rol (Opcional, se puede hacer inline) -->
+            <dialog id="role-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-sm backdrop:bg-black/50">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold mb-4">Cambiar Rol</h3>
+                    <input type="hidden" id="edit-role-userid">
+                    <select id="edit-role-select" class="w-full border p-2 rounded bg-white mb-4">
+                        <option value="user">Usuario</option>
+                        <option value="admin">Administrador</option>
+                        <option value="editor">Editor</option>
+                    </select>
+                    <div class="flex justify-end gap-2">
+                        <button onclick="document.getElementById('role-modal').close()"
+                            class="px-4 py-2 border rounded">Cancelar</button>
+                        <button onclick="confirmRoleChange()"
+                            class="px-4 py-2 bg-slate-900 text-white rounded">Guardar</button>
+                    </div>
+                </div>
+            </dialog>
+
         </main>
     </div>
 
@@ -530,6 +603,28 @@
 
 
         // --- RECURSOS ---
+        function renderResources() {
+            const tbody = document.getElementById('resources-table-body');
+            tbody.innerHTML = state.resources.map(r => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-4"><i data-lucide="${r.type.includes('pdf') ? 'file-text' : 'file'}" class="w-5 h-5 text-gray-400"></i></td>
+                    <td class="p-4">
+                        <div class="font-medium">${r.name}</div>
+                        <div class="text-xs text-gray-500">${r.description || ''}</div>
+                    </td>
+                    <td class="p-4 text-right">
+                        <a href="/api/resources/${r.id}/download" download="${r.name}" class="text-blue-600 hover:text-blue-800 mr-3 px-2 py-1 rounded hover:bg-blue-50">
+                            <i data-lucide="download" class="w-4 h-4 inline"></i>
+                        </a>
+                        <button onclick="deleteResource(${r.id})" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
         function openResourceModal() {
             document.getElementById('resource-name').value = '';
             document.getElementById('resource-desc').value = '';
@@ -566,8 +661,117 @@
             reader.readAsDataURL(file);
         }
 
-        // Remove old handleFileUpload
-        // function handleFileUpload(input) ...
+        async function deleteResource(id) {
+            if (!confirm("¿Seguro que deseas eliminar este recurso?")) return;
+            try {
+                await window.API.apiDeleteResource(id);
+                showToast("Recurso eliminado", "success");
+                state.resources = await window.API.apiGetResources();
+                renderResources();
+            } catch (e) { showToast("Error al eliminar", "error"); }
+        }
+
+        // --- MIEMBROS ---
+        function renderMembers(filtered = null) {
+            const list = filtered || state.members;
+            const tbody = document.getElementById('members-table-body');
+            tbody.innerHTML = list.map(m => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">
+                        <div class="font-medium text-slate-900">${m.firstName || 'Usuario'} ${m.lastName || ''}</div>
+                        <div class="text-xs text-gray-500">${m.email}</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded text-xs font-semibold uppercase ${m.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">
+                            ${m.role || 'user'}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded-full text-xs ${m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${m.status === 'active' ? 'Activo' : 'Bloqueado'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center">${(m.courses || []).length || 0}</td>
+                    <td class="p-4 font-mono">$${(m.spent || 0).toFixed(2)}</td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="openRoleModal(${m.id}, '${m.role}')" class="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Cambiar Rol">
+                            <i data-lucide="shield" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="toggleMemberStatus(${m.id}, '${m.status}')" class="${m.status === 'active' ? 'text-orange-500 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'} p-1 rounded" title="${m.status === 'active' ? 'Bloquear' : 'Activar'}">
+                            <i data-lucide="${m.status === 'active' ? 'lock' : 'unlock'}" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function filterMembers(query) {
+            const lower = query.toLowerCase();
+            const filtered = state.members.filter(m =>
+                (m.firstName + ' ' + m.lastName).toLowerCase().includes(lower) ||
+                m.email.toLowerCase().includes(lower)
+            );
+            renderMembers(filtered);
+        }
+
+        async function toggleMemberStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+            try {
+                await window.API.apiUpdateMemberStatus(id, newStatus);
+                showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'bloqueado'}`, 'success');
+                // Reload
+                state.members = await window.API.apiGetAllUsers();
+                renderMembers();
+            } catch (e) { showToast("Error actualizando usuario", "error"); }
+        }
+
+        // User Creation & Role Mgmt
+        function openCreateUserModal() {
+            document.getElementById('new-user-firstname').value = '';
+            document.getElementById('new-user-lastname').value = '';
+            document.getElementById('new-user-email').value = '';
+            document.getElementById('new-user-password').value = '';
+            document.getElementById('create-user-modal').showModal();
+        }
+
+        async function createNewUser() {
+            const first = document.getElementById('new-user-firstname').value;
+            const last = document.getElementById('new-user-lastname').value;
+            const email = document.getElementById('new-user-email').value;
+            const pass = document.getElementById('new-user-password').value;
+            const role = document.getElementById('new-user-role').value;
+
+            if (!email || !pass) return showToast("Email y contraseña requeridos", "error");
+
+            try {
+                await window.API.apiCreateUser({ firstName: first, lastName: last, email: email, password: pass, role: role });
+                showToast("Usuario creado correctamente", "success");
+                document.getElementById('create-user-modal').close();
+                state.members = await window.API.apiGetAllUsers();
+                renderMembers();
+            } catch (e) {
+                showToast("Error: " + e.message, "error");
+            }
+        }
+
+        function openRoleModal(id, role) {
+            document.getElementById('edit-role-userid').value = id;
+            document.getElementById('edit-role-select').value = role || 'user';
+            document.getElementById('role-modal').showModal();
+        }
+
+        async function confirmRoleChange() {
+            const id = document.getElementById('edit-role-userid').value;
+            const role = document.getElementById('edit-role-select').value;
+            try {
+                await window.API.apiUpdateUserRole(id, role);
+                showToast("Rol actualizado", "success");
+                document.getElementById('role-modal').close();
+                state.members = await window.API.apiGetAllUsers();
+                renderMembers();
+            } catch (e) { showToast("Error al actualizar rol", "error"); }
+        }
 
 
         // CARGAR TODOS LOS DATOS DEL ADMIN
@@ -586,12 +790,15 @@
                 state.courses = courses || [];
                 state.coupons = coupons || [];
                 state.members = members || [];
+                // Update Resource is separate because it was not in the original list
+                state.resources = await window.API.apiGetResources();
 
                 console.log('✅ Admin data loaded:', {
                     categories: state.categories.length,
                     courses: state.courses.length,
                     coupons: state.coupons.length,
-                    members: state.members.length
+                    members: state.members.length,
+                    resources: state.resources.length
                 });
             } catch (err) {
                 console.error('❌ Error loading admin data:', err);
@@ -620,6 +827,7 @@
             renderModules();
             renderCategorySelect();
         }
+
 
         function editCourse(id) {
             const course = state.courses.find(c => c.id === id);

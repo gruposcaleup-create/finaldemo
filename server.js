@@ -697,10 +697,35 @@ app.post('/api/resources', (req, res) => {
     );
 });
 // Download Resource
+// Download Resource CORRECTED
 app.get('/api/resources/:id/download', (req, res) => {
     db.get(`SELECT * FROM resources WHERE id = ?`, [req.params.id], (err, row) => {
         if (err || !row) return res.status(404).json({ error: 'Resource not found' });
-        res.json(row);
+
+        try {
+            // dataUrl format: "data:application/pdf;base64,JVBERi0xLjQK..."
+            const matches = row.dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+
+            if (!matches || matches.length !== 3) {
+                return res.status(500).json({ error: 'Invalid file format stored' });
+            }
+
+            const type = matches[1];
+            const buffer = Buffer.from(matches[2], 'base64');
+
+            res.setHeader('Content-Type', type);
+            // Content-Disposition: attachment triggers download. Inline opens in browser.
+            // Using attachment to force download as requested.
+            // Encoding filename to handle special chars
+            const filename = encodeURIComponent(row.name);
+            res.setHeader('Content-Disposition', `attachment; filename="${row.name}"; filename*=UTF-8''${filename}`);
+
+            res.send(buffer);
+
+        } catch (e) {
+            console.error("Download Error:", e);
+            res.status(500).json({ error: 'Error processing file' });
+        }
     });
 });
 
@@ -737,23 +762,58 @@ app.post('/api/settings', (req, res) => {
 app.get('/api/users', (req, res) => {
     db.all(`SELECT id, email, firstName, lastName, role, status, createdAt FROM users`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        // Agregar "spent" dummy o calculado
-        // Recorrer ordenes para calcular spent... (buena práctica: JOIN, pero aqui JS)
+
         db.all(`SELECT userId, total FROM orders`, [], (err2, orders) => {
             const users = rows.map(u => {
                 const spent = orders.filter(o => o.userId === u.id).reduce((acc, o) => acc + o.total, 0);
-                const userOrders = orders.filter(o => o.userId === u.id);
-                // Get course names from orders logic could be complex, skipping for brevity
-                return { ...u, spent, courses: [] };
+                return { ...u, spent };
             });
             res.json(users);
         });
     });
 });
-app.put('/api/users/:email/status', (req, res) => {
+
+// Update User Status
+app.put('/api/users/:id/status', (req, res) => {
     const { status } = req.body;
-    db.run(`UPDATE users SET status = ? WHERE email = ?`, [status, req.params.email], (err) => res.json({ success: true }));
+    db.run(`UPDATE users SET status = ? WHERE id = ?`, [status, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
 });
+
+// Create User (Admin)
+app.post('/api/users', async (req, res) => {
+    const { email, password, firstName, lastName, role } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
+
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        db.run(`INSERT INTO users (email, password, firstName, lastName, role) VALUES (?, ?, ?, ?, ?)`,
+            [email, hash, firstName || '', lastName || '', role || 'user'],
+            function (err) {
+                if (err) {
+                    if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'El email ya está registrado' });
+                    return res.status(500).json({ error: err.message });
+                }
+                res.json({ id: this.lastID, email, role: role || 'user' });
+            }
+        );
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Update User Role (Admin)
+app.put('/api/users/:id/role', (req, res) => {
+    const { role } = req.body;
+    const validRoles = ['user', 'admin', 'editor'];
+    if (!validRoles.includes(role)) return res.status(400).json({ error: 'Rol inválido' });
+
+    db.run(`UPDATE users SET role = ? WHERE id = ?`, [role, req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 
 // 10. Admin: Assign Membership Manually
 app.post('/api/admin/users/:userId/membership', (req, res) => {

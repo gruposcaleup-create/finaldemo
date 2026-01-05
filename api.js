@@ -334,9 +334,18 @@ if (typeof window !== 'undefined') {
 
     async function apiGetMembers() { return await request('/users'); }
     async function apiGetAllUsers() { return await request('/users'); } // Alias
-    async function apiUpdateMemberStatus(email, status) {
-      return await request(`/users/${email}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+    async function apiUpdateMemberStatus(id, status) {
+      return await request(`/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
     }
+
+    async function apiCreateUser(data) {
+      return await request('/users', { method: 'POST', body: JSON.stringify(data) });
+    }
+
+    async function apiUpdateUserRole(id, role) {
+      return await request(`/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
+    }
+
     async function apiGetOrders() {
       const user = _currentUser();
       if (!user) return [];
@@ -413,8 +422,10 @@ if (typeof window !== 'undefined') {
       apiDeleteResource,
       apiGetMembers,
       apiGetAllUsers,
+      apiCreateUser, // New
       apiUpdateMemberStatus,
       apiUpdateUserStatus: apiUpdateMemberStatus, // Alias for component compatibility
+      apiUpdateUserRole, // New
       apiGetCourses: apiGetCourses,
       apiGetOrders,
       apiDeleteOrder,
