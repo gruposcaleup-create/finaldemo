@@ -351,35 +351,42 @@
                 x-init="loadResources()">
                 <template x-for="resource in resources" :key="resource.id">
                     <article
-                        class="bg-card rounded-xl border border-zinc-800 p-6 hover:border-zinc-600 transition group relative">
+                        class="bg-zinc-900/50 backdrop-blur-sm rounded-xl border border-zinc-800 p-6 hover:border-brandPink/50 hover:bg-zinc-900 transition-all duration-300 group relative shadow-lg hover:shadow-brandPink/10">
                         <div class="flex items-start justify-between mb-4">
-                            <div class="p-3 bg-zinc-900 rounded-lg">
-                                <svg class="w-6 h-6 text-brandPink" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                            <div
+                                class="p-3 bg-zinc-800 rounded-lg group-hover:bg-brandPink/20 group-hover:text-brandPink text-zinc-400 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                     </path>
                                 </svg>
                             </div>
-                            <span class="text-xs text-zinc-500 uppercase font-bold tracking-wider"
-                                x-text="resource.type.split('/')[1] || 'FILE'"></span>
+                            <span
+                                class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-1 rounded-full uppercase font-bold tracking-wider group-hover:bg-brandPink group-hover:text-white transition-colors"
+                                x-text="resource.type ? (resource.type.split('/')[1] ? resource.type.split('/')[1].toUpperCase() : 'FILE') : 'FILE'"></span>
                         </div>
-                        <h3 class="font-bold text-white mb-2" x-text="resource.name"></h3>
-                        <p class="text-xs text-zinc-400 mb-4 line-clamp-3"
-                            x-text="resource.description || 'Sin descripción'"></p>
+                        <h3 class="font-bold text-white mb-2 line-clamp-1" x-text="resource.name"></h3>
+                        <p class="text-xs text-zinc-400 mb-6 line-clamp-2 h-8"
+                            x-text="resource.description || 'Sin descripción disponible.'"></p>
 
                         <button @click="downloadResource(resource)"
-                            class="w-full py-2 rounded border border-zinc-700 hover:bg-zinc-800 hover:text-white text-zinc-400 text-xs font-bold transition flex items-center justify-center gap-2">
+                            class="w-full py-2.5 rounded border border-zinc-700 bg-zinc-800/50 hover:bg-brandPink hover:border-brandPink hover:text-white text-zinc-300 text-xs font-bold transition-all flex items-center justify-center gap-2 group-hover:translate-y-0 translate-y-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                             </svg>
-                            Descargar
+                            Descargar Recurso
                         </button>
                     </article>
                 </template>
-                <div x-show="resources.length === 0" class="col-span-full text-center py-8">
-                    <p class="text-zinc-500 text-sm">Próximamente recursos disponibles.</p>
+                <div x-show="resources.length === 0"
+                    class="col-span-full flex flex-col items-center justify-center py-12 text-zinc-500 border border-zinc-800 rounded-xl bg-zinc-900/30">
+                    <svg class="w-12 h-12 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <p class="text-sm">No hay recursos gratuitos disponibles por el momento.</p>
                 </div>
             </div>
         </div>
@@ -469,9 +476,12 @@
             },
             async downloadResource(res) {
                 try {
-                    // Fetch full data for download (including base64 if needed)
-                    // or just open URL if it's a link. Here we assume we fetch the full object again to get DataURL
-                    const fullRes = await fetch(`http://localhost:3000/api/resources/${res.id}/download`).then(r => r.json());
+                    // Use relative path to avoid CORS/Port issues
+                    const response = await fetch(`/api/resources/${res.id}/download`);
+                    if (!response.ok) throw new Error('Error de red');
+
+                    const fullRes = await response.json();
+
                     if (fullRes.dataUrl) {
                         const a = document.createElement('a');
                         a.href = fullRes.dataUrl;
@@ -481,8 +491,13 @@
                         a.remove();
                     } else if (fullRes.url) {
                         window.open(fullRes.url, '_blank');
+                    } else {
+                        showToast('El recurso no tiene contenido descargable');
                     }
-                } catch (e) { showToast('Error al descargar'); }
+                } catch (e) {
+                    console.error(e);
+                    showToast('Error al descargar');
+                }
             }
         }
     }
