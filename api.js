@@ -359,12 +359,12 @@ if (typeof window !== 'undefined') {
       return await request(`/dashboard?userId=${user.id}`);
     }
 
-    async function apiUpdateProgress(courseId, progress, hoursToAdd) {
+    async function apiUpdateProgress(courseId, progress, hoursToAdd, completedLessons) {
       const user = _currentUser();
       if (!user) return;
       return await request('/progress', {
         method: 'POST',
-        body: JSON.stringify({ userId: user.id, courseId, progress, hoursToAdd })
+        body: JSON.stringify({ userId: user.id, courseId, progress, hoursToAdd, completedLessons })
       });
     }
 

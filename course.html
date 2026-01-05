@@ -206,14 +206,25 @@
                     // TODO: Load from API
 
                     try {
-                        const allCourses = await window.API.apiGetProducts(); // Reuse public list or specific endpoint
-                        this.course = allCourses.find(c => c.id == courseId);
+                        let courseFound = null;
 
-                        if (!this.course) {
-                            // Fallback: Check purchased specific endpoint if not public
+                        // Try Loading My Courses first to get Progress
+                        try {
                             const myCourses = await window.API.apiGetMyPurchasedCourses();
-                            this.course = myCourses.courses.find(c => c.id == courseId);
+                            const purchased = myCourses.courses.find(c => c.id == courseId);
+                            if (purchased) {
+                                courseFound = purchased;
+                                this.completedModules = purchased.completedLessons || [];
+                                this.progress = purchased.progress || 0;
+                            }
+                        } catch (ignore) { }
+
+                        if (!courseFound) {
+                            const allCourses = await window.API.apiGetProducts();
+                            courseFound = allCourses.find(c => c.id == courseId);
                         }
+
+                        this.course = courseFound;
 
                         if (this.course && this.course.modules && this.course.modules.length > 0) {
                             this.currentModule = this.course.modules[0];
@@ -231,13 +242,19 @@
                     return this.completedModules.includes(moduleId);
                 },
 
-                markCompleted() {
+                async markCompleted() {
                     if (!this.currentModule) return;
                     if (!this.completedModules.includes(this.currentModule.id)) {
                         this.completedModules.push(this.currentModule.id);
                         this.calculateProgress();
+
                         // Save to API
-                        // window.API.apiUpdateProgress(...)
+                        try {
+                            await window.API.apiUpdateProgress(this.course.id, this.progress, 0.5, this.completedModules);
+                            console.log("Progress saved");
+                        } catch (e) {
+                            console.error("Error saving progress", e);
+                        }
                     }
                 },
 
@@ -246,16 +263,30 @@
                     this.progress = Math.round((this.completedModules.length / this.course.modules.length) * 100);
                 },
 
+                isIframe(url) {
+                    if (!url) return false;
+                    return url.trim().startsWith('<iframe');
+                },
+
                 getEmbedUrl(url) {
                     if (!url) return '';
-                    // Simple YouTube/Vimeo converter
-                    if (url.includes('youtube.com/watch')) {
-                        return url.replace('watch?v=', 'embed/');
+                    if (this.isIframe(url)) return ''; // Handled by x-html
+
+                    // Robust YouTube Regex
+                    const ytPattern = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+                    const ytMatch = url.match(ytPattern);
+                    if (ytMatch) {
+                        // Added modest branding and autoplay
+                        return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
                     }
-                    if (url.includes('youtu.be')) {
-                        const id = url.split('/').pop();
-                        return `https://www.youtube.com/embed/${id}`;
+
+                    // Vimeo Regex
+                    const vimeoPattern = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/;
+                    const vimeoMatch = url.match(vimeoPattern);
+                    if (vimeoMatch) {
+                        return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
                     }
+
                     return url;
                 }
             }

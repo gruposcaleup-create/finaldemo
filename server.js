@@ -762,7 +762,8 @@ app.get('/api/my-courses', (req, res) => {
             description: r.desc,
             progress: r.progress,
             lastAccess: r.lastAccess,
-            modules: r.modulesData ? JSON.parse(r.modulesData) : []
+            modules: r.modulesData ? JSON.parse(r.modulesData) : [],
+            completedLessons: r.completedLessons ? JSON.parse(r.completedLessons) : []
         }));
 
         res.json({ courses });
@@ -811,12 +812,13 @@ app.get('/api/dashboard', (req, res) => {
 });
 
 app.post('/api/progress', (req, res) => {
-    const { userId, courseId, progress, hoursToAdd } = req.body;
+    const { userId, courseId, progress, hoursToAdd, completedLessons } = req.body;
 
     // Update progress
     // If progress is provided, update it (if greater than current? optional logic, stick to overwrite for now or max)
     // Update lastAccess = NOW
     // Add hoursToAdd
+    // Update completedLessons if provided
 
     let sql = `UPDATE enrollments SET lastAccess = CURRENT_TIMESTAMP`;
     const params = [];
@@ -829,6 +831,11 @@ app.post('/api/progress', (req, res) => {
     if (hoursToAdd) {
         sql += `, totalHoursSpent = totalHoursSpent + ?`;
         params.push(hoursToAdd);
+    }
+
+    if (completedLessons) {
+        sql += `, completedLessons = ?`;
+        params.push(JSON.stringify(completedLessons));
     }
 
     sql += ` WHERE userId = ? AND courseId = ?`;
