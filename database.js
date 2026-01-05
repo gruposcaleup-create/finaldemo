@@ -82,6 +82,12 @@ function initDatabase() {
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
+        // Categories
+        db.run(`CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE
+        )`);
+
         // Settings
         db.run(`CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,

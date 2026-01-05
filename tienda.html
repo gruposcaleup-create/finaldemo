@@ -179,18 +179,50 @@
                     <ul class="space-y-2">
                         <li>
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <div
-                                    class="w-3 h-3 rounded-full border border-brandPink bg-brandPink shadow-[0_0_8px_rgba(212,11,117,0.5)]">
+                                <input type="radio" value="" x-model="filters.category" @change="loadProducts()"
+                                    class="hidden">
+                                <div class="w-3 h-3 rounded-full border shadow-[0_0_8px_rgba(212,11,117,0.5)]"
+                                    :class="filters.category === '' ? 'bg-brandPink border-brandPink' : 'border-zinc-500 bg-transparent'">
                                 </div>
-                                <span
-                                    class="text-sm text-white font-medium group-hover:text-brandPink transition-colors">Todas
-                                    las categorías</span>
+                                <span class="text-sm font-medium transition-colors"
+                                    :class="filters.category === '' ? 'text-white' : 'text-zinc-400 group-hover:text-white'">Todas</span>
                             </label>
                         </li>
+                        <template x-for="cat in categories" :key="cat">
+                            <li>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="radio" :value="cat" x-model="filters.category" @change="loadProducts()"
+                                        class="hidden">
+                                    <div class="w-3 h-3 rounded-full border"
+                                        :class="filters.category === cat ? 'bg-brandPink border-brandPink shadow-[0_0_8px_rgba(212,11,117,0.5)]' : 'border-zinc-500 bg-transparent'">
+                                    </div>
+                                    <span class="text-sm font-medium transition-colors"
+                                        :class="filters.category === cat ? 'text-white' : 'text-zinc-400 group-hover:text-white'"
+                                        x-text="cat"></span>
+                                </label>
+                            </li>
+                        </template>
                     </ul>
                 </div>
 
                 <div>
+                    <h3
+                        class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-800">
+                        Precio</h3>
+                    <div class="space-y-3">
+                        <div class="flex gap-2 items-center">
+                            <input type="number" x-model="filters.minPrice" placeholder="Mín"
+                                class="w-full bg-card border border-borderDark rounded px-2 py-1 text-xs text-white">
+                            <span class="text-zinc-500">-</span>
+                            <input type="number" x-model="filters.maxPrice" placeholder="Máx"
+                                class="w-full bg-card border border-borderDark rounded px-2 py-1 text-xs text-white">
+                        </div>
+                        <button @click="loadProducts()"
+                            class="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-1.5 rounded transition">Filtrar</button>
+                    </div>
+                </div>
+
+                <div class="hidden">
                     <h3
                         class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-800">
                         Opciones</h3>
@@ -241,7 +273,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-data="productsGrid()"
-                    x-init="loadProducts()">
+                    x-init="init()">
 
                     <template x-for="product in products" :key="product.id">
                         <article
@@ -359,30 +391,51 @@
 <script src="./api.js"></script>
 
 <script>
+
     window.productsGrid = function () {
         return {
             products: [],
+            categories: [], // New state for categories
+            filters: {
+                search: '',
+                category: '',
+                minPrice: '',
+                maxPrice: ''
+            },
+            searchQuery: '', // Linked to input
             loading: true,
-            searchQuery: '',
             isLoggedIn() {
                 return window.API && window.API.isLoggedIn ? window.API.isLoggedIn() : false;
             },
+            async init() {
+                this.loadProducts();
+                this.loadCategories();
+            },
+
+            async loadCategories() {
+                try {
+                    const api = window.API || (window.__loadAPI ? await window.__loadAPI() : null);
+                    if (api && api.apiGetCategories) {
+                        this.categories = await api.apiGetCategories();
+                    }
+                } catch (e) { console.error("Err loading cats", e); }
+            },
+
             async loadProducts() {
                 try {
                     this.loading = true;
-                    // Use Search Query if present
+                    // Sync Search
+                    this.filters.search = this.searchQuery;
+
                     const api = window.API || (window.__loadAPI ? await window.__loadAPI() : null);
                     if (!api) return;
 
-                    const response = await api.apiGetProducts(this.searchQuery);
+                    const response = await api.apiGetProducts(this.filters);
                     this.products = Array.isArray(response) ? response : response.data || [];
                 } catch (err) {
                     console.error('Error loading products:', err);
                 } finally {
                     this.loading = false;
-                    // Expose reload hook for storage events
-                    window.__reloadTienda = () => { this.loadProducts(); };
-                    // Also initialize cart count when products load
                     try { updateCartCount(); } catch (e) { }
                 }
             },

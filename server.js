@@ -281,15 +281,30 @@ app.put('/api/users/password', (req, res) => {
     });
 });
 
-// 4. Cursos: Listar (Público) con Búsqueda
+// 4. Cursos: Listar (Público) con Búsqueda y Filtros
 app.get('/api/courses', (req, res) => {
-    const { search } = req.query;
+    const { search, category, minPrice, maxPrice } = req.query;
     let query = "SELECT * FROM courses WHERE status = 'active'";
     let params = [];
 
     if (search) {
         query += " AND (title LIKE ? OR desc LIKE ?)";
         params.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (category) {
+        query += " AND category = ?";
+        params.push(category);
+    }
+
+    if (minPrice) {
+        query += " AND price >= ?";
+        params.push(minPrice);
+    }
+
+    if (maxPrice) {
+        query += " AND price <= ?";
+        params.push(maxPrice);
     }
 
     db.all(query, params, (err, rows) => {
@@ -636,6 +651,24 @@ app.post('/api/coupons', (req, res) => {
 });
 app.delete('/api/coupons/:id', (req, res) => {
     db.run(`DELETE FROM coupons WHERE id = ?`, [req.params.id], (err) => res.json({ success: true }));
+});
+
+// Categories
+app.get('/api/categories', (req, res) => {
+    db.all(`SELECT name FROM categories`, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows.map(r => r.name));
+    });
+});
+app.post('/api/categories', (req, res) => {
+    const { name } = req.body;
+    db.run(`INSERT OR IGNORE INTO categories (name) VALUES (?)`, [name], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, id: this.lastID });
+    });
+});
+app.delete('/api/categories/:name', (req, res) => {
+    db.run(`DELETE FROM categories WHERE name = ?`, [req.params.name], (err) => res.json({ success: true }));
 });
 
 app.post('/api/coupons/validate', (req, res) => {
