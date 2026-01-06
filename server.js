@@ -361,8 +361,11 @@ app.post('/api/courses', (req, res) => {
     const modulesStr = JSON.stringify(modules || []);
     const modulesCount = modules ? modules.length : 0;
 
+    // Helper to sanitize undefined -> null for SQL
+    const s = (v) => v === undefined ? null : v;
+
     db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, modulesData, modulesCount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, desc, price, priceOffer, image, videoPromo, category, modulesStr, modulesCount],
+        [s(title), s(desc), s(price), s(priceOffer), s(image), s(videoPromo), s(category), s(modulesStr), s(modulesCount)],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, ...req.body });
@@ -380,6 +383,9 @@ app.put('/api/courses/:id', (req, res) => {
     const modulesStr = modules ? JSON.stringify(modules) : null;
     const modulesCount = modules ? modules.length : null;
 
+    // Helper to sanitize undefined -> null for SQL
+    const s = (v) => v === undefined ? null : v;
+
     db.run(`UPDATE courses SET 
             title = COALESCE(?, title), 
             desc = COALESCE(?, desc), 
@@ -391,7 +397,7 @@ app.put('/api/courses/:id', (req, res) => {
             modulesCount = COALESCE(?, modulesCount),
             status = COALESCE(?, status)
             WHERE id = ?`,
-        [title, desc, price, priceOffer, videoPromo, category, modulesStr, modulesCount, status, id],
+        [s(title), s(desc), s(price), s(priceOffer), s(videoPromo), s(category), s(modulesStr), s(modulesCount), s(status), id],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Curso actualizado' });
@@ -713,8 +719,11 @@ app.get('/api/resources', (req, res) => {
 });
 app.post('/api/resources', (req, res) => {
     const { name, type, dataUrl, description } = req.body;
+    // Helper to sanitize undefined -> null for SQL
+    const s = (v) => v === undefined ? null : v;
+
     db.run(`INSERT INTO resources (name, type, dataUrl, description) VALUES (?, ?, ?, ?)`,
-        [name, type, dataUrl, description || ''],
+        [s(name), s(type), s(dataUrl), description || ''],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID });
