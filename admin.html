@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -1021,10 +1021,11 @@
                         <div class="flex gap-2 items-center flex-1"><i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400 cursor-move"></i><input type="text" value="${mod.title}" onchange="updateModTitle(${mod.id}, this.value)" class="bg-transparent font-medium border-none focus:ring-0 p-0 w-full"></div>
                         <button onclick="deleteModule(${mod.id})" class="text-red-500 hover:bg-red-100 p-1 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
-                    <div class="pl-6 space-y-4 border-l-2 border-gray-200 ml-2">
+                    <div class="pl-6 space-y-4 border-l-2 border-gray-200 ml-2 lessons-list" data-mod-id="${mod.id}">
                         ${mod.lessons.map(lesson => `
-                            <div class="bg-white p-3 rounded border shadow-sm">
+                            <div class="bg-white p-3 rounded border shadow-sm group">
                                 <div class="flex gap-3 items-start mb-3">
+                                    <div class="cursor-move-lesson p-1 mr-2 text-gray-300 hover:text-gray-500 self-center"><i data-lucide="grip-vertical" class="w-4 h-4"></i></div>
                                     <div class="w-24 h-14 bg-gray-100 rounded overflow-hidden flex-shrink-0 relative video-thumbnail">
                                         <img src="${getVideoThumbnail(lesson.url)}" alt="Thumbnail">
                                         ${lesson.url ? '<div class="play-icon-overlay"><i data-lucide="play" class="w-4 h-4 text-white"></i></div>' : ''}
@@ -1065,6 +1066,46 @@
                 </div>
             `).join('');
             lucide.createIcons();
+
+            // Initialize Sortable for Modules
+            const modulesContainer = document.getElementById('modules-container');
+            if (modulesContainer) {
+                new Sortable(modulesContainer, {
+                    animation: 150,
+                    handle: '.cursor-move',
+                    onEnd: function (evt) {
+                        const itemEl = evt.item;
+                        const newIndex = evt.newIndex;
+                        const oldIndex = evt.oldIndex;
+
+                        // Move in array
+                        if (newIndex !== oldIndex && state.tempModules) {
+                            const movedItem = state.tempModules.splice(oldIndex, 1)[0];
+                            state.tempModules.splice(newIndex, 0, movedItem);
+                        }
+                    }
+                });
+            }
+
+            // Initialize Sortable for Lessons within each module
+            document.querySelectorAll('.lessons-list').forEach(list => {
+                new Sortable(list, {
+                    animation: 150,
+                    handle: '.cursor-move-lesson',
+                    group: 'lessons',
+                    onEnd: function (evt) {
+                        const modId = parseInt(evt.to.dataset.modId);
+                        const newIndex = evt.newIndex;
+                        const oldIndex = evt.oldIndex;
+
+                        const mod = state.tempModules.find(m => m.id === modId);
+                        if (mod && newIndex !== oldIndex) {
+                            const movedItem = mod.lessons.splice(oldIndex, 1)[0];
+                            mod.lessons.splice(newIndex, 0, movedItem);
+                        }
+                    }
+                });
+            });
         }
         function addModule() { state.tempModules.push({ id: Date.now(), title: "Nuevo Módulo", lessons: [] }); renderModules(); }
         function deleteModule(id) { state.tempModules = state.tempModules.filter(m => m.id !== id); renderModules(); }
