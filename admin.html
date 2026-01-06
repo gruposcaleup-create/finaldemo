@@ -529,6 +529,7 @@
         const state = {
             currentUser: null,
             editingCourseId: null, // NUEVO: Para saber si estamos editando
+            metrics: null, // Store dashboard metrics
             categories: [],
             courses: [],
             coupons: [],
@@ -556,7 +557,12 @@
             if (viewName === 'coupons') renderCoupons();
             if (viewName === 'resources') renderResources();
             if (viewName === 'courses') renderCoursesList();
-            if (viewName === 'dashboard') { updateDashboard(); initChart(); }
+            if (viewName === 'dashboard') {
+                if (state.metrics) {
+                    updateDashboard(state.metrics);
+                    initChart(state.metrics);
+                }
+            }
 
             // Si vamos a crear curso y NO estamos editando, limpiar
             if (viewName === 'create-course' && !state.editingCourseId) {
@@ -777,29 +783,35 @@
         // CARGAR TODOS LOS DATOS DEL ADMIN
         window.loadAdminData = async function () {
             try {
-                // Cargar datos en paralelo
-                const [categories, courses, coupons, orders, members] = await Promise.all([
+                // Fetch basic data
+                const [categories, courses, coupons, members, resources] = await Promise.all([
                     window.API.apiGetCategories(),
                     window.API.apiGetAllCourses(),
                     window.API.apiGetCoupons(),
-                    window.API.apiGetOrders(),
-                    window.API.apiGetAllUsers()
+                    window.API.apiGetAllUsers(),
+                    window.API.apiGetResources()
                 ]);
 
                 state.categories = categories || [];
                 state.courses = courses || [];
                 state.coupons = coupons || [];
                 state.members = members || [];
-                // Update Resource is separate because it was not in the original list
-                state.resources = await window.API.apiGetResources();
+                state.resources = resources || [];
 
-                console.log('✅ Admin data loaded:', {
-                    categories: state.categories.length,
-                    courses: state.courses.length,
-                    coupons: state.coupons.length,
-                    members: state.members.length,
-                    resources: state.resources.length
-                });
+                // Fetch Metrics (New Endpoint)
+                try {
+                    state.metrics = await window.API.apiGetAdminMetrics();
+                } catch (e) {
+                    console.error("Error fetching metrics", e);
+                    state.metrics = {}; // Empty fallback
+                }
+
+                console.log('✅ Admin data loaded');
+
+                // Initialize Dashboard if that's the current view
+                updateDashboard(state.metrics);
+                initChart(state.metrics);
+
             } catch (err) {
                 console.error('❌ Error loading admin data:', err);
                 showToast('Error cargando datos', 'error');

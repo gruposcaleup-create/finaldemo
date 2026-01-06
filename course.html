@@ -54,12 +54,14 @@
             height: 100%;
             z-index: 10;
             background: transparent;
-            /* Allow clicks to pass through to start video if needed, 
-               but catch context menu. 
-               Note: pointer-events: none would let clicks pass but ALSO right clicks. 
-               We need something clever or accept we can't fully block iframe right click.
-            */
             pointer-events: none;
+            /* Allow interaction with video controls */
+        }
+
+        /* Extra block for wrapper */
+        #video-container {
+            user-select: none;
+            -webkit-user-select: none;
         }
     </style>
     <script>
@@ -133,6 +135,8 @@
                             :src="getEmbedUrl(currentLesson.url)" class="w-full h-full absolute inset-0" frameborder="0"
                             allow="autoplay; fullscreen" allowfullscreen>
                         </iframe>
+                        <!-- Anti-Piracy Overlay: Allow clicks (playback) but block Context Menu -->
+                        <div class="video-protection-overlay" @contextmenu.prevent></div>
                         <!-- Fallback if URL exists but cannot be embedded (e.g. invalid YT link) -->
                         <div x-show="!isIframe(currentLesson.url) && currentLesson.url && !getEmbedUrl(currentLesson.url)"
                             class="w-full h-full flex flex-col items-center justify-center text-gray-500">
@@ -368,11 +372,41 @@
                     if (!url) return '';
                     if (this.isIframe(url)) return ''; // Handled by x-html
 
-                    // Robust YouTube Regex
-                    const ytPattern = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-                    const ytMatch = url.match(ytPattern);
-                    if (ytMatch) {
-                        return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
+                    let videoId = null;
+
+                    // Method 1: URL Object Parsing (Safest)
+                    try {
+                        // Add protocol if missing to making valid URL
+                        const safeUrl = url.startsWith('http') ? url : `https://${url}`;
+                        const u = new URL(safeUrl);
+
+                        if (u.hostname.includes('youtube.com')) {
+                            if (u.searchParams.has('v')) {
+                                videoId = u.searchParams.get('v');
+                            } else if (u.pathname.startsWith('/embed/')) {
+                                videoId = u.pathname.split('/')[2];
+                            } else if (u.pathname.startsWith('/v/')) {
+                                videoId = u.pathname.split('/')[2];
+                            }
+                        } else if (u.hostname.includes('youtu.be')) {
+                            videoId = u.pathname.slice(1);
+                        }
+                    } catch (e) {
+                        // Ignore URL parse errors
+                    }
+
+                    // Method 2: Regex Fallback (Simple)
+                    if (!videoId) {
+                        const match = url.match(/[?&]v=([^&]+)/);
+                        if (match) videoId = match[1];
+                        else {
+                            const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+                            if (shortMatch) videoId = shortMatch[1];
+                        }
+                    }
+
+                    if (videoId && videoId.length === 11) {
+                        return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
                     }
 
                     // Fallback for Vimeo
@@ -381,18 +415,8 @@
                         if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
                     }
 
-                    // SAFETY: If it looks like a YouTube watch link but failed regex, DO NOT return raw URL to avoid "Refused to connect"
-                    if (url.includes('youtube.com/watch')) {
-                        try {
-                            const u = new URL(url);
-                            const v = u.searchParams.get('v');
-                            if (v) return `https://www.youtube.com/embed/${v}?rel=0`;
-                        } catch (e) { }
-                        return ''; // Fail safe
-                    }
-
-                    return url;
-                }
+                    return '';
+                },
             }
         }
     </script>
