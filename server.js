@@ -309,12 +309,32 @@ app.get('/api/courses', (req, res) => {
 
     db.all(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        // Parse modulesData
-        const courses = rows.map(c => ({
-            ...c,
-            modules: c.modulesData ? JSON.parse(c.modulesData) : []
-        }));
+        const courses = rows.map(c => {
+            let modules = [];
+            try {
+                modules = c.modulesData ? JSON.parse(c.modulesData) : [];
+            } catch (e) {
+                console.error(`Error parsing modules for course ${c.id}:`, e.message);
+            }
+            return { ...c, modules };
+        });
         res.json(courses);
+    });
+});
+
+// Get Single Course (Public)
+app.get('/api/courses/:id', (req, res) => {
+    db.get('SELECT * FROM courses WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Curso no encontrado' });
+
+        try {
+            row.modules = row.modulesData ? JSON.parse(row.modulesData) : [];
+        } catch (e) {
+            console.error(`Error parsing modules for course ${row.id}:`, e.message);
+            row.modules = [];
+        }
+        res.json(row);
     });
 });
 
@@ -322,10 +342,15 @@ app.get('/api/courses', (req, res) => {
 app.get('/api/admin/courses', (req, res) => {
     db.all(`SELECT * FROM courses`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        const courses = rows.map(c => ({
-            ...c,
-            modules: c.modulesData ? JSON.parse(c.modulesData) : []
-        }));
+        const courses = rows.map(c => {
+            let modules = [];
+            try {
+                modules = c.modulesData ? JSON.parse(c.modulesData) : [];
+            } catch (e) {
+                console.error(`Error parsing modules for course ${c.id}:`, e.message);
+            }
+            return { ...c, modules };
+        });
         res.json(courses);
     });
 });
