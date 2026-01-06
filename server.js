@@ -898,6 +898,60 @@ app.get('/api/my-courses', (req, res) => {
         WHERE e.userId = ?
     `;
 
+    // 11. Admin Metrics
+    app.get('/api/admin/metrics', (req, res) => {
+        const metrics = {};
+
+        db.parallelize(() => {
+            // 1. Total Revenue
+            db.get(`SELECT SUM(total) as revenue FROM orders WHERE status = 'paid'`, (err, row) => {
+                metrics.revenue = row ? row.revenue || 0 : 0;
+            });
+
+            // 2. Total Students (Role user)
+            db.get(`SELECT COUNT(*) as count FROM users WHERE role = 'user'`, (err, row) => {
+                metrics.students = row ? row.count : 0;
+            });
+
+            // 3. Active Courses
+            db.get(`SELECT COUNT(*) as count FROM courses WHERE status = 'active'`, (err, row) => {
+                metrics.activeCourses = row ? row.count : 0;
+
+                // 4. Monthly Revenue (Current Year)
+                // Note: SQLite doesn't have easy date functions like MySQL, so we fetch paid orders and process in JS
+                // Improved for scalability: Fetch only date and amount
+                db.all(`SELECT total, createdAt FROM orders WHERE status = 'paid'`, (err, rows) => {
+                    const monthly = new Array(12).fill(0);
+                    const currentYear = new Date().getFullYear();
+
+                    rows.forEach(r => {
+                        const d = new Date(r.createdAt);
+                        if (d.getFullYear() === currentYear) {
+                            monthly[d.getMonth()] += r.total;
+                        }
+                    });
+                    metrics.monthlyRevenue = monthly;
+
+                    // 5. Recent Sales (Last 5)
+                    db.all(`
+                    SELECT o.id, o.total, o.createdAt, u.firstName, u.lastName, u.email 
+                    FROM orders o 
+                    JOIN users u ON o.userId = u.id 
+                    WHERE o.status = 'paid'
+                    ORDER BY o.createdAt DESC 
+                    LIMIT 5
+                `, (err, rows) => {
+                        metrics.recentSales = rows || [];
+
+                        // Final Response
+                        res.json(metrics);
+                    });
+                });
+            });
+        });
+    });
+
+
     db.all(query, [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
 

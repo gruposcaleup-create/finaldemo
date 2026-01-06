@@ -858,6 +858,18 @@
             const price = document.getElementById('price-real').value;
             if (!title || !price) return showToast("Falta título o precio", "error");
 
+            // Safety: Deep Clean the URL data immediately before saving
+            // This ensures even if ONCHANGE didn't fire, we save clean data
+            state.tempModules.forEach(m => {
+                if (m.lessons) {
+                    m.lessons.forEach(l => {
+                        if (l.url) l.url = l.url.trim();
+                        // Also Ensure Resources are array
+                        if (!l.resources) l.resources = [];
+                    });
+                }
+            });
+
             const courseData = {
                 title,
                 price,
@@ -916,32 +928,18 @@
         }
 
         // DASHBOARD
-        function updateDashboard() {
-            const totalRevenue = state.members.reduce((acc, member) => acc + member.spent, 0);
-            const totalStudents = state.members.length;
-            const activeCoursesCount = state.courses.filter(c => c.status === 'active').length;
-            document.getElementById('kpi-revenue').textContent = '$' + totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('kpi-students').textContent = '+' + totalStudents;
-            document.getElementById('kpi-active-courses').textContent = activeCoursesCount;
+        function updateDashboard(metrics) {
+            if (!metrics) return;
+            document.getElementById('kpi-revenue').textContent = '$' + (metrics.revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('kpi-students').textContent = '+' + (metrics.students || 0);
+            document.getElementById('kpi-active-courses').textContent = metrics.activeCourses || 0;
         }
 
-        function initChart() {
+        function initChart(metrics) {
             const ctx = document.getElementById('revenueChart').getContext('2d');
             if (window.myChart) window.myChart.destroy();
 
-            // Calcular ingresos por órdenes reales
-            const orders = _get('orders', []);
-            const monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-            orders.forEach(order => {
-                const amount = order.totalAmount || order.total || 0;
-                if (amount && order.createdAt) {
-                    const date = new Date(order.createdAt);
-                    const month = date.getMonth();
-                    monthlyData[month] = (monthlyData[month] || 0) + parseFloat(amount);
-                }
-            });
-
+            const monthlyData = metrics.monthlyRevenue || new Array(12).fill(0);
             const monthLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
             window.myChart = new Chart(ctx, {
@@ -965,29 +963,26 @@
                             ticks: { callback: (value) => '$' + value.toFixed(0) }
                         }
                     },
-                    plugins: {
-                        legend: { display: true }
-                    }
+                    plugins: { legend: { display: true } }
                 }
             });
 
-            // Actualizar ventas recientes
-            const recentOrders = orders.slice(-5).reverse();
-            document.getElementById('recent-sales-list').innerHTML = recentOrders.length > 0 ? recentOrders.map(order => {
-                const member = state.members.find(m => m.id === order.userId);
-                return `
+            // Recent Sales
+            const recentOrders = metrics.recentSales || [];
+            document.getElementById('recent-sales-list').innerHTML = recentOrders.length > 0 ? recentOrders.map(order => `
                     <div class="flex items-center justify-between p-2 border rounded hover:bg-gray-50">
                         <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs">${(member?.name || 'Anon').substring(0, 2).toUpperCase()}</div>
+                            <div class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs">
+                                ${(order.firstName || 'C').substring(0, 1).toUpperCase()}
+                            </div>
                             <div>
-                                <p class="text-sm font-medium">${member?.name || 'Comprador Anónimo'}</p>
-                                <p class="text-xs text-gray-500">#${order.id}</p>
+                                <p class="text-sm font-medium">${order.firstName || 'Cliente'} ${order.lastName || ''}</p>
+                                <p class="text-xs text-gray-400">#${order.id}</p>
                             </div>
                         </div>
-                        <span class="font-bold text-sm text-green-600">+$${parseFloat(order.total || order.totalAmount || 0).toFixed(2)}</span>
+                        <span class="font-bold text-sm text-green-600">+$${parseFloat(order.total).toFixed(2)}</span>
                     </div>
-                `;
-            }).join('') : '<p class="text-gray-400 text-center py-4 text-sm">Sin ventas aún</p>';
+            `).join('') : '<p class="text-gray-400 text-center py-4 text-sm">Sin ventas recientes</p>';
         }
 
         function _get(key, fallback) {
