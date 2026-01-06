@@ -129,10 +129,24 @@
                         </div>
 
                         <!-- Case 2: URL to be converted to Embed -->
-                        <iframe x-show="!isIframe(currentLesson.url) && currentLesson.url"
+                        <iframe x-show="!isIframe(currentLesson.url) && getEmbedUrl(currentLesson.url)"
                             :src="getEmbedUrl(currentLesson.url)" class="w-full h-full absolute inset-0" frameborder="0"
                             allow="autoplay; fullscreen" allowfullscreen>
                         </iframe>
+                        <!-- Fallback if URL exists but cannot be embedded (e.g. invalid YT link) -->
+                        <div x-show="!isIframe(currentLesson.url) && currentLesson.url && !getEmbedUrl(currentLesson.url)"
+                            class="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1" class="mb-2 opacity-50">
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                                <path d="M8 14h8"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            <p class="text-xs text-center px-4">Video no disponible o enlace inválido.<br><span
+                                    class="opacity-50 text-[10px]" x-text="currentLesson.url"></span></p>
+                        </div>
 
                         <!-- Fallback if no video -->
                         <div x-show="!currentLesson.url"
@@ -358,15 +372,23 @@
                     const ytPattern = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
                     const ytMatch = url.match(ytPattern);
                     if (ytMatch) {
-                        // Added modest branding and autoplay
                         return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
                     }
 
-                    // Vimeo Regex
-                    const vimeoPattern = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/;
-                    const vimeoMatch = url.match(vimeoPattern);
-                    if (vimeoMatch) {
-                        return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                    // Fallback for Vimeo
+                    if (url.includes('vimeo.com')) {
+                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                        if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                    }
+
+                    // SAFETY: If it looks like a YouTube watch link but failed regex, DO NOT return raw URL to avoid "Refused to connect"
+                    if (url.includes('youtube.com/watch')) {
+                        try {
+                            const u = new URL(url);
+                            const v = u.searchParams.get('v');
+                            if (v) return `https://www.youtube.com/embed/${v}?rel=0`;
+                        } catch (e) { }
+                        return ''; // Fail safe
                     }
 
                     return url;

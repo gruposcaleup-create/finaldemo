@@ -1064,7 +1064,13 @@
         function updateModTitle(id, val) { state.tempModules.find(m => m.id === id).title = val; }
         function addLesson(modId) { state.tempModules.find(m => m.id === modId).lessons.push({ id: Date.now(), title: "", url: "", resources: [] }); renderModules(); }
         function deleteLesson(modId, lessonId) { const mod = state.tempModules.find(m => m.id === modId); mod.lessons = mod.lessons.filter(l => l.id !== lessonId); renderModules(); }
-        function updateLesson(modId, lessonId, field, value) { const mod = state.tempModules.find(m => m.id === modId); mod.lessons = mod.lessons.map(l => l.id === lessonId ? { ...l, [field]: value } : l); if (field === 'url') renderModules(); }
+        function updateLesson(modId, lessonId, field, value) {
+            const mod = state.tempModules.find(m => m.id === modId);
+            // Sanitize URL input automatically
+            const finalValue = field === 'url' ? value.trim() : value;
+            mod.lessons = mod.lessons.map(l => l.id === lessonId ? { ...l, [field]: finalValue } : l);
+            if (field === 'url') renderModules();
+        }
 
         // NEW: Resource Logic specific for lessons
         async function uploadResourceForLesson(modId, lessonId, input) {
