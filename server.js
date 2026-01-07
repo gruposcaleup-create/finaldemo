@@ -395,9 +395,10 @@ app.put('/api/courses/:id', (req, res) => {
             category = COALESCE(?, category),
             modulesData = COALESCE(?, modulesData),
             modulesCount = COALESCE(?, modulesCount),
-            status = COALESCE(?, status)
+            status = COALESCE(?, status),
+            image = COALESCE(?, image)
             WHERE id = ?`,
-        [s(title), s(desc), s(price), s(priceOffer), s(videoPromo), s(category), s(modulesStr), s(modulesCount), s(status), id],
+        [s(title), s(desc), s(price), s(priceOffer), s(videoPromo), s(category), s(modulesStr), s(modulesCount), s(status), s(image), id],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Curso actualizado' });

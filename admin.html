@@ -275,10 +275,24 @@
                         </div>
                         <div class="bg-white p-6 rounded-xl border shadow-sm">
                             <h3 class="font-semibold mb-4">Multimedia</h3>
-                            <div
-                                class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition">
-                                <i data-lucide="image" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i><span
-                                    class="text-sm text-gray-500">Subir Portada</span>
+                            <div onclick="document.getElementById('course-cover-input').click()"
+                                class="relative border-2 border-dashed rounded-lg p-0 text-center cursor-pointer hover:bg-gray-50 transition overflow-hidden h-40 flex items-center justify-center group">
+                                <input type="file" id="course-cover-input" class="hidden" accept="image/*"
+                                    onchange="handleCourseCoverUpload(this)">
+
+                                <div id="cover-placeholder" class="p-6">
+                                    <i data-lucide="image" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
+                                    <span class="text-sm text-gray-500">Subir Portada</span>
+                                </div>
+
+                                <img id="cover-preview" src=""
+                                    class="absolute inset-0 w-full h-full object-cover hidden">
+
+                                <div id="cover-overlay"
+                                    class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition hidden">
+                                    <span class="text-white text-xs font-medium"><i data-lucide="upload"
+                                            class="w-4 h-4 inline mr-1"></i> Cambiar</span>
+                                </div>
                             </div>
                             <div class="mt-4"><label class="block text-sm font-medium mb-1">Video Promo
                                     (URL)</label><input type="text" id="course-video-promo"
@@ -530,6 +544,7 @@
             currentUser: null,
             editingCourseId: null, // NUEVO: Para saber si estamos editando
             metrics: null, // Store dashboard metrics
+            currentCourseImage: null,
             categories: [],
             courses: [],
             coupons: [],
@@ -835,6 +850,14 @@
             document.getElementById('price-offer').value = "";
             document.getElementById('course-video-promo').value = "";
 
+            // Image Reset
+            state.currentCourseImage = null;
+            document.getElementById('course-cover-input').value = "";
+            document.getElementById('cover-preview').src = "";
+            document.getElementById('cover-preview').classList.add('hidden');
+            document.getElementById('cover-overlay').classList.add('hidden');
+            document.getElementById('cover-placeholder').classList.remove('hidden');
+
             state.tempModules = [{ id: Date.now(), title: "Módulo 1", lessons: [{ id: Date.now() + 1, title: "", url: "" }] }];
             renderModules();
             renderCategorySelect();
@@ -859,6 +882,19 @@
             document.getElementById('price-real').value = course.price;
             document.getElementById('price-offer').value = course.priceOffer || "";
             document.getElementById('course-video-promo').value = course.videoPromo || "";
+
+            // Image Load
+            state.currentCourseImage = course.image || null;
+            if (state.currentCourseImage) {
+                document.getElementById('cover-preview').src = state.currentCourseImage;
+                document.getElementById('cover-preview').classList.remove('hidden');
+                document.getElementById('cover-overlay').classList.remove('hidden');
+                document.getElementById('cover-placeholder').classList.add('hidden');
+            } else {
+                document.getElementById('cover-preview').classList.add('hidden');
+                document.getElementById('cover-overlay').classList.add('hidden');
+                document.getElementById('cover-placeholder').classList.remove('hidden');
+            }
 
             renderCategorySelect();
             document.getElementById('course-category').value = course.category;
@@ -888,6 +924,7 @@
                 desc: document.getElementById('course-desc').value,
                 priceOffer: document.getElementById('price-offer').value,
                 videoPromo: document.getElementById('course-video-promo').value,
+                image: state.currentCourseImage,
                 modulesCount: state.tempModules.length,
                 category: document.getElementById('course-category').value,
                 modules: state.tempModules,
@@ -920,6 +957,22 @@
                 renderCoursesList();
                 showToast(`Curso ${newStatus === 'active' ? 'Activado' : 'Desactivado'}`, 'success');
             } catch (err) { showToast('No se pudo cambiar estado', 'error'); }
+        }
+
+        function handleCourseCoverUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    state.currentCourseImage = e.target.result;
+                    const preview = document.getElementById('cover-preview');
+                    preview.src = state.currentCourseImage;
+                    preview.classList.remove('hidden');
+                    document.getElementById('cover-placeholder').classList.add('hidden');
+                    document.getElementById('cover-overlay').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         // AUTH - Esperar a que API esté listo
@@ -1192,15 +1245,20 @@
                     : `<span class="text-[10px] bg-gray-100 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full font-bold uppercase">Inactivo</span>`;
                 const opacityClass = isInactive ? 'opacity-75' : '';
 
+                const imageHtml = c.image
+                    ? `<div class="h-32 w-full overflow-hidden mb-3 rounded border bg-gray-100 group"><img src="${c.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"></div>`
+                    : `<div class="h-32 w-full bg-slate-100 mb-3 rounded border flex items-center justify-center text-gray-300"><i data-lucide="image" class="w-8 h-8"></i></div>`;
+
                 return `
-                <div class="bg-white p-4 rounded-lg border shadow-sm flex flex-col justify-between h-52 ${opacityClass} transition-all">
+                <div class="bg-white p-4 rounded-lg border shadow-sm flex flex-col justify-between h-auto ${opacityClass} transition-all hover:shadow-md">
                     <div>
+                        ${imageHtml}
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 inline-block">${c.category || 'Sin cat.'}</span>
                             ${statusBadge}
                         </div>
                         <h3 class="font-bold text-lg leading-tight mb-1">${c.title}</h3>
-                        <p class="text-sm text-gray-500">${c.modulesCount} Módulos</p>
+                        <p class="text-sm text-gray-500 mb-4">${c.modulesCount} Módulos</p>
                     </div>
                     <div>
                          <div class="font-bold text-lg mb-3">$${c.price}</div>
