@@ -162,7 +162,7 @@
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                <input type="text" x-model.debounce.500ms="searchQuery" @input="loadProducts()"
+                <input type="text" x-model.debounce.500ms="searchQuery"
                     class="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-borderDark rounded-lg leading-5 bg-card text-zinc-300 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-0 sm:text-sm text-xs transition-colors"
                     placeholder="Buscar curso...">
             </div>
@@ -443,6 +443,7 @@
                 return window.API && window.API.isLoggedIn ? window.API.isLoggedIn() : false;
             },
             async init() {
+                this.$watch('searchQuery', () => this.loadProducts());
                 this.loadProducts();
                 this.loadCategories();
             },

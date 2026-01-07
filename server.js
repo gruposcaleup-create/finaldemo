@@ -426,19 +426,10 @@ app.delete('/api/courses/:id', (req, res) => {
 });
 
 
-// 5. Categorías (Simulado por ahora extrayendo de cursos o tabla separada. Usaremos tabla separada si da tiempo, sino hardcoded en DB o distinct)
-// Vamos a hacer un DISTINCT de la tabla cursos + una tabla auxiliar si se quiere gestionar vacías.
-// Por simplicidad en este paso, retornamos DISTINCT categorias de cursos + defaults.
-app.get('/api/categories', (req, res) => {
-    db.all("SELECT DISTINCT category FROM courses", [], (err, rows) => {
-        const cats = rows.map(r => r.category).filter(c => c);
-        // Agregar defaults si no están
-        const defaults = ['Fiscal', 'Contabilidad', 'Finanzas', 'Legal'];
-        const all = [...new Set([...defaults, ...cats])];
-        res.json(all);
-    });
-});
-// Para añadir categoria (stub para que el panel no falle)
+// 5. Categorías
+// Usamos el endpoint basado en tabla 'categories' definido más abajo.
+// Esta versión anterior se comenta/elimina para evitar conflictos.
+// app.get('/api/categories', ...);
 app.post('/api/categories', (req, res) => { res.json({ success: true }); });
 app.delete('/api/categories/:name', (req, res) => { res.json({ success: true }); });
 
