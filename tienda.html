@@ -255,20 +255,35 @@
                         <p class="text-xs text-zinc-400 mt-1">Explora nuestros recursos educativos</p>
                     </div>
 
-                    <div class="relative">
-                        <button
-                            class="flex items-center gap-2 text-xs text-zinc-300 border border-zinc-700 bg-card px-3 py-1.5 rounded hover:border-zinc-500 transition-colors">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                                <polyline points="17 6 23 6 23 12"></polyline>
-                            </svg>
-                            Más relevantes
+                    <div class="relative" x-data="{ open: false, sortLabel: 'Más relevantes' }">
+                        <button @click="open = !open" @click.outside="open = false"
+                            class="flex items-center gap-2 text-xs text-zinc-300 border border-zinc-700 bg-card px-3 py-1.5 rounded hover:border-zinc-500 transition-colors w-40 justify-between">
+                            <span x-text="sortLabel">Más relevantes</span>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                                stroke-width="2" :class="open ? 'rotate-180' : ''" class="transition-transform">
                                 <path d="M6 9l6 6 6-6" />
                             </svg>
                         </button>
+                        <div x-show="open"
+                            class="absolute right-0 top-full mt-1 w-40 bg-card border border-borderDark rounded shadow-lg z-50 flex flex-col py-1"
+                            style="display: none;">
+                            <button
+                                @click="filters.sort = 'newest'; sortLabel = 'Más Nuevos'; open = false; loadProducts()"
+                                class="text-left px-4 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Más
+                                Nuevos</button>
+                            <button
+                                @click="filters.sort = 'price_asc'; sortLabel = 'Menor Precio'; open = false; loadProducts()"
+                                class="text-left px-4 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Menor
+                                Precio</button>
+                            <button
+                                @click="filters.sort = 'price_desc'; sortLabel = 'Mayor Precio'; open = false; loadProducts()"
+                                class="text-left px-4 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Mayor
+                                Precio</button>
+                            <button
+                                @click="filters.sort = ''; sortLabel = 'Más relevantes'; open = false; loadProducts()"
+                                class="text-left px-4 py-2 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Más
+                                relevantes</button>
+                        </div>
                     </div>
                 </div>
 
@@ -419,7 +434,8 @@
                 search: '',
                 category: '',
                 minPrice: '',
-                maxPrice: ''
+                maxPrice: '',
+                sort: ''
             },
             searchQuery: '', // Linked to input
             loading: true,

@@ -959,6 +959,19 @@
             } catch (err) { showToast('No se pudo cambiar estado', 'error'); }
         }
 
+        async function deleteCourse(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este curso? Esta acción no se puede deshacer.')) return;
+            try {
+                await window.API.apiDeleteCourse(id);
+                state.courses = await window.API.apiGetAllCourses();
+                renderCoursesList();
+                showToast('Curso eliminado correctamente', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al eliminar curso', 'error');
+            }
+        }
+
         function handleCourseCoverUpload(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];

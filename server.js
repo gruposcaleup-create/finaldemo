@@ -307,6 +307,17 @@ app.get('/api/courses', (req, res) => {
         params.push(maxPrice);
     }
 
+    const { sort } = req.query;
+    if (sort === 'price_asc') {
+        query += " ORDER BY price ASC";
+    } else if (sort === 'price_desc') {
+        query += " ORDER BY price DESC";
+    } else if (sort === 'newest') {
+        query += " ORDER BY id DESC"; // Assuming ID correlates with time, or add createdAt if available
+    } else {
+        query += " ORDER BY id DESC"; // Default
+    }
+
     db.all(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const courses = rows.map(c => {

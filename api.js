@@ -117,6 +117,7 @@ if (typeof window !== 'undefined') {
         if (filters.category) params.append('category', filters.category);
         if (filters.minPrice) params.append('minPrice', filters.minPrice);
         if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+        if (filters.sort) params.append('sort', filters.sort);
       }
 
       const queryString = params.toString();
