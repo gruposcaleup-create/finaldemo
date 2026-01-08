@@ -1801,11 +1801,11 @@
                         <td class="p-4 text-center">-</td>
                         <td class="p-4 font-mono">-</td>
                          <td class="p-4 text-right flex justify-end gap-2">
-                             <button onclick="openRoleModal(${m.id}, '${m.role}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600" title="Cambiar Rol">
+                            <button onclick="openRoleModal(${m.id}, '${m.role}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600" title="Cambiar Rol">
                                 <i data-lucide="shield" class="w-3 h-3"></i>
                             </button>
-                            <button onclick="openEnrollmentsModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50" title="Ver Cursos">
-                                <i data-lucide="settings-2" class="w-3 h-3"></i> Gestionar
+                            <button onclick="openChangePasswordModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600" title="Cambiar Contraseña">
+                                <i data-lucide="key" class="w-3 h-3"></i>
                             </button>
                             <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="flex items-center gap-1 text-xs bg-white border ${m.status === 'blocked' ? 'border-green-200 text-green-600' : 'border-amber-200 text-amber-600'} px-2 py-1 rounded hover:bg-gray-50" title="${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}">
                                 <i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
@@ -1849,6 +1849,20 @@
                             </span>
                         </td>
                         <td class="p-4 text-center font-bold text-slate-600 text-sm">${(m.courses || []).length}</td>
+                        <td class="p-4 font-mono text-xs text-slate-500">$${m.spent ? m.spent.toFixed(2) : '0.00'}</td>
+                         <td class="p-4 text-right flex justify-end gap-2">
+                            <button onclick="openEnrollmentsModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50" title="Ver Cursos">
+                                <i data-lucide="settings-2" class="w-3 h-3"></i> Gestionar
+                            </button>
+                            <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="flex items-center gap-1 text-xs bg-white border ${m.status === 'blocked' ? 'border-green-200 text-green-600' : 'border-amber-200 text-amber-600'} px-2 py-1 rounded hover:bg-gray-50" title="${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}">
+                                <i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
+                            </button>
+                            ${state.currentUser.email !== m.email ? `
+                            <button onclick="deleteUser(${m.id}, '${m.email}')" class="flex items-center gap-1 text-xs bg-white border border-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-50" title="Eliminar Usuario">
+                                <i data-lucide="trash" class="w-3 h-3"></i>
+                            </button>` : ''}
+                        </td>
+                        <td class="p-4 text-center font-bold text-slate-600 text-sm">${(m.courses || []).length}</td>
                         <td class="p-4 font-mono text-green-600 text-sm">$${(m.spent || 0).toFixed(2)}</td>
                         <td class="p-4 text-right flex justify-end gap-2">
                             <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="text-slate-400 hover:text-slate-700 p-1 rounded" title="${m.status === 'active' ? 'Bloquear' : 'Desbloquear'}">
@@ -1889,6 +1903,35 @@
                 renderMembers();
                 showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'bloqueado'}`);
             } catch (e) { showToast('Error actualizando usuario', 'error'); }
+        }
+
+        // PASSWORD MANAGEMENT (ADMIN)
+        function openChangePasswordModal(id, name) {
+            document.getElementById('pwd-user-id').value = id;
+            document.getElementById('pwd-user-name').textContent = name;
+            document.getElementById('new-user-pwd').value = '';
+            document.getElementById('change-password-modal').showModal();
+        }
+
+        async function confirmChangePassword() {
+            const id = document.getElementById('pwd-user-id').value;
+            const pwd = document.getElementById('new-user-pwd').value;
+            if (!pwd || pwd.length < 6) return showToast("Mínimo 6 caracteres", "error");
+
+            try {
+                const res = await fetch(`/api/users/${id}/password-force`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                if (res.ok) {
+                    showToast("Contraseña actualizada", "success");
+                    document.getElementById('change-password-modal').close();
+                } else {
+                    const d = await res.json();
+                    showToast(d.error || "Error al actualizar", "error");
+                }
+            } catch (e) { showToast("Error de conexión", "error"); }
         }
 
         async function promoteToStaff(id) {
@@ -2024,6 +2067,24 @@
         // Initialize Icons
         lucide.createIcons();
     </script>
+
+    <!-- Change Password Modal -->
+    <dialog id="change-password-modal" class="p-6 rounded-lg border border-gray-200 shadow-xl backdrop:bg-black/50">
+        <h3 class="text-lg font-bold mb-4">Cambiar Contraseña</h3>
+        <p class="text-sm text-gray-500 mb-4">Usuario: <span id="pwd-user-name" class="font-bold"></span></p>
+        <input type="hidden" id="pwd-user-id">
+        <div class="space-y-3">
+            <input type="password" id="new-user-pwd" placeholder="Nueva contraseña"
+                class="w-full p-2 border rounded text-sm">
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="document.getElementById('change-password-modal').close()"
+                    class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
+                <button onclick="confirmChangePassword()"
+                    class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 font-bold">Guardar</button>
+            </div>
+        </div>
+    </dialog>
+
 </body>
 
 </html>

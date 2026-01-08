@@ -872,6 +872,20 @@ app.put('/api/users/:id/role', (req, res) => {
     });
 });
 
+// Update User Password (Admin)
+app.put('/api/users/:id/password-force', async (req, res) => {
+    const { password } = req.body;
+    if (!password || password.length < 6) return res.status(400).json({ error: 'Contraseña requerida (min 6 chars)' });
+
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        db.run('UPDATE users SET password = ? WHERE id = ?', [hash, req.params.id], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.delete('/api/users/:id', (req, res) => {
     db.run('DELETE FROM users WHERE id = ?', [req.params.id], (err) => {
         if (err) return res.status(500).json({ error: err.message });
