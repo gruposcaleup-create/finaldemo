@@ -431,9 +431,11 @@ if (typeof window !== 'undefined') {
       apiGetCourses: apiGetCourses,
       apiGetOrders,
       apiDeleteOrder,
-      apiGetOrders,
-      apiDeleteOrder,
-      apiGetSettings: async function () { return await request('/settings'); },
+      apiGetDashboardStats,
+      apiGetAdminMetrics: async function () { return await request('/admin/metrics'); },
+      apiUpdateUserStatus: async function (userId, status) { return await request('/users/status', { method: 'POST', body: JSON.stringify({ userId, status }) }); },
+      apiGetUserEnrollments: async function (userId) { return await request(`/users/${userId}/enrollments`); },
+      apiDeleteUserEnrollment: async function (userId, courseId) { return await request(`/users/${userId}/enrollments/${courseId}`, { method: 'DELETE' }); },
       apiSaveSettings: async function (settings) { return await request('/settings', { method: 'POST', body: JSON.stringify({ settings }) }); },
 
       // Admin Comments

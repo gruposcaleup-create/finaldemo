@@ -243,12 +243,36 @@
                         <div class="bg-white p-6 rounded-xl border shadow-sm">
                             <h3 class="font-semibold mb-4">Información General</h3>
                             <div class="space-y-4">
-                                <div><label class="block text-sm font-medium mb-1">Título del Curso</label><input
-                                        type="text" id="course-title" class="w-full p-2 border rounded-md"
-                                        placeholder="Ej: Master en React"></div>
-                                <div><label class="block text-sm font-medium mb-1">Descripción</label><textarea
-                                        id="course-desc" class="w-full p-2 border rounded-md h-32"
-                                        placeholder="¿De qué trata?"></textarea></div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Título del Curso</label>
+                                    <input type="text" id="course-title" class="w-full p-2 border rounded-lg"
+                                        placeholder="Ej: Master en React">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Descripción</label>
+                                    <textarea id="course-desc" class="w-full p-2 border rounded-lg h-24"
+                                        placeholder="¿De qué trata?"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Duración (texto libre)</label>
+                                    <input type="text" id="course-duration" placeholder="Ej. 12 Horas, 3 Semanas"
+                                        class="w-full p-2 border rounded-lg">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Precio Real ($)</label>
+                                        <input type="number" id="price-real" class="w-full p-2 border rounded-md">
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded border border-green-100">
+                                        <div class="flex justify-between mb-1"><label
+                                                class="block text-sm font-bold text-green-700">Precio Oferta
+                                                ($)</label><span
+                                                class="text-[10px] bg-green-200 text-green-800 px-2 rounded-full font-bold">OFERTA</span>
+                                        </div>
+                                        <input type="number" id="price-offer"
+                                            class="w-full p-2 border border-green-200 rounded-md bg-white">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-white p-6 rounded-xl border shadow-sm">
@@ -302,22 +326,6 @@
                             <div class="mt-4"><label class="block text-sm font-medium mb-1">Video Promo
                                     (URL)</label><input type="text" id="course-video-promo"
                                     class="w-full p-2 border rounded-md text-sm" placeholder="https://youtube.com/...">
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border shadow-sm">
-                            <h3 class="font-semibold mb-4">Venta</h3>
-                            <div class="space-y-4">
-                                <div><label class="block text-sm font-medium mb-1">Precio Real ($)</label><input
-                                        type="number" id="price-real" class="w-full p-2 border rounded-md"></div>
-                                <div class="bg-green-50 p-3 rounded border border-green-100">
-                                    <div class="flex justify-between mb-1"><label
-                                            class="block text-sm font-bold text-green-700">Precio Oferta
-                                            ($)</label><span
-                                            class="text-[10px] bg-green-200 text-green-800 px-2 rounded-full font-bold">OFERTA</span>
-                                    </div>
-                                    <input type="number" id="price-offer"
-                                        class="w-full p-2 border border-green-200 rounded-md bg-white">
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -403,6 +411,20 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Enrollments Modal -->
+                <dialog id="enrollments-modal"
+                    class="p-0 rounded-lg shadow-xl border w-full max-w-lg backdrop:bg-black/50">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold mb-4">Cursos del Usuario</h3>
+                        <div id="enrollments-list" class="space-y-2 mb-4 max-h-60 overflow-y-auto"></div>
+                        <div class="flex justify-end">
+                            <button onclick="document.getElementById('enrollments-modal').close()"
+                                class="px-4 py-2 border rounded">Cerrar</button>
+                        </div>
+                    </div>
+                </dialog>
+
                 <div class="bg-white rounded-lg border shadow-sm overflow-hidden overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="bg-gray-50 border-b">
@@ -744,35 +766,110 @@
         // --- MIEMBROS ---
         function renderMembers(filtered = null) {
             const list = filtered || state.members;
+            const staff = list.filter(m => m.role === 'admin' || m.role === 'editor');
+            const customers = list.filter(m => m.role !== 'admin' && m.role !== 'editor');
+
             const tbody = document.getElementById('members-table-body');
-            tbody.innerHTML = list.map(m => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4">
-                        <div class="font-medium text-slate-900">${m.firstName || 'Usuario'} ${m.lastName || ''}</div>
-                        <div class="text-xs text-gray-500">${m.email}</div>
-                    </td>
-                    <td class="p-4">
-                        <span class="px-2 py-1 rounded text-xs font-semibold uppercase ${m.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}">
-                            ${m.role || 'user'}
-                        </span>
-                    </td>
-                    <td class="p-4">
-                        <span class="px-2 py-1 rounded-full text-xs ${m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                            ${m.status === 'active' ? 'Activo' : 'Bloqueado'}
-                        </span>
-                    </td>
-                    <td class="p-4 text-center">${(m.courses || []).length || 0}</td>
-                    <td class="p-4 font-mono">$${(m.spent || 0).toFixed(2)}</td>
-                    <td class="p-4 text-right space-x-2">
-                        <button onclick="openRoleModal(${m.id}, '${m.role}')" class="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Cambiar Rol">
-                            <i data-lucide="shield" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="toggleMemberStatus(${m.id}, '${m.status}')" class="${m.status === 'active' ? 'text-orange-500 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'} p-1 rounded" title="${m.status === 'active' ? 'Bloquear' : 'Activar'}">
-                            <i data-lucide="${m.status === 'active' ? 'lock' : 'unlock'}" class="w-4 h-4"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = '';
+
+            // 1. Staff Section Header
+            if (staff.length > 0) {
+                tbody.innerHTML += `
+                    <tr><td colspan="6" class="p-4 bg-slate-100 font-bold text-slate-700 text-sm uppercase tracking-wider border-y">Equipo Administrativo (${staff.length})</td></tr>
+                `;
+                tbody.innerHTML += staff.map(m => `
+                    <tr class="border-b hover:bg-gray-50 bg-white">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-700 text-xs shadow-sm">
+                                    ${(m.firstName || 'A').substring(0, 1).toUpperCase()}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-slate-900">${m.firstName || 'Admin'} ${m.lastName || ''}</span>
+                                    <span class="text-xs text-gray-400 font-mono">${m.email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                             <span class="px-2 py-0.5 rounded textxs font-bold uppercase ${m.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">
+                                ${m.role}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            ${m.status === 'blocked'
+                        ? '<span class="text-red-600 text-xs font-bold bg-red-100 px-2 py-0.5 rounded">Bloqueado</span>'
+                        : '<span class="text-green-600 text-xs font-bold">Activo</span>'}
+                        </td>
+                        <td class="p-4 text-center">-</td>
+                        <td class="p-4 font-mono">-</td>
+                         <td class="p-4 text-right flex justify-end gap-2">
+                             <button onclick="openRoleModal(${m.id}, '${m.role}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600" title="Cambiar Rol">
+                                <i data-lucide="shield" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="openEnrollmentsModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50" title="Ver Cursos">
+                                <i data-lucide="book-open" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="flex items-center gap-1 text-xs bg-white border ${m.status === 'blocked' ? 'border-green-200 text-green-600' : 'border-amber-200 text-amber-600'} px-2 py-1 rounded hover:bg-gray-50" title="${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}">
+                                <i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
+                            </button>
+                            ${state.currentUser.email !== m.email ? `
+                            <button onclick="deleteUser(${m.id}, '${m.email}')" class="flex items-center gap-1 text-xs bg-white border border-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-50" title="Eliminar Usuario">
+                                <i data-lucide="trash" class="w-3 h-3"></i>
+                            </button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // 2. Customers Section Header
+            tbody.innerHTML += `
+                <tr><td colspan="6" class="p-4 bg-slate-100 font-bold text-slate-700 text-sm uppercase tracking-wider border-y mt-4">Clientes Registrados (${customers.length})</td></tr>
+            `;
+
+            if (customers.length === 0) {
+                tbody.innerHTML += '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">No hay clientes registrados aún.</td></tr>';
+            } else {
+                tbody.innerHTML += customers.map(m => `
+                     <tr class="border-b hover:bg-gray-50 bg-white">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                                    ${(m.firstName || 'C').substring(0, 1).toUpperCase()}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-slate-900">${m.firstName || 'Cliente'} ${m.lastName || ''}</span>
+                                    <span class="text-xs text-gray-400">${m.email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <span class="text-gray-400 text-xs">Cliente</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${m.status === 'active' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}">
+                                ${m.status === 'active' ? 'Activo' : 'Bloqueado'}
+                            </span>
+                        </td>
+                        <td class="p-4 text-center font-bold text-slate-600 text-sm">${(m.courses || []).length}</td>
+                        <td class="p-4 font-mono text-green-600 text-sm">$${(m.spent || 0).toFixed(2)}</td>
+                        <td class="p-4 text-right flex justify-end gap-2">
+                            <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="text-slate-400 hover:text-slate-700 p-1 rounded" title="${m.status === 'active' ? 'Bloquear' : 'Desbloquear'}">
+                                <i data-lucide="${m.status === 'active' ? 'lock' : 'unlock'}" class="w-4 h-4"></i>
+                            </button>
+                             <button onclick="assignMembership('${m.id}')" class="text-yellow-500 hover:text-yellow-600 p-1 rounded" title="Regalar Membresía">
+                                <i data-lucide="crown" class="w-4 h-4"></i>
+                            </button>
+                             <button onclick="deleteUser(${m.id}, '${m.email}')" class="text-red-400 hover:text-red-600 p-1 rounded" title="Eliminar Usuario">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                             <!-- Promo to Admin -->
+                             <button onclick="promoteToStaff(${m.id})" class="text-purple-400 hover:text-purple-600 p-1 rounded" title="Promover a Staff">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
             lucide.createIcons();
         }
 
@@ -861,11 +958,11 @@
                         </td>
                         <td class="p-4 text-xs text-gray-500">${new Date(c.createdAt).toLocaleDateString()}</td>
                         <td class="p-4 text-right space-x-2">
-                            <button onclick="openReplyModal('${c.courseId}', '${c.lessonId}', '${c.firstName} ${c.lastName}')" 
+                            <button onclick="openReplyModal('${c.courseId}', '${c.lessonId}', '${c.firstName} ${c.lastName}')"
                                 class="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Responder">
                                 <i data-lucide="reply" class="w-4 h-4"></i>
                             </button>
-                            <button onclick="deleteComment(${c.id})" 
+                            <button onclick="deleteComment(${c.id})"
                                 class="text-red-600 hover:bg-red-50 p-1 rounded" title="Eliminar">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
@@ -901,7 +998,7 @@
 
             try {
                 // Admin replies as themselves (need to be logged in effectively)
-                // We use apiPostComment which uses local currentUser. 
+                // We use apiPostComment which uses local currentUser.
                 // Admin panel usually has Admin logged in.
                 const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
                 if (!user.id) return showToast("Error de sesión", "error");
@@ -957,6 +1054,120 @@
             }
         };
 
+        // NEW: User Controls
+        async function toggleUserStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+            if (!confirm(`¿${newStatus === 'blocked' ? 'Bloquear' : 'Desbloquear'} usuario?`)) return;
+            try {
+                await window.API.apiUpdateUserStatus(id, newStatus);
+                showToast(`Usuario ${newStatus === 'blocked' ? 'bloqueado' : 'activado'}`);
+                state.members = await window.API.apiGetAllUsers();
+                renderMembers();
+            } catch (e) { showToast("Error al cambiar estado", "error"); }
+        }
+
+        async function openEnrollmentsModal(userId, userName) {
+            const listEl = document.getElementById('enrollments-list');
+            listEl.innerHTML = '<p class="text-gray-500">Cargando...</p>';
+            document.getElementById('enrollments-modal').showModal();
+
+            try {
+                const enrollmentList = await window.API.apiGetUserEnrollments(userId);
+                if (enrollmentList.length === 0) {
+                    listEl.innerHTML = `<p class="text-gray-500 italic">No está inscrito en ningún curso.</p>`;
+                } else {
+                    listEl.innerHTML = enrollmentList.map(e => `
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded border">
+                            <span class="text-sm font-medium">${e.title}</span>
+                            <button onclick="unenrollUser(${userId}, ${e.courseId})" class="text-red-500 text-xs hover:underline">Quitar Acceso</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                listEl.innerHTML = '<p class="text-red-500">Error cargando cursos.</p>';
+            }
+        }
+
+        async function unenrollUser(uid, cid) {
+            if (!confirm("¿Quitar acceso al curso? El progreso se perderá.")) return;
+            try {
+                await window.API.apiDeleteUserEnrollment(uid, cid);
+                showToast("Acceso revocado");
+                // Refresh modal content
+                const enrollmentList = await window.API.apiGetUserEnrollments(uid);
+                // Re-render essentially... simple way is just re-call open but generic
+                // Or updates manually. Let's just close/re-open logic or update HTML directly
+                // Easier to just close modal to confirm action or simple reload
+                document.getElementById('enrollments-modal').close();
+            } catch (e) { showToast("Error revocando acceso", "error"); }
+        }
+
+        // RESOURCES PRIVACY
+        async function uploadResourceForLesson(modId, lessonId, input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            showToast('Subiendo recurso...', 'info');
+
+            reader.onload = async (e) => {
+                const dataUrl = e.target.result;
+                try {
+                    // Upload with access='course' so it doesn't show in free resources
+                    const result = await window.API.apiCreateResource({
+                        name: file.name,
+                        type: file.type,
+                        description: 'Course Attachment',
+                        dataUrl: dataUrl,
+                        access: 'course'
+                    });
+
+                    if (result && result.id) {
+                        const mod = state.tempModules.find(m => m.id === modId);
+                        const lesson = mod.lessons.find(l => l.id === lessonId);
+                        if (!lesson.resources) lesson.resources = [];
+                        lesson.resources.push({
+                            id: result.id,
+                            name: file.name,
+                            url: `/api/resources/${result.id}/download`,
+                            type: file.type
+                        });
+                        renderModules();
+                        showToast('Recurso adjuntado', 'success');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error al adjuntar', 'error');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleFileUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    const dataUrl = e.target.result;
+                    try {
+                        // Public resources
+                        await window.API.apiCreateResource({
+                            name: file.name,
+                            type: file.type,
+                            dataUrl: dataUrl,
+                            access: 'public'
+                        });
+                        state.resources = await window.API.apiGetResources();
+                        renderResources();
+                        showToast('Recurso subido correctamente', 'success');
+                    } catch (err) {
+                        showToast('Error al subir recurso', 'error');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         // --- LÓGICA DE EDICIÓN Y CREACIÓN ---
         function resetAndCreateCourse() {
             state.editingCourseId = null; // Limpiar modo edición
@@ -970,6 +1181,7 @@
 
             document.getElementById('course-title').value = "";
             document.getElementById('course-desc').value = "";
+            document.getElementById('course-duration').value = "";
             document.getElementById('price-real').value = "";
             document.getElementById('price-offer').value = "";
             document.getElementById('course-video-promo').value = "";
@@ -1003,6 +1215,7 @@
 
             document.getElementById('course-title').value = course.title;
             document.getElementById('course-desc').value = course.desc || "";
+            document.getElementById('course-duration').value = course.duration || "";
             document.getElementById('price-real').value = course.price;
             document.getElementById('price-offer').value = course.priceOffer || "";
             document.getElementById('course-video-promo').value = course.videoPromo || "";
@@ -1046,6 +1259,7 @@
                 title,
                 price,
                 desc: document.getElementById('course-desc').value,
+                duration: document.getElementById('course-duration').value,
                 priceOffer: document.getElementById('price-offer').value,
                 videoPromo: document.getElementById('course-video-promo').value,
                 image: state.currentCourseImage,
@@ -1226,7 +1440,7 @@
                                     </div>
                                     <button onclick="deleteLesson(${mod.id}, ${lesson.id})" class="text-red-400 hover:text-red-600"><i data-lucide="x" class="w-4 h-4"></i></button>
                                 </div>
-                                
+
                                 <!-- Resources Section -->
                                 <div class="border-t pt-2 mt-2">
                                     <div class="flex items-center justify-between mb-2">
@@ -1395,7 +1609,11 @@
                             ${statusBadge}
                         </div>
                         <h3 class="font-bold text-lg leading-tight mb-1">${c.title}</h3>
-                        <p class="text-sm text-gray-500 mb-4">${c.modulesCount} Módulos</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                             <span>${c.modulesCount} Módulos</span>
+                             ${c.duration ? `<span>• ${c.duration}</span>` : ''}
+                        </div>
+                        <p class="text-xs text-gray-400 mb-4 line-clamp-2">${c.desc || ''}</p>
                     </div>
                     <div>
                          <div class="font-bold text-lg mb-3">$${c.price}</div>
@@ -1574,15 +1792,23 @@
                                 ${m.role}
                             </span>
                         </td>
-                        <td class="p-4"><span class="text-green-600 text-xs font-bold">Activo</span></td>
+                        <td class="p-4">
+                            <span class="text-green-600 text-xs font-bold">Activo</span>
+                        </td>
                         <td class="p-4 text-center">-</td>
                         <td class="p-4 font-mono">-</td>
-                        <td class="p-4 text-right flex justify-end gap-2">
-                             <button onclick="openRoleModal(${m.id}, '${m.role}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600">
-                                <i data-lucide="shield" class="w-3 h-3"></i> Rol
+                         <td class="p-4 text-right flex justify-end gap-2">
+                             <button onclick="openRoleModal(${m.id}, '${m.role}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600" title="Cambiar Rol">
+                                <i data-lucide="shield" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="openEnrollmentsModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50" title="Ver Cursos">
+                                <i data-lucide="book-open" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="flex items-center gap-1 text-xs bg-white border ${m.status === 'blocked' ? 'border-green-200 text-green-600' : 'border-amber-200 text-amber-600'} px-2 py-1 rounded hover:bg-gray-50" title="${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}">
+                                <i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
                             </button>
                             ${state.currentUser.email !== m.email ? `
-                            <button onclick="deleteUser(${m.id}, '${m.email}')" class="flex items-center gap-1 text-xs bg-white border border-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-50">
+                            <button onclick="deleteUser(${m.id}, '${m.email}')" class="flex items-center gap-1 text-xs bg-white border border-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-50" title="Eliminar Usuario">
                                 <i data-lucide="trash" class="w-3 h-3"></i>
                             </button>` : ''}
                         </td>

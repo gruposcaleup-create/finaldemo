@@ -368,53 +368,43 @@ app.get('/api/admin/courses', (req, res) => {
 
 // Admin: Crear Curso
 app.post('/api/courses', (req, res) => {
-    const { title, desc, price, priceOffer, image, videoPromo, category, modules } = req.body;
-    const modulesStr = JSON.stringify(modules || []);
-    const modulesCount = modules ? modules.length : 0;
-
-    // Helper to sanitize undefined -> null for SQL
-    const s = (v) => v === undefined ? null : v;
-
-    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, modulesData, modulesCount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [s(title), s(desc), s(price), s(priceOffer), s(image), s(videoPromo), s(category), s(modulesStr), s(modulesCount)],
+    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules } = req.body;
+    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modules) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules)],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, ...req.body });
-        }
-    );
+            res.json({ id: this.lastID, success: true });
+        });
 });
 
 // Admin: Editar Curso
 app.put('/api/courses/:id', (req, res) => {
-    const { id } = req.params;
-    const { title, desc, price, priceOffer, image, videoPromo, category, modules, status } = req.body;
+    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules, status } = req.body;
+    const courseId = req.params.id;
 
-    // Construir query dinámico o update masivo
-    // Simplificamos actualizando todo lo enviado.
-    const modulesStr = modules ? JSON.stringify(modules) : null;
-    const modulesCount = modules ? modules.length : null;
+    // Build dynamic query to update only provided fields
+    let fields = [];
+    let values = [];
 
-    // Helper to sanitize undefined -> null for SQL
-    const s = (v) => v === undefined ? null : v;
+    if (title !== undefined) { fields.push('title = ?'); values.push(title); }
+    if (desc !== undefined) { fields.push('desc = ?'); values.push(desc); }
+    if (price !== undefined) { fields.push('price = ?'); values.push(price); }
+    if (priceOffer !== undefined) { fields.push('priceOffer = ?'); values.push(priceOffer); }
+    if (image !== undefined) { fields.push('image = ?'); values.push(image); }
+    if (videoPromo !== undefined) { fields.push('videoPromo = ?'); values.push(videoPromo); }
+    if (category !== undefined) { fields.push('category = ?'); values.push(category); }
+    if (duration !== undefined) { fields.push('duration = ?'); values.push(duration); }
+    if (modules !== undefined) { fields.push('modules = ?'); values.push(JSON.stringify(modules)); }
+    if (status !== undefined) { fields.push('status = ?'); values.push(status); }
 
-    db.run(`UPDATE courses SET 
-            title = COALESCE(?, title), 
-            desc = COALESCE(?, desc), 
-            price = COALESCE(?, price), 
-            priceOffer = COALESCE(?, priceOffer), 
-            videoPromo = COALESCE(?, videoPromo), 
-            category = COALESCE(?, category),
-            modulesData = COALESCE(?, modulesData),
-            modulesCount = COALESCE(?, modulesCount),
-            status = COALESCE(?, status),
-            image = COALESCE(?, image)
-            WHERE id = ?`,
-        [s(title), s(desc), s(price), s(priceOffer), s(videoPromo), s(category), s(modulesStr), s(modulesCount), s(status), s(image), id],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: 'Curso actualizado' });
-        }
-    );
+    if (fields.length === 0) return res.json({ success: true, message: 'Nothing to update' });
+
+    values.push(courseId);
+
+    db.run(`UPDATE courses SET ${fields.join(', ')} WHERE id = ?`, values, function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
 });
 
 // Admin: Eliminar Curso
@@ -649,10 +639,7 @@ app.post('/api/checkout/verify-session', async (req, res) => {
 // Let's modify the old api/orders to be just for admin manual usage or manual confirmation if needed, 
 // OR just leave it as is if it doesn't conflict. 
 // Actually, let's keep the old endpoint but maybe rename logic or assume frontend calls checkout now.
-// For now, I'll add the Stripe logic above and keep the old one below but commented out or renamed if it conflicts.
-// The old one was line 152: app.post('/api/orders'...
-// I will REPLACE the old order endpoint with one that just creates the order in DB, 
-// BUT users now want Stripe. So I will add the checkout endpoint separately.
+// For now, I'll add the checkout endpoint separately.
 
 
 app.get('/api/orders', (req, res) => {
@@ -716,24 +703,34 @@ app.post('/api/coupons/validate', (req, res) => {
 
 
 // 8. Recursos
-app.get('/api/resources', (req, res) => {
-    // No devolver dataUrl gigante en lista
-    db.all(`SELECT id, name, description, type, url, createdAt FROM resources`, [], (err, rows) => res.json(rows));
-});
 app.post('/api/resources', (req, res) => {
-    const { name, type, dataUrl, description } = req.body;
-    // Helper to sanitize undefined -> null for SQL
-    const s = (v) => v === undefined ? null : v;
-
-    db.run(`INSERT INTO resources (name, type, dataUrl, description) VALUES (?, ?, ?, ?)`,
-        [s(name), s(type), s(dataUrl), description || ''],
+    const { name, type, dataUrl, description, access } = req.body;
+    db.run(`INSERT INTO resources (name, type, dataUrl, description, access) VALUES (?, ?, ?, ?, ?)`,
+        [name, type, dataUrl, description || '', access || 'public'],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID });
-        }
-    );
+            res.json({ id: this.lastID, success: true });
+        });
 });
-// Download Resource
+
+app.get('/api/resources', (req, res) => {
+    // Admin gets all, but usually user interface filters by 'public'.
+    // We can add a query param ?access=public
+    const access = req.query.access;
+    let sql = `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
+    let params = [];
+
+    if (access) {
+        sql = `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
+        params.push(access);
+    }
+
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const processed = rows.map(r => ({ ...r, url: `/api/resources/${r.id}/download` }));
+        res.json(processed);
+    });
+});
 // Download Resource CORRECTED
 app.get('/api/resources/:id/download', (req, res) => {
     db.get(`SELECT * FROM resources WHERE id = ?`, [req.params.id], (err, row) => {
