@@ -484,201 +484,206 @@
                         try {
                             const myCourses = await window.API.apiGetMyPurchasedCourses();
                             const purchased = myCourses.courses.find(c => c.id == courseId);
-                            if (purchased) {
-                                courseFound = purchased;
-                                this.completedModules = purchased.completedLessons || [];
-                                this.progress = purchased.progress || 0;
+                            courseFound = purchased;
+                            this.completedModules = purchased.completedLessons || [];
+                            this.progress = purchased.progress || 0;
+                            // Check for paused status
+                            if (purchased.status === 'paused') {
+                                alert("Tu acceso a este curso ha sido pausado. Contacta a soporte.");
+                                window.location.href = 'panel.html';
+                                return;
                             }
+                        }
                         } catch (ignore) { }
 
-                        if (!courseFound) {
-                            const allCourses = await window.API.apiGetProducts();
-                            courseFound = allCourses.find(c => c.id == courseId);
-                        }
-
-                        this.course = courseFound;
-
-                        if (this.course && this.course.modules) {
-                            let count = 0;
-                            let first = true;
-                            // COllect all valid lesson IDs to sanitize completed list
-                            const allLessonIds = [];
-
-                            this.course.modules.forEach((m, mIdx) => {
-                                if (m.lessons) {
-                                    count += m.lessons.length;
-                                    m.lessons.forEach(l => allLessonIds.push(l.id));
-
-                                    if (first && m.lessons.length > 0) {
-                                        this.loadLesson(m.lessons[0], m.title, mIdx, 0);
-                                        first = false;
-                                    }
-                                }
-                            });
-                            this.totalLessons = count;
-
-                            // Recalculate progress based on current actual lessons
-                            // Only count completed lessons that actually exist in the course now
-                            if (this.completedModules && this.completedModules.length > 0) {
-                                this.completedModules = this.completedModules.filter(id => allLessonIds.includes(id));
-                                this.calculateProgress();
-                            } else {
-                                this.progress = 0;
-                            }
-                        }
-
-                    } catch (e) {
-                        console.error("Error loading course", e);
+                    if (!courseFound) {
+                        const allCourses = await window.API.apiGetProducts();
+                        courseFound = allCourses.find(c => c.id == courseId);
                     }
-                },
+
+                    this.course = courseFound;
+
+                    if (this.course && this.course.modules) {
+                        let count = 0;
+                        let first = true;
+                        // COllect all valid lesson IDs to sanitize completed list
+                        const allLessonIds = [];
+
+                        this.course.modules.forEach((m, mIdx) => {
+                            if (m.lessons) {
+                                count += m.lessons.length;
+                                m.lessons.forEach(l => allLessonIds.push(l.id));
+
+                                if (first && m.lessons.length > 0) {
+                                    this.loadLesson(m.lessons[0], m.title, mIdx, 0);
+                                    first = false;
+                                }
+                            }
+                        });
+                        this.totalLessons = count;
+
+                        // Recalculate progress based on current actual lessons
+                        // Only count completed lessons that actually exist in the course now
+                        if (this.completedModules && this.completedModules.length > 0) {
+                            this.completedModules = this.completedModules.filter(id => allLessonIds.includes(id));
+                            this.calculateProgress();
+                        } else {
+                            this.progress = 0;
+                        }
+                    }
+
+                } catch(e) {
+                    console.error("Error loading course", e);
+                }
+            },
 
                 loadLesson(lesson, modTitle, mIdx = -1, lIdx = -1) {
-                    this.currentLesson = lesson;
-                    this.currentModuleTitle = modTitle;
+                this.currentLesson = lesson;
+                this.currentModuleTitle = modTitle;
 
-                    if (mIdx === -1 && this.course) {
-                        this.course.modules.forEach((m, i) => {
-                            const foundWrapped = m.lessons.findIndex(l => l.id === lesson.id);
-                            if (foundWrapped !== -1) { mIdx = i; lIdx = foundWrapped; }
-                        });
-                    }
-                    this.currentModuleIndex = mIdx;
-                    this.currentLessonIndex = lIdx;
-                    this.mobileMenuOpen = false;
+                if (mIdx === -1 && this.course) {
+                    this.course.modules.forEach((m, i) => {
+                        const foundWrapped = m.lessons.findIndex(l => l.id === lesson.id);
+                        if (foundWrapped !== -1) { mIdx = i; lIdx = foundWrapped; }
+                    });
+                }
+                this.currentModuleIndex = mIdx;
+                this.currentLessonIndex = lIdx;
+                this.mobileMenuOpen = false;
 
-                    // Reset tab to overview on new lesson? Optional. Let's keep current tab.
-                    this.fetchComments();
-                },
+                // Reset tab to overview on new lesson? Optional. Let's keep current tab.
+                this.fetchComments();
+            },
 
-                formatDate(dateStr) {
-                    if (!dateStr) return '';
-                    return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-                },
+            formatDate(dateStr) {
+                if (!dateStr) return '';
+                return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+            },
 
-                prevLesson() {
-                    if (!this.course || this.currentModuleIndex === -1) return;
-                    let m = this.currentModuleIndex, l = this.currentLessonIndex - 1;
+            prevLesson() {
+                if (!this.course || this.currentModuleIndex === -1) return;
+                let m = this.currentModuleIndex, l = this.currentLessonIndex - 1;
 
-                    if (l < 0) {
-                        m--;
-                        if (m < 0) return;
-                        l = this.course.modules[m].lessons.length - 1;
-                    }
-                    this.loadLesson(this.course.modules[m].lessons[l], this.course.modules[m].title, m, l);
-                },
+                if (l < 0) {
+                    m--;
+                    if (m < 0) return;
+                    l = this.course.modules[m].lessons.length - 1;
+                }
+                this.loadLesson(this.course.modules[m].lessons[l], this.course.modules[m].title, m, l);
+            },
 
-                nextLesson() {
-                    if (!this.course || this.currentModuleIndex === -1) return;
-                    let m = this.currentModuleIndex, l = this.currentLessonIndex + 1;
+            nextLesson() {
+                if (!this.course || this.currentModuleIndex === -1) return;
+                let m = this.currentModuleIndex, l = this.currentLessonIndex + 1;
 
-                    if (l >= this.course.modules[m].lessons.length) {
-                        m++;
-                        if (m >= this.course.modules.length) return;
-                        l = 0;
-                    }
-                    this.loadLesson(this.course.modules[m].lessons[l], this.course.modules[m].title, m, l);
-                },
+                if (l >= this.course.modules[m].lessons.length) {
+                    m++;
+                    if (m >= this.course.modules.length) return;
+                    l = 0;
+                }
+                this.loadLesson(this.course.modules[m].lessons[l], this.course.modules[m].title, m, l);
+            },
 
                 get hasPrev() {
-                    if (this.currentModuleIndex === 0 && this.currentLessonIndex === 0) return false;
-                    return true;
-                },
+                if (this.currentModuleIndex === 0 && this.currentLessonIndex === 0) return false;
+                return true;
+            },
 
                 get hasNext() {
-                    if (!this.course) return false;
-                    const lastModIdx = this.course.modules.length - 1;
-                    const lastMod = this.course.modules[lastModIdx];
-                    if (!lastMod.lessons.length) return false;
-                    if (this.currentModuleIndex === lastModIdx && this.currentLessonIndex === lastMod.lessons.length - 1) return false;
-                    return true;
-                },
+                if (!this.course) return false;
+                const lastModIdx = this.course.modules.length - 1;
+                const lastMod = this.course.modules[lastModIdx];
+                if (!lastMod.lessons.length) return false;
+                if (this.currentModuleIndex === lastModIdx && this.currentLessonIndex === lastMod.lessons.length - 1) return false;
+                return true;
+            },
 
-                isCompleted(lessonId) {
-                    return this.completedModules.includes(lessonId);
-                },
+            isCompleted(lessonId) {
+                return this.completedModules.includes(lessonId);
+            },
 
                 async markCompleted() {
-                    if (!this.currentLesson) return;
-                    if (!this.completedModules.includes(this.currentLesson.id)) {
-                        this.completedModules.push(this.currentLesson.id);
-                        this.calculateProgress();
-                        try {
-                            await window.API.apiUpdateProgress(this.course.id, this.progress, 0.5, this.completedModules);
-                        } catch (e) { console.error(e); }
-                    }
-                },
+                if (!this.currentLesson) return;
+                if (!this.completedModules.includes(this.currentLesson.id)) {
+                    this.completedModules.push(this.currentLesson.id);
+                    this.calculateProgress();
+                    try {
+                        await window.API.apiUpdateProgress(this.course.id, this.progress, 0.5, this.completedModules);
+                    } catch (e) { console.error(e); }
+                }
+            },
 
-                calculateProgress() {
-                    if (this.totalLessons === 0) return;
-                    // Ensure we don't go over 100 due to any sync issues
-                    const p = Math.round((this.completedModules.length / this.totalLessons) * 100);
-                    this.progress = p > 100 ? 100 : p;
-                },
+            calculateProgress() {
+                if (this.totalLessons === 0) return;
+                // Ensure we don't go over 100 due to any sync issues
+                const p = Math.round((this.completedModules.length / this.totalLessons) * 100);
+                this.progress = p > 100 ? 100 : p;
+            },
 
                 async fetchComments() {
-                    if (!this.currentLesson || !this.course) return;
-                    this.comments = [];
-                    try {
-                        const res = await fetch(`/api/comments?courseId=${this.course.id}&lessonId=${this.currentLesson.id}`);
-                        if (res.ok) this.comments = await res.json();
-                    } catch (e) { console.error(e); }
-                },
+                if (!this.currentLesson || !this.course) return;
+                this.comments = [];
+                try {
+                    const res = await fetch(`/api/comments?courseId=${this.course.id}&lessonId=${this.currentLesson.id}`);
+                    if (res.ok) this.comments = await res.json();
+                } catch (e) { console.error(e); }
+            },
 
                 async postComment() {
-                    if (!this.newComment.trim() || !this.user) return;
-                    try {
-                        const res = await fetch('/api/comments', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                userId: this.user.id,
-                                courseId: this.course.id,
-                                lessonId: this.currentLesson.id,
-                                content: this.newComment
-                            })
-                        });
-                        if (res.ok) {
-                            this.newComment = '';
-                            this.fetchComments();
-                        } else {
-                            alert('Error al publicar comentario');
-                        }
-                    } catch (e) { console.error(e); }
-                },
-
-                isIframe(url) { return url && url.trim().startsWith('<iframe'); },
-
-                getEmbedUrl(url) {
-                    if (!url || this.isIframe(url)) return '';
-                    let videoId = null;
-                    try {
-                        const safeUrl = url.startsWith('http') ? url : `https://${url}`;
-                        const u = new URL(safeUrl);
-                        if (u.hostname.includes('youtube.com')) {
-                            if (u.searchParams.has('v')) videoId = u.searchParams.get('v');
-                            else if (u.pathname.split('/')[2]) videoId = u.pathname.split('/')[2];
-                        } else if (u.hostname.includes('youtu.be')) videoId = u.pathname.slice(1);
-                    } catch (e) { }
-
-                    if (!videoId) {
-                        const match = url.match(/[?&]v=([^&]+)/);
-                        if (match) videoId = match[1];
-                        else {
-                            const sm = url.match(/youtu\.be\/([^?&]+)/);
-                            if (sm) videoId = sm[1];
-                        }
+                if (!this.newComment.trim() || !this.user) return;
+                try {
+                    const res = await fetch('/api/comments', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: this.user.id,
+                            courseId: this.course.id,
+                            lessonId: this.currentLesson.id,
+                            content: this.newComment
+                        })
+                    });
+                    if (res.ok) {
+                        this.newComment = '';
+                        this.fetchComments();
+                    } else {
+                        alert('Error al publicar comentario');
                     }
+                } catch (e) { console.error(e); }
+            },
 
-                    if (videoId && videoId.length === 11) {
-                        return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
+            isIframe(url) { return url && url.trim().startsWith('<iframe'); },
+
+            getEmbedUrl(url) {
+                if (!url || this.isIframe(url)) return '';
+                let videoId = null;
+                try {
+                    const safeUrl = url.startsWith('http') ? url : `https://${url}`;
+                    const u = new URL(safeUrl);
+                    if (u.hostname.includes('youtube.com')) {
+                        if (u.searchParams.has('v')) videoId = u.searchParams.get('v');
+                        else if (u.pathname.split('/')[2]) videoId = u.pathname.split('/')[2];
+                    } else if (u.hostname.includes('youtu.be')) videoId = u.pathname.slice(1);
+                } catch (e) { }
+
+                if (!videoId) {
+                    const match = url.match(/[?&]v=([^&]+)/);
+                    if (match) videoId = match[1];
+                    else {
+                        const sm = url.match(/youtu\.be\/([^?&]+)/);
+                        if (sm) videoId = sm[1];
                     }
-                    if (url.includes('vimeo.com')) {
-                        const vm = url.match(/vimeo\.com\/(\d+)/);
-                        if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
-                    }
-                    return '';
                 }
+
+                if (videoId && videoId.length === 11) {
+                    return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
+                }
+                if (url.includes('vimeo.com')) {
+                    const vm = url.match(/vimeo\.com\/(\d+)/);
+                    if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+                }
+                return '';
             }
+        }
         }
     </script>
 </body>
