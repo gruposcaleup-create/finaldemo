@@ -584,6 +584,35 @@
                 </div>
             </dialog>
 
+            <!-- Modal Ban Duration -->
+            <dialog id="ban-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-sm backdrop:bg-black/50">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center text-orange-600"><i data-lucide="clock"
+                            class="w-5 h-5 mr-2"></i> Banear Temporalmente</h3>
+                    <input type="hidden" id="ban-user-id">
+                    <p class="text-sm text-gray-500 mb-4">El usuario no podrá acceder a la plataforma durante este
+                        tiempo.</p>
+
+                    <label class="block text-sm font-medium mb-2">Duración de la suspensión</label>
+                    <select id="ban-duration" class="w-full border p-2 rounded bg-white mb-6">
+                        <option value="1">1 Minuto (Prueba)</option>
+                        <option value="60">1 Hora</option>
+                        <option value="1440" selected>24 Horas</option>
+                        <option value="4320">3 Días</option>
+                        <option value="10080">1 Semana</option>
+                        <option value="43200">1 Mes</option>
+                    </select>
+
+                    <div class="flex justify-end gap-2">
+                        <button onclick="document.getElementById('ban-modal').close()"
+                            class="px-4 py-2 border rounded hover:bg-gray-50">Cancelar</button>
+                        <button onclick="confirmBan()"
+                            class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700">Confirmar
+                            Ban</button>
+                    </div>
+                </div>
+            </dialog>
+
             <!-- Modal Cambio de Rol (Opcional, se puede hacer inline) -->
             <dialog id="role-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-sm backdrop:bg-black/50">
                 <div class="p-6">
@@ -620,6 +649,7 @@
             coupons: [],
             resources: [],
             members: [],
+            expandedUserId: null, // Track expanded user row
             tempModules: []
         };
 
@@ -766,13 +796,19 @@
         // --- MIEMBROS ---
         function renderMembers(filtered = null) {
             const list = filtered || state.members;
-            const staff = list.filter(m => m.role === 'admin' || m.role === 'editor');
-            const customers = list.filter(m => m.role !== 'admin' && m.role !== 'editor');
+
+            // DEDUPLICATION: Use Map by Email to ensure uniqueness
+            const uniqueMap = new Map();
+            list.forEach(m => uniqueMap.set(m.email, m));
+            const uniqueList = Array.from(uniqueMap.values());
+
+            const staff = uniqueList.filter(m => m.role === 'admin' || m.role === 'editor');
+            const customers = uniqueList.filter(m => m.role !== 'admin' && m.role !== 'editor');
 
             const tbody = document.getElementById('members-table-body');
             tbody.innerHTML = '';
 
-            // 1. Staff Section Header
+            // 1. Staff Section
             if (staff.length > 0) {
                 tbody.innerHTML += `
                     <tr><td colspan="6" class="p-4 bg-slate-100 font-bold text-slate-700 text-sm uppercase tracking-wider border-y">Equipo Administrativo (${staff.length})</td></tr>
@@ -790,38 +826,23 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="p-4">
-                             <span class="px-2 py-0.5 rounded textxs font-bold uppercase ${m.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">
-                                ${m.role}
-                            </span>
-                        </td>
+                        <td class="p-4"><span class="px-2 py-0.5 rounded text-xs font-bold uppercase ${m.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${m.role}</span></td>
                         <td class="p-4">
                             ${m.status === 'blocked'
                         ? '<span class="text-red-600 text-xs font-bold bg-red-100 px-2 py-0.5 rounded">Bloqueado</span>'
                         : '<span class="text-green-600 text-xs font-bold">Activo</span>'}
                         </td>
-                        <td class="p-4 text-center">-</td>
-                        <td class="p-4 font-mono">-</td>
+                        <td class="p-4 font-mono text-center">-</td>
+                        <td class="p-4 font-mono text-center">-</td>
                          <td class="p-4 text-right flex justify-end gap-2">
-                             <button onclick="openRoleModal(${m.id}, '${m.role}')" class="flex items-center gap-1 text-xs bg-white border border-gray-200 px-2 py-1 rounded hover:bg-gray-50 text-slate-600" title="Cambiar Rol">
-                                <i data-lucide="shield" class="w-3 h-3"></i>
-                            </button>
-                            <button onclick="openEnrollmentsModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50" title="Ver Cursos">
-                                <i data-lucide="book-open" class="w-3 h-3"></i>
-                            </button>
-                            <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="flex items-center gap-1 text-xs bg-white border ${m.status === 'blocked' ? 'border-green-200 text-green-600' : 'border-amber-200 text-amber-600'} px-2 py-1 rounded hover:bg-gray-50" title="${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}">
-                                <i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
-                            </button>
-                            ${state.currentUser.email !== m.email ? `
-                            <button onclick="deleteUser(${m.id}, '${m.email}')" class="flex items-center gap-1 text-xs bg-white border border-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-50" title="Eliminar Usuario">
-                                <i data-lucide="trash" class="w-3 h-3"></i>
-                            </button>` : ''}
+                             <button onclick="openRoleModal(${m.id}, '${m.role}')" class="text-slate-500 hover:bg-gray-100 p-1 rounded" title="Rol"><i data-lucide="shield" class="w-4 h-4"></i></button>
+                             <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="text-slate-500 hover:bg-gray-100 p-1 rounded" title="Bloqueo"><i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-4 h-4"></i></button>
                         </td>
                     </tr>
                 `).join('');
             }
 
-            // 2. Customers Section Header
+            // 2. Customers Section
             tbody.innerHTML += `
                 <tr><td colspan="6" class="p-4 bg-slate-100 font-bold text-slate-700 text-sm uppercase tracking-wider border-y mt-4">Clientes Registrados (${customers.length})</td></tr>
             `;
@@ -829,8 +850,13 @@
             if (customers.length === 0) {
                 tbody.innerHTML += '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">No hay clientes registrados aún.</td></tr>';
             } else {
-                tbody.innerHTML += customers.map(m => `
-                     <tr class="border-b hover:bg-gray-50 bg-white">
+                tbody.innerHTML += customers.map(m => {
+                    const isExpanded = state.expandedUserId === m.id;
+                    const rowClass = isExpanded ? 'bg-blue-50/50 border-l-4 border-l-slate-900' : 'bg-white hover:bg-gray-50 border-l-4 border-l-transparent';
+
+                    // Main Row
+                    let html = `
+                     <tr class="border-b cursor-pointer transition-colors ${rowClass}" onclick="toggleExpandUser(${m.id})">
                         <td class="p-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
@@ -842,35 +868,124 @@
                                 </div>
                             </div>
                         </td>
+                        <td class="p-4"><span class="text-gray-400 text-xs">Cliente</span></td>
                         <td class="p-4">
-                            <span class="text-gray-400 text-xs">Cliente</span>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${m.status === 'active' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}">
-                                ${m.status === 'active' ? 'Activo' : 'Bloqueado'}
-                            </span>
+                           ${m.bannedUntil ?
+                            `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-orange-100 text-orange-700 border border-orange-200" title="Hasta: ${new Date(m.bannedUntil).toLocaleDateString()}">Suspendido</span>`
+                            : (m.status === 'active'
+                                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-700 border border-green-200">Activo</span>'
+                                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 border border-red-200">Bloqueado</span>')
+                        }
                         </td>
                         <td class="p-4 text-center font-bold text-slate-600 text-sm">${(m.courses || []).length}</td>
                         <td class="p-4 font-mono text-green-600 text-sm">$${(m.spent || 0).toFixed(2)}</td>
-                        <td class="p-4 text-right flex justify-end gap-2">
-                            <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="text-slate-400 hover:text-slate-700 p-1 rounded" title="${m.status === 'active' ? 'Bloquear' : 'Desbloquear'}">
-                                <i data-lucide="${m.status === 'active' ? 'lock' : 'unlock'}" class="w-4 h-4"></i>
-                            </button>
-                             <button onclick="assignMembership('${m.id}')" class="text-yellow-500 hover:text-yellow-600 p-1 rounded" title="Regalar Membresía">
-                                <i data-lucide="crown" class="w-4 h-4"></i>
-                            </button>
-                             <button onclick="deleteUser(${m.id}, '${m.email}')" class="text-red-400 hover:text-red-600 p-1 rounded" title="Eliminar Usuario">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                             <!-- Promo to Admin -->
-                             <button onclick="promoteToStaff(${m.id})" class="text-purple-400 hover:text-purple-600 p-1 rounded" title="Promover a Staff">
-                                <i data-lucide="user-plus" class="w-4 h-4"></i>
-                            </button>
+                        <td class="p-4 text-right">
+                            <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4 text-gray-400 inline-block transition-transform ${isExpanded ? 'rotate-180' : ''}"></i>
                         </td>
-                    </tr>
-                `).join('');
+                    </tr>`;
+
+                    // Details Row (Expanded)
+                    if (isExpanded) {
+                        html += `
+                        <tr class="bg-gray-50 border-b shadow-inner">
+                            <td colspan="6" class="p-6 cursor-default">
+                                <div class="flex flex-col md:flex-row gap-8">
+                                    <!-- Courses List -->
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
+                                            <i data-lucide="book-open" class="w-4 h-4"></i> Cursos Inscritos (${(m.courses || []).length})
+                                        </h4>
+                                        <div class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                            ${(m.courses && m.courses.length > 0) ? m.courses.map(c => `
+                                                <div class="flex items-center justify-between p-2 bg-white rounded border text-sm">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-8 h-8 bg-gray-200 rounded overflow-hidden">
+                                                            <!-- We assume c.image might be available in course detail logic, if not fallback -->
+                                                             <i data-lucide="book" class="w-4 h-4 m-2 text-gray-400"></i>
+                                                        </div>
+                                                        <span class="font-medium text-slate-700">Curso #${c.courseId}</span>
+                                                    </div>
+                                                    <button onclick="event.stopPropagation(); unenrollUser(${m.id}, ${c.courseId})" class="text-xs text-red-500 hover:underline">Quitar Acceso</button>
+                                                </div>
+                                            `).join('') : '<p class="text-xs text-gray-400 italic">Sin cursos activos.</p>'}
+                                        </div>
+                                    </div>
+
+                                    <!-- Actions Panel -->
+                                    <div class="w-full md:w-64 space-y-3 pt-2">
+                                        <h4 class="font-bold text-sm text-slate-700 mb-2">Acciones de Gestión</h4>
+                                        
+                                        <button onclick="event.stopPropagation(); openBanModal(${m.id})" class="w-full flex items-center justify-between px-3 py-2 bg-white border border-orange-200 text-orange-600 rounded hover:bg-orange-50 transition text-sm">
+                                            <span><i data-lucide="clock" class="w-4 h-4 inline mr-2"></i> Banear Temporalmente</span>
+                                        </button>
+
+                                        ${m.status === 'blocked' ?
+                                `<button onclick="event.stopPropagation(); toggleUserStatus(${m.id}, 'blocked')" class="w-full flex items-center justify-between px-3 py-2 bg-white border border-green-200 text-green-600 rounded hover:bg-green-50 transition text-sm">
+                                                <span><i data-lucide="unlock" class="w-4 h-4 inline mr-2"></i> Desbloquear Usuario</span>
+                                            </button>` :
+                                `<button onclick="event.stopPropagation(); toggleUserStatus(${m.id}, 'active')" class="w-full flex items-center justify-between px-3 py-2 bg-white border border-red-200 text-red-600 rounded hover:bg-red-50 transition text-sm">
+                                                <span><i data-lucide="lock" class="w-4 h-4 inline mr-2"></i> Bloquear (Indefinido)</span>
+                                            </button>`
+                            }
+
+                                        <button onclick="event.stopPropagation(); deleteUser(${m.id}, '${m.email}')" class="w-full flex items-center justify-between px-3 py-2 bg-white border border-red-200 text-red-600 rounded hover:bg-red-50 transition text-sm mt-4">
+                                            <span><i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Eliminar Usuario</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }
+                    return html;
+                }).join('');
             }
             lucide.createIcons();
+        }
+
+        // EXPAND HANDLER
+        function toggleExpandUser(userId) {
+            // Toggle
+            if (state.expandedUserId === userId) state.expandedUserId = null;
+            else state.expandedUserId = userId;
+            renderMembers();
+        }
+
+        // BAN LOGIC
+        function openBanModal(userId) {
+            document.getElementById('ban-user-id').value = userId;
+            document.getElementById('ban-duration').value = '1440'; // Default 24h
+            document.getElementById('ban-modal').showModal();
+        }
+
+        async function confirmBan() {
+            const userId = document.getElementById('ban-user-id').value;
+            const minutes = parseInt(document.getElementById('ban-duration').value);
+
+            if (!userId) return;
+
+            const banDate = new Date();
+            banDate.setMinutes(banDate.getMinutes() + minutes);
+
+            try {
+                await window.API.apiBanUser(userId, banDate.toISOString());
+                showToast("Usuario baneado temporalmente", "success");
+                document.getElementById('ban-modal').close();
+                // Refresh
+                state.members = await window.API.apiGetAllUsers();
+                renderMembers();
+            } catch (e) {
+                showToast("Error al banear usuario", "error");
+            }
+        }
+
+        async function deleteUser(id, email) {
+            if (!confirm(\`⚠️ PELIGRO ⚠️\n\nEstás a punto de eliminar al usuario \${email}.\nSe perderán todos sus cursos, progreso y compras.\n\n¿Estás seguro?\`)) return;
+            try {
+                await window.API.apiDeleteUser(id);
+                showToast("Usuario eliminado permanentemente", "success");
+                state.members = await window.API.apiGetAllUsers();
+                renderMembers();
+            } catch (e) { showToast("Error al eliminar", "error"); }
         }
 
         function filterMembers(query) {
@@ -886,7 +1001,7 @@
             const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
             try {
                 await window.API.apiUpdateMemberStatus(id, newStatus);
-                showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'bloqueado'}`, 'success');
+                showToast(`Usuario ${ newStatus === 'active' ? 'activado' : 'bloqueado'} `, 'success');
                 // Reload
                 state.members = await window.API.apiGetAllUsers();
                 renderMembers();
@@ -946,7 +1061,7 @@
                 const comments = await window.API.apiGetAllComments();
                 const tbody = document.getElementById('comments-table-body');
                 tbody.innerHTML = comments.map(c => `
-                    <tr class="border-b hover:bg-gray-50">
+            < tr class="border-b hover:bg-gray-50" >
                         <td class="p-4">
                             <div class="font-medium text-slate-900">${c.firstName || 'Usuario'} ${c.lastName || ''}</div>
                             <div class="text-xs text-gray-500">${c.email || 'Sin email'}</div>
@@ -967,8 +1082,8 @@
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
-                    </tr>
-                `).join('');
+                    </tr >
+            `).join('');
                 lucide.createIcons();
             } catch (e) { console.error(e); }
         }
@@ -985,7 +1100,7 @@
         function openReplyModal(courseId, lessonId, userName) {
             document.getElementById('reply-course-id').value = courseId;
             document.getElementById('reply-lesson-id').value = lessonId;
-            document.getElementById('reply-content').value = `@${userName} `; // Pre-fill with mention
+            document.getElementById('reply-content').value = `@${ userName } `; // Pre-fill with mention
             document.getElementById('reply-modal').showModal();
         }
 
@@ -1060,10 +1175,10 @@
         // NEW: User Controls
         async function toggleUserStatus(id, currentStatus) {
             const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
-            if (!confirm(`¿${newStatus === 'blocked' ? 'Bloquear' : 'Desbloquear'} usuario?`)) return;
+            if (!confirm(`¿${ newStatus === 'blocked' ? 'Bloquear' : 'Desbloquear' } usuario ? `)) return;
             try {
                 await window.API.apiUpdateUserStatus(id, newStatus);
-                showToast(`Usuario ${newStatus === 'blocked' ? 'bloqueado' : 'activado'}`);
+                showToast(`Usuario ${ newStatus === 'blocked' ? 'bloqueado' : 'activado' } `);
                 state.members = await window.API.apiGetAllUsers();
                 renderMembers();
             } catch (e) { showToast("Error al cambiar estado", "error"); }
@@ -1077,14 +1192,14 @@
             try {
                 const enrollmentList = await window.API.apiGetUserEnrollments(userId);
                 if (enrollmentList.length === 0) {
-                    listEl.innerHTML = `<p class="text-gray-500 italic">No está inscrito en ningún curso.</p>`;
+                    listEl.innerHTML = `< p class="text-gray-500 italic" > No está inscrito en ningún curso.</p > `;
                 } else {
                     listEl.innerHTML = enrollmentList.map(e => `
-                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded border">
+            < div class="flex justify-between items-center p-2 bg-gray-50 rounded border" >
                             <span class="text-sm font-medium">${e.title}</span>
                             <button onclick="unenrollUser(${userId}, ${e.courseId})" class="text-red-500 text-xs hover:underline">Quitar Acceso</button>
-                        </div>
-                    `).join('');
+                        </div >
+            `).join('');
                 }
             } catch (e) {
                 listEl.innerHTML = '<p class="text-red-500">Error cargando cursos.</p>';
@@ -1132,18 +1247,18 @@
                         lesson.resources.push({
                             id: result.id,
                             name: file.name,
-                            url: `/api/resources/${result.id}/download`,
-                            type: file.type
+                            url: `/ api / resources / ${ result.id }/download`,
+        type: file.type
                         });
-                        renderModules();
-                        showToast('Recurso adjuntado', 'success');
+        renderModules();
+        showToast('Recurso adjuntado', 'success');
                     }
                 } catch (err) {
-                    console.error(err);
-                    showToast('Error al adjuntar', 'error');
-                }
+            console.error(err);
+            showToast('Error al adjuntar', 'error');
+        }
             };
-            reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
         }
 
         async function handleFileUpload(input) {

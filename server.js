@@ -163,7 +163,21 @@ app.post('/api/auth/login', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!row) return res.status(401).json({ error: 'Credenciales inválidas' });
 
-        if (row.status === 'blocked') return res.status(403).json({ error: 'Tu cuenta ha sido bloqueada. Contacta soporte.' });
+        if (row.status === 'blocked') return res.status(403).json({ error: 'Tu cuenta ha sido bloqueada permanentemente. Contacta soporte.' });
+
+        // Check Ban Status
+        if (row.bannedUntil) {
+            const banDate = new Date(row.bannedUntil);
+            if (banDate > new Date()) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                return res.status(403).json({
+                    error: `Tu cuenta está suspendida temporalmente hasta el ${banDate.toLocaleDateString('es-ES', options)}.`
+                });
+            } else {
+                // Ban expired, clear it (optional, but keeps DB clean)
+                db.run('UPDATE users SET bannedUntil = NULL WHERE id = ?', [row.id]);
+            }
+        }
 
         try {
             // Check password (support old plain text for admin seed if needed, but better migrate)
@@ -846,6 +860,15 @@ app.put('/api/users/:uid/enrollments/:cid/status', (req, res) => {
     const { uid, cid } = req.params;
     const { status } = req.body; // 'active' or 'paused'
     db.run(`UPDATE enrollments SET status = ? WHERE userId = ? AND courseId = ?`, [status, uid, cid], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// Update User Ban Status (Temporary)
+app.post('/api/users/:id/ban', (req, res) => {
+    const { bannedUntil } = req.body; // ISO String or null
+    db.run(`UPDATE users SET bannedUntil = ? WHERE id = ?`, [bannedUntil, req.params.id], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });

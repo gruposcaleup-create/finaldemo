@@ -425,6 +425,9 @@ if (typeof window !== 'undefined') {
       apiGetAllUsers,
       apiCreateUser, // New
       apiUpdateMemberStatus,
+      apiBanUser: async function (id, bannedUntil) {
+        return await request(`/users/${id}/ban`, { method: 'POST', body: JSON.stringify({ bannedUntil }) });
+      },
       apiUpdateUserStatus: apiUpdateMemberStatus, // Alias for component compatibility
       apiUpdateUserRole, // New
       apiDeleteUser: async function (id) { return await request(`/users/${id}`, { method: 'DELETE' }); },
