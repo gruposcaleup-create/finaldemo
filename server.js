@@ -369,8 +369,8 @@ app.get('/api/admin/courses', (req, res) => {
 // Admin: Crear Curso
 app.post('/api/courses', (req, res) => {
     const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules } = req.body;
-    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modules) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules)],
+    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modulesData, modulesCount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules || []), (modules || []).length],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });
@@ -391,10 +391,16 @@ app.put('/api/courses/:id', (req, res) => {
     if (price !== undefined) { fields.push('price = ?'); values.push(price); }
     if (priceOffer !== undefined) { fields.push('priceOffer = ?'); values.push(priceOffer); }
     if (image !== undefined) { fields.push('image = ?'); values.push(image); }
+    if (image !== undefined) { fields.push('image = ?'); values.push(image); }
     if (videoPromo !== undefined) { fields.push('videoPromo = ?'); values.push(videoPromo); }
     if (category !== undefined) { fields.push('category = ?'); values.push(category); }
     if (duration !== undefined) { fields.push('duration = ?'); values.push(duration); }
-    if (modules !== undefined) { fields.push('modules = ?'); values.push(JSON.stringify(modules)); }
+    if (modules !== undefined) {
+        fields.push('modulesData = ?');
+        values.push(JSON.stringify(modules));
+        fields.push('modulesCount = ?');
+        values.push(modules.length);
+    }
     if (status !== undefined) { fields.push('status = ?'); values.push(status); }
 
     if (fields.length === 0) return res.json({ success: true, message: 'Nothing to update' });
@@ -794,6 +800,7 @@ app.post('/api/settings', (req, res) => {
 
 // 9. Usuarios (Admin)
 // 9. Usuarios (Admin)
+// 9. Usuarios (Admin)
 app.get('/api/users', (req, res) => {
     db.all(`SELECT id, email, firstName, lastName, role, status, createdAt FROM users`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -815,18 +822,32 @@ app.get('/api/users', (req, res) => {
             const users = rows.map(u => {
                 const spent = orders.filter(o => o.userId === u.id).reduce((acc, o) => acc + o.total, 0);
                 const enrollCount = enrollmentCounts.find(e => e.userId === u.id);
-                // Attach course list to user object for "enrollments modal" if needed, 
-                // OR we rely on separate endpoint apiGetUserEnrollments which we already added.
-                // For the table column "Cursos", we need the count.
-                // admin.html uses `(m.courses || []).length`. So let's attach a dummy array or just property.
-                // To minimize admin.html changes, let's attach `courses: new Array(count)`.
-                // Better: `courses: enrollmentList.filter(e => e.userId === u.id)`
                 const userCourses = enrollmentList.filter(e => e.userId === u.id);
 
                 return { ...u, spent, courses: userCourses };
             });
             res.json(users);
         });
+    });
+});
+// Get User Enrollments (Admin Modal)
+app.get('/api/users/:id/enrollments', (req, res) => {
+    db.all(`SELECT e.*, c.title, c.image 
+            FROM enrollments e 
+            JOIN courses c ON e.courseId = c.id 
+            WHERE e.userId = ?`, [req.params.id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Update Enrollment Status (Pause/Resume)
+app.put('/api/users/:uid/enrollments/:cid/status', (req, res) => {
+    const { uid, cid } = req.params;
+    const { status } = req.body; // 'active' or 'paused'
+    db.run(`UPDATE enrollments SET status = ? WHERE userId = ? AND courseId = ?`, [status, uid, cid], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 
