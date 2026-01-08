@@ -102,6 +102,12 @@
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
             </a>
+            <!-- Mobile Menu Toggle -->
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 text-zinc-400 hover:text-white">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                </svg>
+            </button>
             <h1 class="font-semibold text-sm sm:text-base truncate max-w-[200px] sm:max-w-md"
                 x-text="course ? course.title : 'Cargando...'"></h1>
         </div>
@@ -177,7 +183,27 @@
                     <div>
                         <h2 class="text-2xl font-bold mb-2" x-text="currentLesson ? currentLesson.title : 'Bienvenido'">
                         </h2>
-                        <p class="text-zinc-400 text-sm" x-text="currentModuleTitle || ''"></p>
+                        <p class="text-zinc-400 text-sm mb-4" x-text="currentModuleTitle || ''"></p>
+
+                        <!-- Navigation Buttons -->
+                        <div class="flex items-center gap-2 mb-4">
+                            <button @click="prevLesson()" :disabled="!hasPrev"
+                                class="px-4 py-2 bg-zinc-800 rounded-lg text-xs font-semibold hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white flex items-center gap-2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                                Anterior
+                            </button>
+                            <button @click="nextLesson()" :disabled="!hasNext"
+                                class="px-4 py-2 bg-white text-black rounded-lg text-xs font-semibold hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                                Siguiente
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <button @click="markCompleted()" x-show="currentLesson"
                         class="px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors border"
@@ -219,6 +245,61 @@
                         <div x-show="!currentLesson || !currentLesson.resources || currentLesson.resources.length === 0"
                             class="text-zinc-500 text-sm">
                             No hay recursos adjuntos a esta lección.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="pt-8 border-t border-zinc-800">
+                    <h3 class="font-bold text-lg mb-6">Comentarios</h3>
+
+                    <!-- Post Comment -->
+                    <div class="bg-cardDark border border-borderDark rounded-xl p-4 mb-8">
+                        <template x-if="user">
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 rounded-full bg-brandPink flex items-center justify-center text-white font-bold text-sm shrink-0"
+                                    x-text="user.firstName.charAt(0)"></div>
+                                <div class="flex-1">
+                                    <textarea x-model="newComment" rows="3"
+                                        class="w-full bg-bgDark border border-borderDark rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brandPink resize-none"
+                                        placeholder="Escribe un comentario o duda sobre esta lección..."></textarea>
+                                    <div class="flex justify-end mt-2">
+                                        <button @click="postComment()"
+                                            class="px-4 py-2 bg-white text-black text-sm font-bold rounded-lg hover:bg-zinc-200 transition-colors">
+                                            Publicar comentario
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="!user">
+                            <div class="text-center py-4 text-zinc-400 text-sm">
+                                <a href="login.html" class="text-brandPink hover:underline">Inicia sesión</a> para
+                                comentar.
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Comment List -->
+                    <div class="space-y-6">
+                        <template x-for="comment in comments" :key="comment.id">
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-bold text-sm shrink-0"
+                                    x-text="comment.firstName ? comment.firstName.charAt(0) : 'U'">
+                                </div>
+                                <div>
+                                    <div class="flex items-baseline gap-2 mb-1">
+                                        <span class="font-bold text-sm"
+                                            x-text="comment.firstName + ' ' + (comment.lastName || '')"></span>
+                                        <span class="text-xs text-zinc-500"
+                                            x-text="new Date(comment.createdAt).toLocaleDateString()"></span>
+                                    </div>
+                                    <p class="text-zinc-300 text-sm leading-relaxed" x-text="comment.content"></p>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="comments.length === 0" class="text-center py-8 text-zinc-500">
+                            No hay comentarios aún. ¡Sé el primero en comentar!
                         </div>
                     </div>
                 </div>
@@ -272,6 +353,68 @@
 
     <!-- Mobile Module List Drawer (Optional) -->
 
+    <!-- Mobile Module List Drawer -->
+    <div x-show="mobileMenuOpen" style="display: none;" class="fixed inset-0 z-50 lg:hidden flex justify-end">
+
+        <!-- Backdrop -->
+        <div @click="mobileMenuOpen = false" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            x-transition.opacity></div>
+
+        <!-- Palette -->
+        <aside class="w-80 h-full bg-bgDark border-l border-borderDark flex flex-col relative z-20 shadow-2xl"
+            x-transition:enter="transition transform ease-out duration-300" x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0" x-transition:leave="transition transform ease-in duration-300"
+            x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+
+            <div class="p-4 border-b border-borderDark flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-sm">Contenido del Curso</h3>
+                    <p class="text-[10px] text-zinc-400 mt-1" x-text="(totalLessons) + ' lecciones'"></p>
+                </div>
+                <button @click="mobileMenuOpen = false" class="p-2 text-zinc-400 hover:text-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                <template x-for="(module, mIndex) in (course?.modules || [])" :key="module.id || mIndex">
+                    <div>
+                        <div class="px-4 py-2 bg-zinc-900/50 text-[10px] font-bold text-zinc-500 uppercase tracking-wider border-b border-borderDark/50"
+                            x-text="module.title"></div>
+
+                        <template x-for="(lesson, lIndex) in (module.lessons || [])" :key="lesson.id || lIndex">
+                            <button @click="loadLesson(lesson, module.title)"
+                                class="w-full text-left p-4 hover:bg-white/5 transition-colors border-b border-zinc-900 group relative"
+                                :class="currentLesson === lesson ? 'bg-white/10' : ''">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5">
+                                        <div class="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] text-zinc-500"
+                                            :class="isCompleted(lesson.id) ? 'bg-green-500 border-green-500 text-black' : ''">
+                                            <svg x-show="isCompleted(lesson.id)" width="12" height="12"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                            <span x-show="!isCompleted(lesson.id)" x-text="lIndex + 1"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-medium group-hover:text-brandPink transition-colors"
+                                            x-text="lesson.title"></h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[10px] text-zinc-500">Video</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </aside>
+    </div>
+
     <script src="./api.js"></script>
     <script>
         function courseViewer() {
@@ -279,11 +422,21 @@
                 course: null,
                 currentLesson: null,
                 currentModuleTitle: '',
+                currentModuleIndex: -1,
+                currentLessonIndex: -1,
                 progress: 0,
-                completedModules: [], // This actually stores LESSON IDs (renaming it would be better but keeping for compat)
+                completedModules: [],
                 totalLessons: 0,
+                comments: [],
+                newComment: '',
+                mobileMenuOpen: false,
+                user: null,
 
                 async init() {
+                    // Load User
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) this.user = JSON.parse(userStr);
+
                     const params = new URLSearchParams(window.location.search);
                     const courseId = params.get('id');
                     if (!courseId) {
@@ -317,11 +470,11 @@
                         if (this.course && this.course.modules) {
                             let first = true;
                             let count = 0;
-                            this.course.modules.forEach(m => {
+                            this.course.modules.forEach((m, mIdx) => {
                                 if (m.lessons && m.lessons.length > 0) {
                                     count += m.lessons.length;
                                     if (first) {
-                                        this.loadLesson(m.lessons[0], m.title);
+                                        this.loadLesson(m.lessons[0], m.title, mIdx, 0);
                                         first = false;
                                     }
                                 }
@@ -334,9 +487,78 @@
                     }
                 },
 
-                loadLesson(lesson, modTitle) {
+                loadLesson(lesson, modTitle, mIdx = -1, lIdx = -1) {
                     this.currentLesson = lesson;
                     this.currentModuleTitle = modTitle;
+
+                    // Find indices if not provided
+                    if (mIdx === -1 && this.course) {
+                        this.course.modules.forEach((m, i) => {
+                            const foundWrapped = m.lessons.findIndex(l => l.id === lesson.id);
+                            if (foundWrapped !== -1) {
+                                mIdx = i;
+                                lIdx = foundWrapped;
+                            }
+                        });
+                    }
+
+                    this.currentModuleIndex = mIdx;
+                    this.currentLessonIndex = lIdx;
+                    this.mobileMenuOpen = false; // Close mobile menu on selection
+
+                    this.fetchComments();
+                },
+
+                prevLesson() {
+                    if (!this.course || this.currentModuleIndex === -1) return;
+
+                    let m = this.currentModuleIndex;
+                    let l = this.currentLessonIndex - 1;
+
+                    if (l < 0) {
+                        m--;
+                        if (m < 0) return; // Start of course
+                        // Go to last lesson of previous module
+                        l = this.course.modules[m].lessons.length - 1;
+                    }
+
+                    const mod = this.course.modules[m];
+                    const lesson = mod.lessons[l];
+                    this.loadLesson(lesson, mod.title, m, l);
+                },
+
+                nextLesson() {
+                    if (!this.course || this.currentModuleIndex === -1) return;
+
+                    let m = this.currentModuleIndex;
+                    let l = this.currentLessonIndex + 1;
+
+                    if (l >= this.course.modules[m].lessons.length) {
+                        m++;
+                        if (m >= this.course.modules.length) return; // End of course
+                        l = 0;
+                    }
+
+                    const mod = this.course.modules[m];
+                    const lesson = mod.lessons[l];
+                    this.loadLesson(lesson, mod.title, m, l);
+                },
+
+                get hasPrev() {
+                    if (this.currentModuleIndex === 0 && this.currentLessonIndex === 0) return false;
+                    return true;
+                },
+
+                get hasNext() {
+                    if (!this.course) return false;
+                    const lastModIdx = this.course.modules.length - 1;
+                    const lastMod = this.course.modules[lastModIdx];
+                    if (!lastMod.lessons.length) return false;
+
+                    if (this.currentModuleIndex === lastModIdx &&
+                        this.currentLessonIndex === lastMod.lessons.length - 1) return false;
+
+                    return true;
                 },
 
                 isCompleted(lessonId) {
@@ -361,6 +583,42 @@
                 calculateProgress() {
                     if (this.totalLessons === 0) return;
                     this.progress = Math.round((this.completedModules.length / this.totalLessons) * 100);
+                },
+
+                // Comments
+                async fetchComments() {
+                    if (!this.currentLesson || !this.course) return;
+                    this.comments = [];
+                    try {
+                        const res = await fetch(`/api/comments?courseId=${this.course.id}&lessonId=${this.currentLesson.id}`);
+                        if (res.ok) {
+                            this.comments = await res.json();
+                        }
+                    } catch (e) { console.error(e); }
+                },
+
+                async postComment() {
+                    if (!this.newComment.trim() || !this.user) return;
+
+                    try {
+                        const res = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: this.user.id,
+                                courseId: this.course.id,
+                                lessonId: this.currentLesson.id,
+                                content: this.newComment
+                            })
+                        });
+
+                        if (res.ok) {
+                            this.newComment = '';
+                            this.fetchComments(); // Refresh
+                        } else {
+                            alert('Error al publicar comentario');
+                        }
+                    } catch (e) { console.error(e); }
                 },
 
                 isIframe(url) {
@@ -406,6 +664,7 @@
                     }
 
                     if (videoId && videoId.length === 11) {
+                        // Force modestbranding and rel=0
                         return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
                     }
 

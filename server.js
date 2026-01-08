@@ -1051,8 +1051,38 @@ app.post('/api/progress', (req, res) => {
 });
 
 
-// Start
 
+// 10. Comments
+app.get('/api/comments', (req, res) => {
+    const { courseId, lessonId } = req.query;
+    if (!courseId || !lessonId) return res.status(400).json({ error: 'CourseId and LessonId required' });
+
+    db.all(`SELECT c.*, u.firstName, u.lastName, u.email 
+            FROM comments c 
+            JOIN users u ON c.userId = u.id 
+            WHERE c.courseId = ? AND c.lessonId = ? 
+            ORDER BY c.createdAt DESC`,
+        [courseId, lessonId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        });
+});
+
+app.post('/api/comments', (req, res) => {
+    const { userId, courseId, lessonId, content } = req.body;
+    if (!userId || !courseId || !lessonId || !content) return res.status(400).json({ error: 'All fields required' });
+
+    db.run(`INSERT INTO comments (userId, courseId, lessonId, content) VALUES (?, ?, ?, ?)`,
+        [userId, courseId, lessonId, content],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, userId, courseId, lessonId, content, createdAt: new Date() });
+        }
+    );
+});
+
+// Start
 // Global Error Handlers (Prevent Crash in Prod)
 process.on('uncaughtException', (err) => {
     console.error('CRITICAL ERROR (Uncaught Exception):', err);
@@ -1064,8 +1094,8 @@ process.on('unhandledRejection', (reason, promise) => {
 
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`App URL: ${APP_URL}`);
+        console.log(`Servidor corriendo en el puerto ${PORT}`);
+        console.log(`URL de la aplicación: ${APP_URL}`);
     });
 }
 
