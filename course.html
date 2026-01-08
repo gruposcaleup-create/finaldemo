@@ -501,9 +501,14 @@
                         if (this.course && this.course.modules) {
                             let count = 0;
                             let first = true;
+                            // COllect all valid lesson IDs to sanitize completed list
+                            const allLessonIds = [];
+
                             this.course.modules.forEach((m, mIdx) => {
                                 if (m.lessons) {
                                     count += m.lessons.length;
+                                    m.lessons.forEach(l => allLessonIds.push(l.id));
+
                                     if (first && m.lessons.length > 0) {
                                         this.loadLesson(m.lessons[0], m.title, mIdx, 0);
                                         first = false;
@@ -511,6 +516,15 @@
                                 }
                             });
                             this.totalLessons = count;
+
+                            // Recalculate progress based on current actual lessons
+                            // Only count completed lessons that actually exist in the course now
+                            if (this.completedModules && this.completedModules.length > 0) {
+                                this.completedModules = this.completedModules.filter(id => allLessonIds.includes(id));
+                                this.calculateProgress();
+                            } else {
+                                this.progress = 0;
+                            }
                         }
 
                     } catch (e) {
@@ -596,7 +610,9 @@
 
                 calculateProgress() {
                     if (this.totalLessons === 0) return;
-                    this.progress = Math.round((this.completedModules.length / this.totalLessons) * 100);
+                    // Ensure we don't go over 100 due to any sync issues
+                    const p = Math.round((this.completedModules.length / this.totalLessons) * 100);
+                    this.progress = p > 100 ? 100 : p;
                 },
 
                 async fetchComments() {

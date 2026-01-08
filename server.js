@@ -793,14 +793,37 @@ app.post('/api/settings', (req, res) => {
 
 
 // 9. Usuarios (Admin)
+// 9. Usuarios (Admin)
 app.get('/api/users', (req, res) => {
     db.all(`SELECT id, email, firstName, lastName, role, status, createdAt FROM users`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        db.all(`SELECT userId, total FROM orders`, [], (err2, orders) => {
+        // Parallelize fetching extra data
+        const pOrders = new Promise((resolve) => {
+            db.all(`SELECT userId, total FROM orders WHERE status = 'paid'`, [], (err, res) => resolve(res || []));
+        });
+
+        const pEnrollments = new Promise((resolve) => {
+            db.all(`SELECT userId, COUNT(*) as count FROM enrollments GROUP BY userId`, [], (err, res) => resolve(res || []));
+        });
+
+        const pList = new Promise((resolve) => {
+            db.all(`SELECT userId, courseId FROM enrollments`, [], (err, res) => resolve(res || []));
+        });
+
+        Promise.all([pOrders, pEnrollments, pList]).then(([orders, enrollmentCounts, enrollmentList]) => {
             const users = rows.map(u => {
                 const spent = orders.filter(o => o.userId === u.id).reduce((acc, o) => acc + o.total, 0);
-                return { ...u, spent };
+                const enrollCount = enrollmentCounts.find(e => e.userId === u.id);
+                // Attach course list to user object for "enrollments modal" if needed, 
+                // OR we rely on separate endpoint apiGetUserEnrollments which we already added.
+                // For the table column "Cursos", we need the count.
+                // admin.html uses `(m.courses || []).length`. So let's attach a dummy array or just property.
+                // To minimize admin.html changes, let's attach `courses: new Array(count)`.
+                // Better: `courses: enrollmentList.filter(e => e.userId === u.id)`
+                const userCourses = enrollmentList.filter(e => e.userId === u.id);
+
+                return { ...u, spent, courses: userCourses };
             });
             res.json(users);
         });
