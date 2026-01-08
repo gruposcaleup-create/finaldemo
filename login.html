@@ -296,11 +296,12 @@
                         const params = new URLSearchParams(window.location.search);
                         const redirect = params.get('redirect');
 
-                        // Si viene de carrito, regresar a carrito
+                        // Role based redirect
                         if (redirect === 'cart') {
                             window.location.href = 'cart.html';
+                        } else if (response.role === 'admin' || response.role === 'editor') {
+                            window.location.href = 'admin.html';
                         } else {
-                            // Sino, ir al panel
                             window.location.href = 'panel.html';
                         }
                     } catch (err) {

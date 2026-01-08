@@ -1000,11 +1000,13 @@
                 // Admin replies as themselves (need to be logged in effectively)
                 // We use apiPostComment which uses local currentUser.
                 // Admin panel usually has Admin logged in.
-                const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                if (!user.id) return showToast("Error de sesión", "error");
+                // FIX: Use global state.currentUser which is validated on load
+                // This prevents "identity crossing" if localStorage has a client session
+                const adminId = state.currentUser ? state.currentUser.id : null;
+                if (!adminId) return showToast("Error de sesión: Recarga la página", "error");
 
                 await window.API.apiPostComment({
-                    userId: user.id,
+                    userId: adminId,
                     courseId,
                     lessonId,
                     content
@@ -1015,6 +1017,7 @@
             } catch (e) { showToast("Error enviando respuesta", "error"); }
         }
 
+        // --- END HELPERS ---
 
         // CARGAR TODOS LOS DATOS DEL ADMIN
         window.loadAdminData = async function () {
@@ -1918,6 +1921,66 @@
             renderMembers(filtered);
         }
 
+
+        // ENROLLMENT MANAGEMENT
+        async function openEnrollmentsModal(userId, userName) {
+            document.getElementById('enrollment-user-name').textContent = userName;
+            const container = document.getElementById('enrollments-list');
+            container.innerHTML = '<p class="text-center text-gray-400">Cargando cursos...</p>';
+
+            document.getElementById('enrollments-modal').showModal();
+
+            try {
+                const res = await fetch(`/api/users/${userId}/enrollments`);
+                if (!res.ok) throw new Error("Error loading");
+                const enrollments = await res.json();
+
+                if (enrollments.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 py-4">Este usuario no está inscrito en ningún curso.</p>';
+                } else {
+                    container.innerHTML = enrollments.map(e => `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded border mb-2">
+                            <div class="flex items-center gap-3">
+                                <img src="${e.image || 'https://placehold.co/100'}" class="w-10 h-10 rounded object-cover">
+                                <div>
+                                    <p class="font-bold text-sm text-slate-700">${e.title}</p>
+                                    <p class="text-xs text-gray-500">Progreso: ${e.progress || 0}%</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${e.status === 'paused' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}">
+                                    ${e.status === 'paused' ? 'Pausado' : 'Activo'}
+                                </span>
+                                <button onclick="toggleEnrollmentStatus(${userId}, ${e.courseId}, '${e.status === 'paused' ? 'active' : 'paused'}')" 
+                                    class="text-xs border px-2 py-1 rounded hover:bg-white transition-colors ${e.status === 'paused' ? 'text-green-600 border-green-200' : 'text-amber-600 border-amber-200'}">
+                                    ${e.status === 'paused' ? 'Reanudar' : 'Pausar'}
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p class="text-center text-red-400">Error cargando cursos.</p>';
+            }
+        }
+
+        async function toggleEnrollmentStatus(uid, cid, newStatus) {
+            try {
+                const res = await fetch(`/api/users/${uid}/enrollments/${cid}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (res.ok) {
+                    showToast(`Acceso ${newStatus === 'paused' ? 'pausado' : 'reanudado'}`, 'success');
+                    const userName = document.getElementById('enrollment-user-name').textContent;
+                    openEnrollmentsModal(uid, userName);
+                } else {
+                    showToast('Error al actualizar estado', 'error');
+                }
+            } catch (e) { showToast('Error de conexión', 'error'); }
+        }
 
         // TOAST SYSTEM
         function showToast(msg, type = 'info') {
