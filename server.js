@@ -302,7 +302,7 @@ app.get('/api/courses', (req, res) => {
     let params = [];
 
     if (search) {
-        query += " AND (title LIKE ? OR desc LIKE ?)";
+        query += " AND (title LIKE ? OR \"desc\" LIKE ?)";
         params.push(`%${search}%`, `%${search}%`);
     }
 
@@ -829,7 +829,7 @@ app.get('/api/users', (req, res) => {
         });
 
         const pList = new Promise((resolve) => {
-            db.all(`SELECT e.userId, e.courseId, c.title 
+            db.all(`SELECT e.userId, e.courseId, e.progress, e.completedLessons, c.title, c.modulesData 
                     FROM enrollments e 
                     JOIN courses c ON e.courseId = c.id`, [], (err, res) => resolve(res || []));
         });
@@ -838,7 +838,20 @@ app.get('/api/users', (req, res) => {
             const users = rows.map(u => {
                 const spent = orders.filter(o => o.userId === u.id).reduce((acc, o) => acc + o.total, 0);
                 const enrollCount = enrollmentCounts.find(e => e.userId === u.id);
-                const userCourses = enrollmentList.filter(e => e.userId === u.id);
+                // Calculate dynamic progress for each course
+                const userCourses = enrollmentList.filter(e => e.userId === u.id).map(e => {
+                    // Calculate Progress
+                    const completed = e.completedLessons ? JSON.parse(e.completedLessons) : [];
+                    let modules = [];
+                    try { modules = e.modulesData ? JSON.parse(e.modulesData) : []; } catch (err) { }
+                    let totalLessons = 0;
+                    if (modules && Array.isArray(modules)) {
+                        modules.forEach(m => totalLessons += (m.lessons ? m.lessons.length : 0));
+                    }
+                    const dynamicProgress = totalLessons > 0 ? Math.round((completed.length / totalLessons) * 100) : 0;
+
+                    return { ...e, progress: dynamicProgress };
+                });
 
                 return { ...u, spent, courses: userCourses };
             });
@@ -975,7 +988,7 @@ app.get('/api/my-courses', (req, res) => {
 
     // Join enrollments with courses
     const query = `
-        SELECT e.*, c.title, c.image, c.desc, c.modulesData 
+        SELECT e.*, c.title, c.image, c.desc, c.duration, c.modulesData 
         FROM enrollments e
         JOIN courses c ON e.courseId = c.id
         WHERE e.userId = ?
@@ -984,16 +997,29 @@ app.get('/api/my-courses', (req, res) => {
     db.all(query, [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        const courses = rows.map(r => ({
-            id: r.courseId,
-            name: r.title,
-            image: r.image,
-            description: r.desc,
-            progress: r.progress,
-            lastAccess: r.lastAccess,
-            modules: r.modulesData ? JSON.parse(r.modulesData) : [],
-            completedLessons: r.completedLessons ? JSON.parse(r.completedLessons) : []
-        }));
+        const courses = rows.map(r => {
+            const modules = r.modulesData ? JSON.parse(r.modulesData) : [];
+            const completedLessons = r.completedLessons ? JSON.parse(r.completedLessons) : [];
+
+            // Calculate dynamic progress
+            let totalLessons = 0;
+            if (modules && Array.isArray(modules)) {
+                modules.forEach(m => totalLessons += (m.lessons ? m.lessons.length : 0));
+            }
+            const dynamicProgress = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
+
+            return {
+                id: r.courseId,
+                name: r.title,
+                image: r.image,
+                description: r.desc,
+                duration: r.duration,
+                progress: dynamicProgress, // Use dynamic progress
+                lastAccess: r.lastAccess,
+                modules: modules,
+                completedLessons: completedLessons
+            };
+        });
 
         res.json({ courses });
     });

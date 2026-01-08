@@ -77,9 +77,19 @@
     <script src="./api.js"></script>
     <script>
         // Simple initialization check
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.API) {
                 console.log('✅ API loaded');
+                if (window.API.isLoggedIn()) {
+                    try {
+                        const profile = await window.API.apiGetProfile();
+                        if (profile.role !== 'admin' && profile.role !== 'editor') {
+                            window.location.href = 'panel.html';
+                        }
+                    } catch (e) {
+                        console.error("Auth check failed", e);
+                    }
+                }
                 window.dispatchEvent(new CustomEvent('api-ready'));
             } else {
                 console.error('❌ API failed to load');
@@ -904,6 +914,9 @@
                                                              <i data-lucide="book" class="w-4 h-4 m-2 text-gray-400"></i>
                                                         </div>
                                                         <span class="font-medium text-slate-700">${c.title || 'Curso #' + c.courseId}</span>
+                                                        <span class="ml-2 text-xs font-bold ${c.progress === 100 ? 'text-green-600' : 'text-blue-600'} bg-gray-100 px-2 py-0.5 rounded">
+                                                            ${c.progress || 0}%
+                                                        </span>
                                                     </div>
                                                     <button onclick="event.stopPropagation(); unenrollUser(${m.id}, ${c.courseId})" class="text-xs text-red-500 hover:underline">Quitar Acceso</button>
                                                 </div>
