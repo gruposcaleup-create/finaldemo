@@ -329,7 +329,7 @@ if (typeof window !== 'undefined') {
     async function apiDeleteCoupon(id) { return await request(`/coupons/${id}`, { method: 'DELETE' }); }
     async function apiValidateCoupon(code) { return await request('/coupons/validate', { method: 'POST', body: JSON.stringify({ code }) }); }
 
-    async function apiGetResources() { return await request('/resources'); }
+    async function apiGetResources(access) { return await request('/resources' + (access ? `?access=${access}` : '')); }
     async function apiCreateResource(data) { return await request('/resources', { method: 'POST', body: JSON.stringify(data) }); }
     async function apiDeleteResource(id) { return await request(`/resources/${id}`, { method: 'DELETE' }); }
 

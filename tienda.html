@@ -499,7 +499,7 @@
             resources: [],
             async loadResources() {
                 try {
-                    const data = await (window.API ? window.API.apiGetResources() : []);
+                    const data = await (window.API ? window.API.apiGetResources('public') : []);
                     this.resources = data;
                 } catch (e) { console.error(e); }
             },

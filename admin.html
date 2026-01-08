@@ -1802,7 +1802,7 @@
                                 <i data-lucide="shield" class="w-3 h-3"></i>
                             </button>
                             <button onclick="openEnrollmentsModal(${m.id}, '${m.firstName} ${m.lastName}')" class="flex items-center gap-1 text-xs bg-white border border-blue-200 text-blue-600 px-2 py-1 rounded hover:bg-blue-50" title="Ver Cursos">
-                                <i data-lucide="book-open" class="w-3 h-3"></i>
+                                <i data-lucide="settings-2" class="w-3 h-3"></i> Gestionar
                             </button>
                             <button onclick="toggleUserStatus(${m.id}, '${m.status}')" class="flex items-center gap-1 text-xs bg-white border ${m.status === 'blocked' ? 'border-green-200 text-green-600' : 'border-amber-200 text-amber-600'} px-2 py-1 rounded hover:bg-gray-50" title="${m.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}">
                                 <i data-lucide="${m.status === 'blocked' ? 'unlock' : 'lock'}" class="w-3 h-3"></i>
