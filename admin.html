@@ -979,7 +979,7 @@
         }
 
         async function deleteUser(id, email) {
-            if (!confirm(\`⚠️ PELIGRO ⚠️\n\nEstás a punto de eliminar al usuario \${email}.\nSe perderán todos sus cursos, progreso y compras.\n\n¿Estás seguro?\`)) return;
+            if (!confirm(`⚠️ PELIGRO ⚠️\n\nEstás a punto de eliminar al usuario ${email}.\nSe perderán todos sus cursos, progreso y compras.\n\n¿Estás seguro?`)) return;
             try {
                 await window.API.apiDeleteUser(id);
                 showToast("Usuario eliminado permanentemente", "success");
@@ -1001,7 +1001,7 @@
             const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
             try {
                 await window.API.apiUpdateMemberStatus(id, newStatus);
-                showToast(`Usuario ${ newStatus === 'active' ? 'activado' : 'bloqueado'} `, 'success');
+                showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'bloqueado'} `, 'success');
                 // Reload
                 state.members = await window.API.apiGetAllUsers();
                 renderMembers();
@@ -1100,7 +1100,7 @@
         function openReplyModal(courseId, lessonId, userName) {
             document.getElementById('reply-course-id').value = courseId;
             document.getElementById('reply-lesson-id').value = lessonId;
-            document.getElementById('reply-content').value = `@${ userName } `; // Pre-fill with mention
+            document.getElementById('reply-content').value = `@${userName} `; // Pre-fill with mention
             document.getElementById('reply-modal').showModal();
         }
 
@@ -1175,10 +1175,10 @@
         // NEW: User Controls
         async function toggleUserStatus(id, currentStatus) {
             const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
-            if (!confirm(`¿${ newStatus === 'blocked' ? 'Bloquear' : 'Desbloquear' } usuario ? `)) return;
+            if (!confirm(`¿${newStatus === 'blocked' ? 'Bloquear' : 'Desbloquear'} usuario?`)) return;
             try {
                 await window.API.apiUpdateUserStatus(id, newStatus);
-                showToast(`Usuario ${ newStatus === 'blocked' ? 'bloqueado' : 'activado' } `);
+                showToast(`Usuario ${newStatus === 'blocked' ? 'bloqueado' : 'activado'}`);
                 state.members = await window.API.apiGetAllUsers();
                 renderMembers();
             } catch (e) { showToast("Error al cambiar estado", "error"); }
@@ -1192,14 +1192,14 @@
             try {
                 const enrollmentList = await window.API.apiGetUserEnrollments(userId);
                 if (enrollmentList.length === 0) {
-                    listEl.innerHTML = `< p class="text-gray-500 italic" > No está inscrito en ningún curso.</p > `;
+                    listEl.innerHTML = `<p class="text-gray-500 italic">No está inscrito en ningún curso.</p>`;
                 } else {
                     listEl.innerHTML = enrollmentList.map(e => `
-            < div class="flex justify-between items-center p-2 bg-gray-50 rounded border" >
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded border">
                             <span class="text-sm font-medium">${e.title}</span>
                             <button onclick="unenrollUser(${userId}, ${e.courseId})" class="text-red-500 text-xs hover:underline">Quitar Acceso</button>
-                        </div >
-            `).join('');
+                        </div>
+                    `).join('');
                 }
             } catch (e) {
                 listEl.innerHTML = '<p class="text-red-500">Error cargando cursos.</p>';
@@ -1247,18 +1247,18 @@
                         lesson.resources.push({
                             id: result.id,
                             name: file.name,
-                            url: `/ api / resources / ${ result.id }/download`,
-        type: file.type
+                            url: `/api/resources/${result.id}/download`,
+                            type: file.type
                         });
-        renderModules();
-        showToast('Recurso adjuntado', 'success');
+                        renderModules();
+                        showToast('Recurso adjuntado', 'success');
                     }
                 } catch (err) {
-            console.error(err);
-            showToast('Error al adjuntar', 'error');
-        }
+                    console.error(err);
+                    showToast('Error al adjuntar', 'error');
+                }
             };
-        reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
         }
 
         async function handleFileUpload(input) {
