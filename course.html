@@ -113,34 +113,60 @@
         <main class="lg:col-span-9 flex flex-col h-full overflow-y-auto relative scrollbar-hide">
 
             <!-- Video Container (Theater Mode) -->
-            <div class="w-full bg-black relative aspect-video shrink-0 shadow-2xl">
-                <template x-if="currentLesson">
-                    <div class="w-full h-full relative" oncontextmenu="return false;">
-                        <div class="video-protection-overlay"></div>
+            <div
+                class="w-full bg-black relative shrink-0 shadow-2xl flex justify-center bg-zinc-900 border-b border-zinc-800">
+                <div class="w-full max-w-5xl aspect-video relative shadow-lg">
+                    <template x-if="currentLesson">
+                        <div class="w-full h-full relative" oncontextmenu="return false;">
+                            <div class="video-protection-overlay"></div>
 
-                        <!-- Iframe Handling -->
-                        <div x-show="isIframe(currentLesson.url)" x-html="currentLesson.url"
-                            class="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full border-none">
+                            <!-- Iframe Handling -->
+                            <div x-show="isIframe(currentLesson.url)" x-html="currentLesson.url"
+                                class="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full border-none">
+                            </div>
+
+                            <iframe x-show="!isIframe(currentLesson.url) && getEmbedUrl(currentLesson.url)"
+                                :src="getEmbedUrl(currentLesson.url)" class="w-full h-full absolute inset-0"
+                                frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+
+                            <div class="video-protection-overlay" @contextmenu.prevent></div>
+
+                            <!-- Fallback -->
+                            <div x-show="!currentLesson.url || (!isIframe(currentLesson.url) && !getEmbedUrl(currentLesson.url))"
+                                class="w-full h-full flex flex-col items-center justify-center text-zinc-500 bg-zinc-900">
+                                <p class="text-sm">Video no disponible o enlace inválido.</p>
+                            </div>
                         </div>
-
-                        <iframe x-show="!isIframe(currentLesson.url) && getEmbedUrl(currentLesson.url)"
-                            :src="getEmbedUrl(currentLesson.url)" class="w-full h-full absolute inset-0" frameborder="0"
-                            allow="autoplay; fullscreen" allowfullscreen></iframe>
-
-                        <div class="video-protection-overlay" @contextmenu.prevent></div>
-
-                        <!-- Fallback -->
-                        <div x-show="!currentLesson.url || (!isIframe(currentLesson.url) && !getEmbedUrl(currentLesson.url))"
-                            class="w-full h-full flex flex-col items-center justify-center text-zinc-500 bg-zinc-900/50">
-                            <p class="text-sm">Video no disponible o enlace inválido.</p>
+                    </template>
+                    <template x-if="!currentLesson">
+                        <div class="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-900">
+                            <p>Selecciona una lección para comenzar</p>
                         </div>
-                    </div>
-                </template>
-                <template x-if="!currentLesson">
-                    <div class="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-900">
-                        <p>Selecciona una lección para comenzar</p>
-                    </div>
-                </template>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons Bar -->
+            <div class="w-full bg-bgDark border-b border-borderDark/50 py-3">
+                <div class="max-w-5xl mx-auto px-4 md:px-0 flex items-center justify-between">
+                    <button @click="prevLesson()" :disabled="!hasPrev"
+                        class="px-4 py-2 bg-zinc-800 text-white rounded-lg text-xs font-bold hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        Anterior
+                    </button>
+
+                    <button @click="nextLesson()" :disabled="!hasNext"
+                        class="px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                        Siguiente
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Content Area -->
@@ -193,31 +219,6 @@
 
                     <!-- Overview Tab -->
                     <div x-show="activeTab === 'overview'" x-transition.opacity>
-                        <div
-                            class="flex items-center justify-between bg-cardDark rounded-xl p-6 border border-borderDark mb-6">
-                            <div>
-                                <h3 class="font-bold text-lg text-white mb-1">Navegación de Lección</h3>
-                                <p class="text-zinc-400 text-xs">Muévete entre el contenido del curso</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button @click="prevLesson()" :disabled="!hasPrev"
-                                    class="px-4 py-2 bg-zinc-800 text-white rounded-lg text-xs font-bold hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <polyline points="15 18 9 12 15 6" />
-                                    </svg>
-                                    Anterior
-                                </button>
-                                <button @click="nextLesson()" :disabled="!hasNext"
-                                    class="px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
-                                    Siguiente
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <polyline points="9 18 15 12 9 6" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
                         <div class="prose prose-invert max-w-none text-zinc-300 text-sm">
                             <p>Bienvenido a esta lección. Utiliza las pestañas superiores para descargar recursos o
                                 participar en los comentarios.</p>
@@ -463,14 +464,14 @@
                 user: null,
 
                 async init() {
-                    // FIX: Ensure session detection is robust
+                    // FIX: Ensure session detection is robust (Use correct key 'currentUser')
                     try {
-                        const userStr = localStorage.getItem('user');
+                        const userStr = localStorage.getItem('currentUser');
                         if (userStr && userStr !== 'undefined') {
                             this.user = JSON.parse(userStr);
                             console.log("Usuario detectado:", this.user.email);
                         } else {
-                            console.warn("No se detectó sesión de usuario en localStorage");
+                            console.warn("No se detectó sesión de usuario en localStorage (key: currentUser)");
                         }
                     } catch (e) { console.error("Error parseando usuario:", e); }
 
