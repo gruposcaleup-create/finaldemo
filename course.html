@@ -34,11 +34,8 @@
             background-color: #000;
             color: #fff;
             -webkit-user-select: none;
-            /* Safari */
             -ms-user-select: none;
-            /* IE 10 and IE 11 */
             user-select: none;
-            /* Standard syntax */
         }
 
         .scrollbar-hide::-webkit-scrollbar {
@@ -55,13 +52,10 @@
             z-index: 10;
             background: transparent;
             pointer-events: none;
-            /* Allow interaction with video controls */
         }
 
-        /* Extra block for wrapper */
-        #video-container {
-            user-select: none;
-            -webkit-user-select: none;
+        [x-cloak] {
+            display: none !important;
         }
     </style>
     <script>
@@ -69,32 +63,20 @@
         document.addEventListener('contextmenu', event => event.preventDefault());
 
         document.addEventListener('keydown', function (e) {
-            // Block F12, Ctrl+Shift+I (DevTools)
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            // Block F12, Ctrl+Shift+I, PrintScreen, Ctrl+S, Ctrl+U
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || e.key === 'PrintScreen' || (e.ctrlKey && (e.key === 's' || e.key === 'S')) || (e.ctrlKey && (e.key === 'u' || e.key === 'U'))) {
                 e.preventDefault();
-            }
-            // Block PrintScreen (Instructional - can't fully block OS)
-            if (e.key === 'PrintScreen') {
-                // Try to clear clipboard or blur body
-                navigator.clipboard.writeText('');
-                alert('Las capturas de pantalla no están permitidas en esta plataforma.');
-            }
-            // Block Ctrl+S (Save)
-            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
-                e.preventDefault();
-            }
-            // Block Ctrl+U (View Source)
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
-                e.preventDefault();
+                if (e.key === 'PrintScreen') navigator.clipboard.writeText('');
             }
         });
     </script>
 </head>
 
-<body x-data="courseViewer()" x-init="init()" class="min-h-screen flex flex-col">
+<body x-data="courseViewer()" x-init="init()" class="min-h-screen flex flex-col bg-bgDark text-white">
 
     <!-- Header -->
-    <header class="h-[70px] border-b border-borderDark flex items-center justify-between px-6 bg-bgDark z-20">
+    <header
+        class="h-16 border-b border-borderDark flex items-center justify-between px-4 lg:px-6 bg-bgDark z-30 sticky top-0">
         <div class="flex items-center gap-4">
             <a href="panel.html"
                 class="p-2 hover:bg-white/5 rounded-full transition-colors text-zinc-400 hover:text-white">
@@ -102,317 +84,364 @@
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
             </a>
-            <!-- Mobile Menu Toggle -->
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 text-zinc-400 hover:text-white">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 12h18M3 6h18M3 18h18" />
-                </svg>
-            </button>
-            <h1 class="font-semibold text-sm sm:text-base truncate max-w-[200px] sm:max-w-md"
+            <h1 class="font-bold text-sm lg:text-base truncate max-w-[200px] sm:max-w-md text-white tracking-wide"
                 x-text="course ? course.title : 'Cargando...'"></h1>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="hidden sm:block text-xs text-zinc-400">
-                Progreso: <span class="text-white font-medium" x-text="progress + '%'"></span>
+
+        <!-- Toggle Mobile Menu -->
+        <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 text-zinc-400 hover:text-white">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12h18M3 6h18M3 18h18" />
+            </svg>
+        </button>
+
+        <div class="hidden lg:flex items-center gap-4">
+            <div class="text-xs text-zinc-400 font-medium">
+                Tu progreso: <span class="text-white" x-text="progress + '%'"></span>
             </div>
-            <div class="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <div class="h-full bg-brandPink transition-all duration-500" :style="'width: ' + progress + '%'"></div>
+            <div class="w-32 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div class="h-full bg-brandPink transition-all duration-500 ease-out"
+                    :style="'width: ' + progress + '%'"></div>
             </div>
         </div>
     </header>
 
-    <div class="flex-1 flex overflow-hidden">
+    <!-- Main Layout -->
+    <div class="flex-1 lg:grid lg:grid-cols-12 h-[calc(100vh-64px)] overflow-hidden">
 
-        <!-- Main Content (Video) -->
-        <main class="flex-1 flex flex-col overflow-y-auto bg-black relative">
-            <div class="flex-1 flex items-center justify-center bg-black relative group">
+        <!-- Left Column: Video & Tabs (Adaptive Scroll) -->
+        <main class="lg:col-span-9 flex flex-col h-full overflow-y-auto relative scrollbar-hide">
+
+            <!-- Video Container (Theater Mode) -->
+            <div class="w-full bg-black relative aspect-video shrink-0 shadow-2xl">
                 <template x-if="currentLesson">
                     <div class="w-full h-full relative" oncontextmenu="return false;">
-                        <!-- Protection Overlay -->
                         <div class="video-protection-overlay"></div>
 
-                        <!-- Case 1: Raw Iframe Code pasted by user -->
+                        <!-- Iframe Handling -->
                         <div x-show="isIframe(currentLesson.url)" x-html="currentLesson.url"
                             class="w-full h-full absolute inset-0 [&>iframe]:w-full [&>iframe]:h-full border-none">
                         </div>
 
-                        <!-- Case 2: URL to be converted to Embed -->
                         <iframe x-show="!isIframe(currentLesson.url) && getEmbedUrl(currentLesson.url)"
                             :src="getEmbedUrl(currentLesson.url)" class="w-full h-full absolute inset-0" frameborder="0"
-                            allow="autoplay; fullscreen" allowfullscreen>
-                        </iframe>
-                        <!-- Anti-Piracy Overlay: Allow clicks (playback) but block Context Menu -->
-                        <div class="video-protection-overlay" @contextmenu.prevent></div>
-                        <!-- Fallback if URL exists but cannot be embedded (e.g. invalid YT link) -->
-                        <div x-show="!isIframe(currentLesson.url) && currentLesson.url && !getEmbedUrl(currentLesson.url)"
-                            class="w-full h-full flex flex-col items-center justify-center text-gray-500">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1" class="mb-2 opacity-50">
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                                <path d="M8 14h8"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg>
-                            <p class="text-xs text-center px-4">Video no disponible o enlace inválido.<br><span
-                                    class="opacity-50 text-[10px]" x-text="currentLesson.url"></span></p>
-                        </div>
+                            allow="autoplay; fullscreen" allowfullscreen></iframe>
 
-                        <!-- Fallback if no video -->
-                        <div x-show="!currentLesson.url"
-                            class="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1">
-                                <circle cx="12" cy="12" r="10" />
-                                <polygon points="10 8 16 12 10 16 10 8" />
-                            </svg>
-                            <p>Esta lección no tiene video disponible</p>
+                        <div class="video-protection-overlay" @contextmenu.prevent></div>
+
+                        <!-- Fallback -->
+                        <div x-show="!currentLesson.url || (!isIframe(currentLesson.url) && !getEmbedUrl(currentLesson.url))"
+                            class="w-full h-full flex flex-col items-center justify-center text-zinc-500 bg-zinc-900/50">
+                            <p class="text-sm">Video no disponible o enlace inválido.</p>
                         </div>
                     </div>
                 </template>
                 <template x-if="!currentLesson">
-                    <div class="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
-                        <p>Selecciona una lección</p>
+                    <div class="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-900">
+                        <p>Selecciona una lección para comenzar</p>
                     </div>
                 </template>
             </div>
 
-            <!-- Content Info -->
-            <div class="p-8 max-w-4xl mx-auto w-full space-y-6">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2" x-text="currentLesson ? currentLesson.title : 'Bienvenido'">
-                        </h2>
-                        <p class="text-zinc-400 text-sm mb-4" x-text="currentModuleTitle || ''"></p>
+            <!-- Content Area -->
+            <div class="p-6 max-w-5xl mx-auto w-full">
 
-                        <!-- Navigation Buttons -->
-                        <div class="flex items-center gap-2 mb-4">
-                            <button @click="prevLesson()" :disabled="!hasPrev"
-                                class="px-4 py-2 bg-zinc-800 rounded-lg text-xs font-semibold hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white flex items-center gap-2">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="15 18 9 12 15 6" />
-                                </svg>
-                                Anterior
-                            </button>
-                            <button @click="nextLesson()" :disabled="!hasNext"
-                                class="px-4 py-2 bg-white text-black rounded-lg text-xs font-semibold hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
-                                Siguiente
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <polyline points="9 18 15 12 9 6" />
-                                </svg>
-                            </button>
-                        </div>
+                <!-- Lesson Navigation & Title -->
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-zinc-800 pb-6">
+                    <div>
+                        <h2 class="text-2xl lg:text-3xl font-bold text-white mb-2"
+                            x-text="currentLesson ? currentLesson.title : 'Bienvenido'"></h2>
+                        <p class="text-zinc-400 text-sm font-medium" x-text="currentModuleTitle || 'Módulo'"></p>
                     </div>
-                    <button @click="markCompleted()" x-show="currentLesson"
-                        class="px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors border"
-                        :class="isCompleted(currentLesson?.id) ? 'bg-green-500/10 text-green-500 border-green-500/50' : 'bg-white text-black hover:bg-zinc-200 border-transparent'">
-                        <svg x-show="isCompleted(currentLesson?.id)" width="16" height="16" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        <span x-text="isCompleted(currentLesson?.id) ? 'Completado' : 'Marcar como visto'"></span>
+
+                    <div class="flex items-center gap-3 shrink-0">
+                        <button @click="markCompleted()" x-show="currentLesson"
+                            class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all border"
+                            :class="isCompleted(currentLesson?.id) ? 'bg-green-500/10 text-green-500 border-green-500/50' : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-white'">
+                            <svg x-show="isCompleted(currentLesson?.id)" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span x-text="isCompleted(currentLesson?.id) ? 'Completado' : 'Marcar visto'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <div class="flex items-center gap-8 border-b border-zinc-800 mb-6 sticky top-0 bg-bgDark z-10 pt-2">
+                    <button @click="activeTab = 'overview'"
+                        class="pb-4 text-sm font-semibold border-b-2 transition-colors"
+                        :class="activeTab === 'overview' ? 'border-brandPink text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'">
+                        Visión General
+                    </button>
+                    <button @click="activeTab = 'resources'"
+                        class="pb-4 text-sm font-semibold border-b-2 transition-colors"
+                        :class="activeTab === 'resources' ? 'border-brandPink text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'">
+                        Recursos
+                    </button>
+                    <button @click="activeTab = 'comments'"
+                        class="pb-4 text-sm font-semibold border-b-2 transition-colors"
+                        :class="activeTab === 'comments' ? 'border-brandPink text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'">
+                        Comentarios <span class="text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 ml-1"
+                            x-text="comments.length">0</span>
                     </button>
                 </div>
 
-                <!-- Resources Tab -->
-                <div class="pt-6 border-t border-zinc-800">
-                    <h3 class="font-semibold mb-4 text-sm">Recursos de la lección</h3>
-                    <div class="grid gap-3">
-                        <template x-if="currentLesson && currentLesson.resources && currentLesson.resources.length > 0">
-                            <template x-for="res in currentLesson.resources">
-                                <a :href="res.url" target="_blank"
-                                    class="flex items-center gap-3 p-3 rounded-lg border border-borderDark bg-cardDark hover:bg-white/5 transition-colors group">
+                <!-- Tab Contents -->
+                <div class="min-h-[300px]">
+
+                    <!-- Overview Tab -->
+                    <div x-show="activeTab === 'overview'" x-transition.opacity>
+                        <div
+                            class="flex items-center justify-between bg-cardDark rounded-xl p-6 border border-borderDark mb-6">
+                            <div>
+                                <h3 class="font-bold text-lg text-white mb-1">Navegación de Lección</h3>
+                                <p class="text-zinc-400 text-xs">Muévete entre el contenido del curso</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="prevLesson()" :disabled="!hasPrev"
+                                    class="px-4 py-2 bg-zinc-800 text-white rounded-lg text-xs font-bold hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="15 18 9 12 15 6" />
+                                    </svg>
+                                    Anterior
+                                </button>
+                                <button @click="nextLesson()" :disabled="!hasNext"
+                                    class="px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                                    Siguiente
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="prose prose-invert max-w-none text-zinc-300 text-sm">
+                            <p>Bienvenido a esta lección. Utiliza las pestañas superiores para descargar recursos o
+                                participar en los comentarios.</p>
+                        </div>
+                    </div>
+
+                    <!-- Resources Tab -->
+                    <div x-show="activeTab === 'resources'" x-transition.opacity>
+                        <div class="grid gap-3">
+                            <template
+                                x-if="currentLesson && currentLesson.resources && currentLesson.resources.length > 0">
+                                <template x-for="res in currentLesson.resources">
+                                    <a :href="res.url" target="_blank"
+                                        class="flex items-center gap-4 p-4 rounded-xl border border-borderDark bg-cardDark hover:bg-zinc-800 transition-all group">
+                                        <div
+                                            class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center text-brandPink group-hover:scale-110 transition-transform">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                <polyline points="14 2 14 8 20 8" />
+                                                <line x1="12" y1="18" x2="12" y2="12" />
+                                                <line x1="9" y1="15" x2="15" y2="15" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-white group-hover:text-brandPink transition-colors"
+                                                x-text="res.name || 'Recurso descargable'"></div>
+                                            <div
+                                                class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mt-0.5">
+                                                Click para descargar</div>
+                                        </div>
+                                    </a>
+                                </template>
+                            </template>
+                            <div x-show="!currentLesson || !currentLesson.resources || currentLesson.resources.length === 0"
+                                class="text-zinc-500 text-center py-10 border border-dashed border-zinc-800 rounded-xl">
+                                No hay recursos adjuntos a esta lección.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Tab -->
+                    <div x-show="activeTab === 'comments'" x-transition.opacity>
+                        <div class="max-w-3xl mx-auto">
+                            <!-- Post Input -->
+                            <div class="bg-cardDark border border-borderDark rounded-xl p-6 mb-8 shadow-sm">
+                                <template x-if="user">
+                                    <div class="flex gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brandPink to-purple-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg"
+                                            x-text="user.firstName ? user.firstName.charAt(0) : 'U'"></div>
+                                        <div class="flex-1">
+                                            <textarea x-model="newComment" rows="2"
+                                                class="w-full bg-bgDark border border-borderDark rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brandPink/50 focus:ring-1 focus:ring-brandPink/50 resize-none transition-all placeholder:text-zinc-600"
+                                                placeholder="Comparte tus dudas o comentarios..."></textarea>
+                                            <div class="flex justify-end mt-3">
+                                                <button @click="postComment()"
+                                                    class="px-5 py-2 bg-brandPink text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-brandPinkHover transition-all shadow-lg hover:shadow-brandPink/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    :disabled="!newComment.trim()">
+                                                    Publicar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!user">
+                                    <div class="flex flex-col items-center justify-center py-4 gap-3">
+                                        <p class="text-zinc-400 text-sm">Inicia sesión para participar en la comunidad.
+                                        </p>
+                                        <a href="login.html"
+                                            class="px-6 py-2 bg-white text-black text-xs font-bold rounded-full hover:bg-zinc-200 transition-colors">
+                                            Iniciar Sesión
+                                        </a>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Comment List -->
+                            <div class="space-y-6">
+                                <template x-for="comment in comments" :key="comment.id">
+                                    <div class="flex gap-4 animate-fade-in">
+                                        <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-bold text-sm shrink-0 border border-zinc-700"
+                                            x-text="comment.firstName ? comment.firstName.charAt(0) : '?'">
+                                        </div>
+                                        <div class="flex-1">
+                                            <div
+                                                class="bg-cardDark border border-borderDark/50 rounded-r-xl rounded-bl-xl p-4">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-bold text-sm text-white"
+                                                        x-text="comment.firstName + ' ' + (comment.lastName || '')"></span>
+                                                    <span class="text-[10px] text-zinc-500 font-medium"
+                                                        x-text="formatDate(comment.createdAt)"></span>
+                                                </div>
+                                                <p class="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap"
+                                                    x-text="comment.content"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div x-show="comments.length === 0" class="text-center py-12">
                                     <div
-                                        class="p-2 bg-zinc-800 rounded text-zinc-400 group-hover:text-white transition-colors">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                        class="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4 text-zinc-700">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                            <polyline points="14 2 14 8 20 8" />
-                                            <line x1="12" y1="18" x2="12" y2="12" />
-                                            <line x1="9" y1="15" x2="15" y2="15" />
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z">
+                                            </path>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <div class="text-sm font-medium" x-text="res.name || 'Recurso descargable'">
-                                        </div>
-                                        <div class="text-[10px] text-zinc-500">Click para descargar</div>
-                                    </div>
-                                </a>
-                            </template>
-                        </template>
-                        <div x-show="!currentLesson || !currentLesson.resources || currentLesson.resources.length === 0"
-                            class="text-zinc-500 text-sm">
-                            No hay recursos adjuntos a esta lección.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Comments Section -->
-                <div class="pt-8 border-t border-zinc-800">
-                    <h3 class="font-bold text-lg mb-6">Comentarios</h3>
-
-                    <!-- Post Comment -->
-                    <div class="bg-cardDark border border-borderDark rounded-xl p-4 mb-8">
-                        <template x-if="user">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full bg-brandPink flex items-center justify-center text-white font-bold text-sm shrink-0"
-                                    x-text="user.firstName.charAt(0)"></div>
-                                <div class="flex-1">
-                                    <textarea x-model="newComment" rows="3"
-                                        class="w-full bg-bgDark border border-borderDark rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brandPink resize-none"
-                                        placeholder="Escribe un comentario o duda sobre esta lección..."></textarea>
-                                    <div class="flex justify-end mt-2">
-                                        <button @click="postComment()"
-                                            class="px-4 py-2 bg-white text-black text-sm font-bold rounded-lg hover:bg-zinc-200 transition-colors">
-                                            Publicar comentario
-                                        </button>
-                                    </div>
+                                    <p class="text-zinc-500 text-sm">Aún no hay comentarios.</p>
+                                    <p class="text-zinc-600 text-xs mt-1">¡Sé el primero en iniciar la conversación!</p>
                                 </div>
                             </div>
-                        </template>
-                        <template x-if="!user">
-                            <div class="text-center py-4 text-zinc-400 text-sm">
-                                <a href="login.html" class="text-brandPink hover:underline">Inicia sesión</a> para
-                                comentar.
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- Comment List -->
-                    <div class="space-y-6">
-                        <template x-for="comment in comments" :key="comment.id">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-bold text-sm shrink-0"
-                                    x-text="comment.firstName ? comment.firstName.charAt(0) : 'U'">
-                                </div>
-                                <div>
-                                    <div class="flex items-baseline gap-2 mb-1">
-                                        <span class="font-bold text-sm"
-                                            x-text="comment.firstName + ' ' + (comment.lastName || '')"></span>
-                                        <span class="text-xs text-zinc-500"
-                                            x-text="new Date(comment.createdAt).toLocaleDateString()"></span>
-                                    </div>
-                                    <p class="text-zinc-300 text-sm leading-relaxed" x-text="comment.content"></p>
-                                </div>
-                            </div>
-                        </template>
-                        <div x-show="comments.length === 0" class="text-center py-8 text-zinc-500">
-                            No hay comentarios aún. ¡Sé el primero en comentar!
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Footer Spacing -->
+            <div class="h-20"></div>
         </main>
 
-        <!-- Sidebar Playlist -->
-        <aside class="w-80 bg-bgDark border-l border-borderDark flex flex-col z-10 hidden lg:flex">
-            <div class="p-4 border-b border-borderDark">
-                <h3 class="font-semibold text-sm">Contenido del Curso</h3>
-                <p class="text-[10px] text-zinc-400 mt-1" x-text="(totalLessons) + ' lecciones'"></p>
+        <!-- Right Column: Sidebar (Desktop) -->
+        <aside
+            class="hidden lg:flex lg:col-span-3 bg-cardDark border-l border-borderDark flex-col h-full overflow-hidden">
+            <div class="p-5 border-b border-borderDark bg-bgDark">
+                <h3 class="font-bold text-sm text-white">Contenido del Curso</h3>
             </div>
-
-            <div class="flex-1 overflow-y-auto">
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
                 <template x-for="(module, mIndex) in (course?.modules || [])" :key="module.id || mIndex">
                     <div>
-                        <div class="px-4 py-2 bg-zinc-900/50 text-[10px] font-bold text-zinc-500 uppercase tracking-wider border-b border-borderDark/50"
+                        <div class="sticky top-0 z-10 px-5 py-3 bg-zinc-900/95 backdrop-blur border-b border-borderDark/50 text-[10px] font-bold text-zinc-500 uppercase tracking-widest"
                             x-text="module.title"></div>
 
-                        <template x-for="(lesson, lIndex) in (module.lessons || [])" :key="lesson.id || lIndex">
-                            <button @click="loadLesson(lesson, module.title)"
-                                class="w-full text-left p-4 hover:bg-white/5 transition-colors border-b border-zinc-900 group relative"
-                                :class="currentLesson === lesson ? 'bg-white/10' : ''">
-                                <div class="flex items-start gap-3">
-                                    <div class="mt-0.5">
-                                        <div class="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] text-zinc-500"
-                                            :class="isCompleted(lesson.id) ? 'bg-green-500 border-green-500 text-black' : ''">
+                        <div class="divide-y divide-borderDark/30">
+                            <template x-for="(lesson, lIndex) in (module.lessons || [])" :key="lesson.id || lIndex">
+                                <button @click="loadLesson(lesson, module.title)"
+                                    class="w-full text-left p-4 hover:bg-white/5 transition-colors group relative flex gap-3"
+                                    :class="currentLesson === lesson ? 'bg-white/5 border-l-2 border-brandPink' : 'border-l-2 border-transparent'">
+
+                                    <div class="mt-0.5 shrink-0">
+                                        <div class="w-5 h-5 rounded flex items-center justify-center transition-colors"
+                                            :class="isCompleted(lesson.id) ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-500 group-hover:bg-zinc-700'">
                                             <svg x-show="isCompleted(lesson.id)" width="12" height="12"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                                 <polyline points="20 6 9 17 4 12" />
                                             </svg>
-                                            <span x-show="!isCompleted(lesson.id)" x-text="lIndex + 1"></span>
+                                            <span x-show="!isCompleted(lesson.id)" class="text-[10px] font-bold"
+                                                x-text="lIndex + 1"></span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <h4 class="text-xs font-medium group-hover:text-brandPink transition-colors"
+
+                                    <div class="min-w-0">
+                                        <h4 class="text-xs font-medium text-zinc-300 group-hover:text-white transition-colors truncate leading-snug"
+                                            :class="currentLesson === lesson ? 'text-brandPink' : ''"
                                             x-text="lesson.title"></h4>
-                                        <div class="flex items-center gap-2 mt-1">
+                                        <div class="flex items-center gap-2 mt-1.5 opacity-60">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                                class="text-zinc-500" stroke="currentColor" stroke-width="2">
+                                                <polygon points="5 3 19 12 5 21 5 3" />
+                                            </svg>
                                             <span class="text-[10px] text-zinc-500">Video</span>
                                         </div>
                                     </div>
-                                </div>
-                            </button>
-                        </template>
+                                </button>
+                            </template>
+                        </div>
                     </div>
                 </template>
             </div>
         </aside>
 
-    </div>
+        <!-- Mobile Sidebar (Drawer) -->
+        <div x-show="mobileMenuOpen" style="display: none;" class="fixed inset-0 z-50 lg:hidden flex justify-end">
 
-    <!-- Mobile Module List Drawer (Optional) -->
+            <div @click="mobileMenuOpen = false"
+                class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" x-transition.opacity></div>
 
-    <!-- Mobile Module List Drawer -->
-    <div x-show="mobileMenuOpen" style="display: none;" class="fixed inset-0 z-50 lg:hidden flex justify-end">
+            <aside
+                class="w-4/5 max-w-sm h-full bg-cardDark border-l border-borderDark flex flex-col relative z-20 shadow-2xl"
+                x-transition:enter="transition transform ease-out duration-300"
+                x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+                x-transition:leave="transition transform ease-in duration-300" x-transition:leave-start="translate-x-0"
+                x-transition:leave-end="translate-x-full">
 
-        <!-- Backdrop -->
-        <div @click="mobileMenuOpen = false" class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
-            x-transition.opacity></div>
-
-        <!-- Palette -->
-        <aside class="w-80 h-full bg-bgDark border-l border-borderDark flex flex-col relative z-20 shadow-2xl"
-            x-transition:enter="transition transform ease-out duration-300" x-transition:enter-start="translate-x-full"
-            x-transition:enter-end="translate-x-0" x-transition:leave="transition transform ease-in duration-300"
-            x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
-
-            <div class="p-4 border-b border-borderDark flex items-center justify-between">
-                <div>
-                    <h3 class="font-semibold text-sm">Contenido del Curso</h3>
-                    <p class="text-[10px] text-zinc-400 mt-1" x-text="(totalLessons) + ' lecciones'"></p>
+                <div class="p-4 border-b border-borderDark flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-white">Contenido del Curso</h3>
+                    <button @click="mobileMenuOpen = false"
+                        class="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/10">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
-                <button @click="mobileMenuOpen = false" class="p-2 text-zinc-400 hover:text-white">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
 
-            <div class="flex-1 overflow-y-auto">
-                <template x-for="(module, mIndex) in (course?.modules || [])" :key="module.id || mIndex">
-                    <div>
-                        <div class="px-4 py-2 bg-zinc-900/50 text-[10px] font-bold text-zinc-500 uppercase tracking-wider border-b border-borderDark/50"
-                            x-text="module.title"></div>
-
-                        <template x-for="(lesson, lIndex) in (module.lessons || [])" :key="lesson.id || lIndex">
-                            <button @click="loadLesson(lesson, module.title)"
-                                class="w-full text-left p-4 hover:bg-white/5 transition-colors border-b border-zinc-900 group relative"
-                                :class="currentLesson === lesson ? 'bg-white/10' : ''">
-                                <div class="flex items-start gap-3">
+                <div class="flex-1 overflow-y-auto">
+                    <template x-for="(module, mIndex) in (course?.modules || [])" :key="module.id || mIndex">
+                        <div>
+                            <div class="px-5 py-3 bg-zinc-900/50 text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-borderDark/30"
+                                x-text="module.title"></div>
+                            <template x-for="(lesson, lIndex) in (module.lessons || [])" :key="lesson.id || lIndex">
+                                <button @click="loadLesson(lesson, module.title)"
+                                    class="w-full text-left p-4 hover:bg-white/5 border-b border-borderDark/20 flex gap-3"
+                                    :class="currentLesson === lesson ? 'bg-white/5' : ''">
                                     <div class="mt-0.5">
-                                        <div class="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center text-[10px] text-zinc-500"
-                                            :class="isCompleted(lesson.id) ? 'bg-green-500 border-green-500 text-black' : ''">
+                                        <div class="w-5 h-5 rounded flex items-center justify-center"
+                                            :class="isCompleted(lesson.id) ? 'bg-green-500 text-black' : 'bg-zinc-800 text-zinc-500'">
                                             <svg x-show="isCompleted(lesson.id)" width="12" height="12"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                                 <polyline points="20 6 9 17 4 12" />
                                             </svg>
-                                            <span x-show="!isCompleted(lesson.id)" x-text="lIndex + 1"></span>
+                                            <span x-show="!isCompleted(lesson.id)" class="text-[10px]"
+                                                x-text="lIndex + 1"></span>
                                         </div>
                                     </div>
                                     <div>
-                                        <h4 class="text-xs font-medium group-hover:text-brandPink transition-colors"
-                                            x-text="lesson.title"></h4>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <span class="text-[10px] text-zinc-500">Video</span>
-                                        </div>
+                                        <h4 class="text-xs font-medium text-zinc-300" x-text="lesson.title"></h4>
                                     </div>
-                                </div>
-                            </button>
-                        </template>
-                    </div>
-                </template>
-            </div>
-        </aside>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </aside>
+        </div>
     </div>
 
     <script src="./api.js"></script>
@@ -430,25 +459,27 @@
                 comments: [],
                 newComment: '',
                 mobileMenuOpen: false,
+                activeTab: 'overview',
                 user: null,
 
                 async init() {
-                    // Load User
-                    const userStr = localStorage.getItem('user');
-                    if (userStr) this.user = JSON.parse(userStr);
+                    // FIX: Ensure session detection is robust
+                    try {
+                        const userStr = localStorage.getItem('user');
+                        if (userStr && userStr !== 'undefined') {
+                            this.user = JSON.parse(userStr);
+                            console.log("Usuario detectado:", this.user.email);
+                        } else {
+                            console.warn("No se detectó sesión de usuario en localStorage");
+                        }
+                    } catch (e) { console.error("Error parseando usuario:", e); }
 
                     const params = new URLSearchParams(window.location.search);
                     const courseId = params.get('id');
-                    if (!courseId) {
-                        alert('Curso no especificado');
-                        window.location.href = 'panel.html';
-                        return;
-                    }
+                    if (!courseId) return window.location.href = 'panel.html';
 
                     try {
                         let courseFound = null;
-
-                        // Try Loading My Courses first
                         try {
                             const myCourses = await window.API.apiGetMyPurchasedCourses();
                             const purchased = myCourses.courses.find(c => c.id == courseId);
@@ -466,14 +497,13 @@
 
                         this.course = courseFound;
 
-                        // Calculate totals and select first lesson
                         if (this.course && this.course.modules) {
-                            let first = true;
                             let count = 0;
+                            let first = true;
                             this.course.modules.forEach((m, mIdx) => {
-                                if (m.lessons && m.lessons.length > 0) {
+                                if (m.lessons) {
                                     count += m.lessons.length;
-                                    if (first) {
+                                    if (first && m.lessons.length > 0) {
                                         this.loadLesson(m.lessons[0], m.title, mIdx, 0);
                                         first = false;
                                     }
@@ -491,57 +521,47 @@
                     this.currentLesson = lesson;
                     this.currentModuleTitle = modTitle;
 
-                    // Find indices if not provided
                     if (mIdx === -1 && this.course) {
                         this.course.modules.forEach((m, i) => {
                             const foundWrapped = m.lessons.findIndex(l => l.id === lesson.id);
-                            if (foundWrapped !== -1) {
-                                mIdx = i;
-                                lIdx = foundWrapped;
-                            }
+                            if (foundWrapped !== -1) { mIdx = i; lIdx = foundWrapped; }
                         });
                     }
-
                     this.currentModuleIndex = mIdx;
                     this.currentLessonIndex = lIdx;
-                    this.mobileMenuOpen = false; // Close mobile menu on selection
+                    this.mobileMenuOpen = false;
 
+                    // Reset tab to overview on new lesson? Optional. Let's keep current tab.
                     this.fetchComments();
+                },
+
+                formatDate(dateStr) {
+                    if (!dateStr) return '';
+                    return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
                 },
 
                 prevLesson() {
                     if (!this.course || this.currentModuleIndex === -1) return;
-
-                    let m = this.currentModuleIndex;
-                    let l = this.currentLessonIndex - 1;
+                    let m = this.currentModuleIndex, l = this.currentLessonIndex - 1;
 
                     if (l < 0) {
                         m--;
-                        if (m < 0) return; // Start of course
-                        // Go to last lesson of previous module
+                        if (m < 0) return;
                         l = this.course.modules[m].lessons.length - 1;
                     }
-
-                    const mod = this.course.modules[m];
-                    const lesson = mod.lessons[l];
-                    this.loadLesson(lesson, mod.title, m, l);
+                    this.loadLesson(this.course.modules[m].lessons[l], this.course.modules[m].title, m, l);
                 },
 
                 nextLesson() {
                     if (!this.course || this.currentModuleIndex === -1) return;
-
-                    let m = this.currentModuleIndex;
-                    let l = this.currentLessonIndex + 1;
+                    let m = this.currentModuleIndex, l = this.currentLessonIndex + 1;
 
                     if (l >= this.course.modules[m].lessons.length) {
                         m++;
-                        if (m >= this.course.modules.length) return; // End of course
+                        if (m >= this.course.modules.length) return;
                         l = 0;
                     }
-
-                    const mod = this.course.modules[m];
-                    const lesson = mod.lessons[l];
-                    this.loadLesson(lesson, mod.title, m, l);
+                    this.loadLesson(this.course.modules[m].lessons[l], this.course.modules[m].title, m, l);
                 },
 
                 get hasPrev() {
@@ -554,10 +574,7 @@
                     const lastModIdx = this.course.modules.length - 1;
                     const lastMod = this.course.modules[lastModIdx];
                     if (!lastMod.lessons.length) return false;
-
-                    if (this.currentModuleIndex === lastModIdx &&
-                        this.currentLessonIndex === lastMod.lessons.length - 1) return false;
-
+                    if (this.currentModuleIndex === lastModIdx && this.currentLessonIndex === lastMod.lessons.length - 1) return false;
                     return true;
                 },
 
@@ -570,13 +587,9 @@
                     if (!this.completedModules.includes(this.currentLesson.id)) {
                         this.completedModules.push(this.currentLesson.id);
                         this.calculateProgress();
-
                         try {
-                            // Saving progress
                             await window.API.apiUpdateProgress(this.course.id, this.progress, 0.5, this.completedModules);
-                        } catch (e) {
-                            console.error("Error saving progress", e);
-                        }
+                        } catch (e) { console.error(e); }
                     }
                 },
 
@@ -585,21 +598,17 @@
                     this.progress = Math.round((this.completedModules.length / this.totalLessons) * 100);
                 },
 
-                // Comments
                 async fetchComments() {
                     if (!this.currentLesson || !this.course) return;
                     this.comments = [];
                     try {
                         const res = await fetch(`/api/comments?courseId=${this.course.id}&lessonId=${this.currentLesson.id}`);
-                        if (res.ok) {
-                            this.comments = await res.json();
-                        }
+                        if (res.ok) this.comments = await res.json();
                     } catch (e) { console.error(e); }
                 },
 
                 async postComment() {
                     if (!this.newComment.trim() || !this.user) return;
-
                     try {
                         const res = await fetch('/api/comments', {
                             method: 'POST',
@@ -611,71 +620,47 @@
                                 content: this.newComment
                             })
                         });
-
                         if (res.ok) {
                             this.newComment = '';
-                            this.fetchComments(); // Refresh
+                            this.fetchComments();
                         } else {
                             alert('Error al publicar comentario');
                         }
                     } catch (e) { console.error(e); }
                 },
 
-                isIframe(url) {
-                    if (!url) return false;
-                    return url.trim().startsWith('<iframe');
-                },
+                isIframe(url) { return url && url.trim().startsWith('<iframe'); },
 
                 getEmbedUrl(url) {
-                    if (!url) return '';
-                    if (this.isIframe(url)) return ''; // Handled by x-html
-
+                    if (!url || this.isIframe(url)) return '';
                     let videoId = null;
-
-                    // Method 1: URL Object Parsing (Safest)
                     try {
-                        // Add protocol if missing to making valid URL
                         const safeUrl = url.startsWith('http') ? url : `https://${url}`;
                         const u = new URL(safeUrl);
-
                         if (u.hostname.includes('youtube.com')) {
-                            if (u.searchParams.has('v')) {
-                                videoId = u.searchParams.get('v');
-                            } else if (u.pathname.startsWith('/embed/')) {
-                                videoId = u.pathname.split('/')[2];
-                            } else if (u.pathname.startsWith('/v/')) {
-                                videoId = u.pathname.split('/')[2];
-                            }
-                        } else if (u.hostname.includes('youtu.be')) {
-                            videoId = u.pathname.slice(1);
-                        }
-                    } catch (e) {
-                        // Ignore URL parse errors
-                    }
+                            if (u.searchParams.has('v')) videoId = u.searchParams.get('v');
+                            else if (u.pathname.split('/')[2]) videoId = u.pathname.split('/')[2];
+                        } else if (u.hostname.includes('youtu.be')) videoId = u.pathname.slice(1);
+                    } catch (e) { }
 
-                    // Method 2: Regex Fallback (Simple)
                     if (!videoId) {
                         const match = url.match(/[?&]v=([^&]+)/);
                         if (match) videoId = match[1];
                         else {
-                            const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
-                            if (shortMatch) videoId = shortMatch[1];
+                            const sm = url.match(/youtu\.be\/([^?&]+)/);
+                            if (sm) videoId = sm[1];
                         }
                     }
 
                     if (videoId && videoId.length === 11) {
-                        // Force modestbranding and rel=0
                         return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
                     }
-
-                    // Fallback for Vimeo
                     if (url.includes('vimeo.com')) {
-                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-                        if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                        const vm = url.match(/vimeo\.com\/(\d+)/);
+                        if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
                     }
-
                     return '';
-                },
+                }
             }
         }
     </script>
