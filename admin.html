@@ -147,6 +147,11 @@
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
                     data-target="members"><i data-lucide="users" class="w-5 h-5"></i> <span
                         class="hidden sm:inline">Miembros</span></button>
+                <button onclick="router('comments')"
+                    class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
+                    data-target="comments"><i data-lucide="message-square" class="w-5 h-5"></i> <span
+                        class="hidden sm:inline">Comentarios</span></button>
+
                 <button onclick="router('settings')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
                     data-target="settings"><i data-lucide="settings" class="w-5 h-5"></i> <span
@@ -380,6 +385,7 @@
             </div>
 
             <div id="view-members" class="view-section hide fade-in">
+                <!-- ... Content of members ... -->
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h1 class="text-3xl font-bold">Miembros</h1>
@@ -413,6 +419,48 @@
                     </table>
                 </div>
             </div>
+
+            <div id="view-comments" class="view-section hide fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold">Comentarios</h1>
+                    <p class="text-gray-500">Moderación de comentarios.</p>
+                </div>
+
+                <!-- Reply Modal -->
+                <dialog id="reply-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold mb-4">Responder Comentario</h3>
+                        <input type="hidden" id="reply-course-id">
+                        <input type="hidden" id="reply-lesson-id">
+                        <div class="space-y-4">
+                            <textarea id="reply-content" class="w-full border p-2 rounded h-32"
+                                placeholder="Escribe tu respuesta..."></textarea>
+                            <div class="flex justify-end gap-2">
+                                <button onclick="document.getElementById('reply-modal').close()"
+                                    class="px-4 py-2 border rounded">Cancelar</button>
+                                <button onclick="sendReply()" class="px-4 py-2 bg-slate-900 text-white rounded">Enviar
+                                    Respuesta</button>
+                            </div>
+                        </div>
+                    </div>
+                </dialog>
+
+                <div class="bg-white rounded-lg border shadow-sm overflow-hidden overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4 w-32">Usuario</th>
+                                <th class="p-4">Comentario</th>
+                                <th class="p-4 w-40">Curso</th>
+                                <th class="p-4 w-32">Fecha</th>
+                                <th class="p-4 text-right w-24">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comments-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
 
             <div id="view-settings" class="view-section hide fade-in">
                 <div class="flex justify-between items-center mb-6">
@@ -572,6 +620,7 @@
             if (viewName === 'coupons') renderCoupons();
             if (viewName === 'resources') renderResources();
             if (viewName === 'courses') renderCoursesList();
+            if (viewName === 'comments') renderComments();
             if (viewName === 'dashboard') {
                 if (state.metrics) {
                     updateDashboard(state.metrics);
@@ -792,6 +841,81 @@
                 state.members = await window.API.apiGetAllUsers();
                 renderMembers();
             } catch (e) { showToast("Error al actualizar rol", "error"); }
+        }
+
+        // --- COMENTARIOS ---
+        async function renderComments() {
+            try {
+                const comments = await window.API.apiGetAllComments();
+                const tbody = document.getElementById('comments-table-body');
+                tbody.innerHTML = comments.map(c => `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">
+                            <div class="font-medium text-slate-900">${c.firstName || 'Usuario'} ${c.lastName || ''}</div>
+                            <div class="text-xs text-gray-500">${c.email || 'Sin email'}</div>
+                        </td>
+                        <td class="p-4 text-sm text-gray-600 max-w-xs truncate" title="${c.content}">${c.content}</td>
+                        <td class="p-4 text-xs">
+                            <div class="font-medium">${c.courseTitle || 'Curso #' + c.courseId}</div>
+                            <div class="text-gray-500">Lección ${c.lessonId}</div>
+                        </td>
+                        <td class="p-4 text-xs text-gray-500">${new Date(c.createdAt).toLocaleDateString()}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="openReplyModal('${c.courseId}', '${c.lessonId}', '${c.firstName} ${c.lastName}')" 
+                                class="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Responder">
+                                <i data-lucide="reply" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteComment(${c.id})" 
+                                class="text-red-600 hover:bg-red-50 p-1 rounded" title="Eliminar">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteComment(id) {
+            if (!confirm("¿Eliminar comentario?")) return;
+            try {
+                await window.API.apiDeleteComment(id);
+                showToast("Comentario eliminado", "success");
+                renderComments();
+            } catch (e) { showToast("Error al eliminar", "error"); }
+        }
+
+        function openReplyModal(courseId, lessonId, userName) {
+            document.getElementById('reply-course-id').value = courseId;
+            document.getElementById('reply-lesson-id').value = lessonId;
+            document.getElementById('reply-content').value = `@${userName} `; // Pre-fill with mention
+            document.getElementById('reply-modal').showModal();
+        }
+
+        async function sendReply() {
+            const courseId = document.getElementById('reply-course-id').value;
+            const lessonId = document.getElementById('reply-lesson-id').value;
+            const content = document.getElementById('reply-content').value;
+
+            if (!content) return showToast("Escribe una respuesta", "error");
+
+            try {
+                // Admin replies as themselves (need to be logged in effectively)
+                // We use apiPostComment which uses local currentUser. 
+                // Admin panel usually has Admin logged in.
+                const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                if (!user.id) return showToast("Error de sesión", "error");
+
+                await window.API.apiPostComment({
+                    userId: user.id,
+                    courseId,
+                    lessonId,
+                    content
+                });
+                showToast("Respuesta enviada", "success");
+                document.getElementById('reply-modal').close();
+                renderComments();
+            } catch (e) { showToast("Error enviando respuesta", "error"); }
         }
 
 

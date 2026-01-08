@@ -1052,35 +1052,54 @@ app.post('/api/progress', (req, res) => {
 
 
 
-// 10. Comments
+// 10. Comentarios (Admin & User)
 app.get('/api/comments', (req, res) => {
     const { courseId, lessonId } = req.query;
-    if (!courseId || !lessonId) return res.status(400).json({ error: 'CourseId and LessonId required' });
-
     db.all(`SELECT c.*, u.firstName, u.lastName, u.email 
             FROM comments c 
             JOIN users u ON c.userId = u.id 
             WHERE c.courseId = ? AND c.lessonId = ? 
-            ORDER BY c.createdAt DESC`,
-        [courseId, lessonId],
-        (err, rows) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json(rows);
-        });
+            ORDER BY c.createdAt DESC`, [courseId, lessonId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
 });
 
 app.post('/api/comments', (req, res) => {
     const { userId, courseId, lessonId, content } = req.body;
-    if (!userId || !courseId || !lessonId || !content) return res.status(400).json({ error: 'All fields required' });
-
     db.run(`INSERT INTO comments (userId, courseId, lessonId, content) VALUES (?, ?, ?, ?)`,
-        [userId, courseId, lessonId, content],
-        function (err) {
+        [userId, courseId, lessonId, content], function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, userId, courseId, lessonId, content, createdAt: new Date() });
-        }
-    );
+
+            // Return full comment data with user info so frontend can display immediately
+            db.get(`SELECT c.*, u.firstName, u.lastName FROM comments c 
+                    JOIN users u ON c.userId = u.id 
+                    WHERE c.id = ?`, [this.lastID], (err, row) => {
+                res.json(row);
+            });
+        });
 });
+
+// Admin: Get All Comments
+app.get('/api/admin/comments', (req, res) => {
+    db.all(`SELECT c.*, u.firstName, u.lastName, u.email, co.title as courseTitle 
+            FROM comments c 
+            LEFT JOIN users u ON c.userId = u.id 
+            LEFT JOIN courses co ON c.courseId = co.id 
+            ORDER BY c.createdAt DESC`, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Admin: Delete Comment
+app.delete('/api/comments/:id', (req, res) => {
+    db.run(`DELETE FROM comments WHERE id = ?`, [req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: 'Comentario eliminado' });
+    });
+});
+
 
 // Start
 // Global Error Handlers (Prevent Crash in Prod)

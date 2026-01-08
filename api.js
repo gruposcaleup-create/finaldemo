@@ -431,8 +431,15 @@ if (typeof window !== 'undefined') {
       apiGetCourses: apiGetCourses,
       apiGetOrders,
       apiDeleteOrder,
+      apiGetOrders,
+      apiDeleteOrder,
       apiGetSettings: async function () { return await request('/settings'); },
       apiSaveSettings: async function (settings) { return await request('/settings', { method: 'POST', body: JSON.stringify({ settings }) }); },
+
+      // Admin Comments
+      apiGetAllComments: async function () { return await request('/admin/comments'); },
+      apiDeleteComment: async function (id) { return await request(`/comments/${id}`, { method: 'DELETE' }); },
+      apiPostComment: async function (data) { return await request('/comments', { method: 'POST', body: JSON.stringify(data) }); },
 
       // Dashboard
       apiGetMyPurchasedCourses,
