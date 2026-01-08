@@ -829,7 +829,9 @@ app.get('/api/users', (req, res) => {
         });
 
         const pList = new Promise((resolve) => {
-            db.all(`SELECT userId, courseId FROM enrollments`, [], (err, res) => resolve(res || []));
+            db.all(`SELECT e.userId, e.courseId, c.title 
+                    FROM enrollments e 
+                    JOIN courses c ON e.courseId = c.id`, [], (err, res) => resolve(res || []));
         });
 
         Promise.all([pOrders, pEnrollments, pList]).then(([orders, enrollmentCounts, enrollmentList]) => {
