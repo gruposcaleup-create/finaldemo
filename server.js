@@ -311,10 +311,13 @@ app.get('/api/courses', (req, res) => {
         params.push(category);
     }
 
+    // Robust Price Logic: Handle numbers or "$10.00" strings
+    const priceCol = "CAST(REPLACE(REPLACE(price, '$', ''), ',', '') AS REAL)";
+
     if (minPrice) {
         const min = parseFloat(minPrice);
         if (!isNaN(min)) {
-            query += " AND price >= ?";
+            query += ` AND ${priceCol} >= ?`;
             params.push(min);
         }
     }
@@ -322,20 +325,20 @@ app.get('/api/courses', (req, res) => {
     if (maxPrice) {
         const max = parseFloat(maxPrice);
         if (!isNaN(max)) {
-            query += " AND price <= ?";
+            query += ` AND ${priceCol} <= ?`;
             params.push(max);
         }
     }
 
     const { sort } = req.query;
     if (sort === 'price_asc') {
-        query += " ORDER BY price ASC";
+        query += ` ORDER BY ${priceCol} ASC`;
     } else if (sort === 'price_desc') {
-        query += " ORDER BY price DESC";
+        query += ` ORDER BY ${priceCol} DESC`;
     } else if (sort === 'newest') {
-        query += " ORDER BY id DESC"; // Assuming ID correlates with time, or add createdAt if available
+        query += " ORDER BY id DESC";
     } else {
-        query += " ORDER BY id DESC"; // Default
+        query += " ORDER BY id DESC";
     }
 
     db.all(query, params, (err, rows) => {
