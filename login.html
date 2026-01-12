@@ -322,7 +322,7 @@
                     try {
                         // Use consistent API name
                         const response = await window.API.apiRecoverPassword(this.forgotEmail);
-                        this.forgotSuccess = `Código enviado: ${response.code} (Modo Demo)`;
+                        this.forgotSuccess = 'Código enviado a tu correo. Por favor, revisa tu bandeja de entrada.';
                         this.forgotPasswordStep = 2;
                     } catch (err) {
                         this.forgotError = err.message || 'Error al solicitar reset';
