@@ -156,7 +156,7 @@
             class="relative z-10 container mx-auto px-4 sm:px-6 h-full flex flex-col justify-center py-12 sm:py-20 md:py-24">
             <div class="max-w-3xl">
                 <h1
-                    class="text-3xl sm:text-4xl md:text-[3.5rem] font-extrabold text-white leading-tight md:leading-snug lg:leading-normal mb-6 tracking-tight">
+                    class="text-3xl sm:text-4xl md:text-[3.5rem] font-extrabold text-white leading-relaxed mb-6 tracking-tight">
                     Capacitación profesional <br class="hidden sm:block">
                     guiada por expertos.
                 </h1>
@@ -331,11 +331,19 @@
 
             <button @click="$refs.slider.scrollBy({left: -300, behavior: 'smooth'})"
                 class="absolute left-0 md:-left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors z-20 bg-brand text-white shadow-lg">
-                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="w-6 h-6">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
             </button>
             <button @click="$refs.slider.scrollBy({left: 300, behavior: 'smooth'})"
                 class="absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors z-20 bg-brand text-white shadow-lg">
-                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="w-6 h-6">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
             </button>
 
             <div class="flex gap-6 overflow-x-auto snap-x scrollbar-hide pb-4 justify-start md:justify-center"
