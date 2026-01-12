@@ -302,7 +302,7 @@ app.get('/api/courses', (req, res) => {
     let params = [];
 
     if (search) {
-        query += " AND (title LIKE ? OR \"desc\" LIKE ?)";
+        query += " AND (LOWER(title) LIKE LOWER(?) OR LOWER(\"desc\") LIKE LOWER(?))";
         params.push(`%${search}%`, `%${search}%`);
     }
 
@@ -312,13 +312,19 @@ app.get('/api/courses', (req, res) => {
     }
 
     if (minPrice) {
-        query += " AND price >= ?";
-        params.push(minPrice);
+        const min = parseFloat(minPrice);
+        if (!isNaN(min)) {
+            query += " AND price >= ?";
+            params.push(min);
+        }
     }
 
     if (maxPrice) {
-        query += " AND price <= ?";
-        params.push(maxPrice);
+        const max = parseFloat(maxPrice);
+        if (!isNaN(max)) {
+            query += " AND price <= ?";
+            params.push(max);
+        }
     }
 
     const { sort } = req.query;
@@ -440,8 +446,6 @@ app.delete('/api/courses/:id', (req, res) => {
 // Usamos el endpoint basado en tabla 'categories' definido más abajo.
 // Esta versión anterior se comenta/elimina para evitar conflictos.
 // app.get('/api/categories', ...);
-app.post('/api/categories', (req, res) => { res.json({ success: true }); });
-app.delete('/api/categories/:name', (req, res) => { res.json({ success: true }); });
 
 
 // 6. Ordenes & Stripe Checkout

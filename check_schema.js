@@ -1,9 +1,21 @@
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('tienda.db');
+const db = require('./database');
 
 db.serialize(() => {
-    db.all("PRAGMA table_info(enrollments)", (err, rows) => {
-        if (err) console.error(err);
-        else console.log(rows);
+    // List tables
+    db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        console.log("Tables:", tables.map(t => t.name));
+
+        // Check categories schema if it exists
+        if (tables.find(t => t.name === 'categories')) {
+            db.all("PRAGMA table_info(categories)", [], (err, info) => {
+                console.log("Categories Schema:", info);
+            });
+        } else {
+            console.log("❌ Categories table MISSING");
+        }
     });
 });
