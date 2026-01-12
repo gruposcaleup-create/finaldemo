@@ -22,8 +22,8 @@ if (process.env.STRIPE_SECRET_KEY) {
 // Mail Transporter
 const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST || 'smtp.gmail.com',
-    port: 587, // Standard
-    secure: false, // true for 465, false for other ports
+    port: parseInt(process.env.MAIL_PORT) || 587,
+    secure: process.env.MAIL_SECURE === 'true', // true for 465, false for other ports
     auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASSWORD || process.env.MAIL_PASS // Support both just in case
@@ -150,6 +150,18 @@ app.post('/api/auth/register', async (req, res) => {
                     if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'El email ya está registrado' });
                     return res.status(500).json({ error: err.message });
                 }
+
+                // Send Welcome Email
+                if (process.env.MAIL_USER) {
+                    const { getWelcomeEmail } = require('./helpers/emailTemplates');
+                    transporter.sendMail({
+                        from: process.env.MAIL_FROM || `"Soporte" <${process.env.MAIL_USER}>`,
+                        to: email,
+                        subject: '¡Bienvenido a la Comunidad!',
+                        html: getWelcomeEmail(firstName || 'Estudiante')
+                    }).catch(err => console.error("Welcome Email Error:", err));
+                }
+
                 res.json({ id: this.lastID, email, firstName, lastName, role: 'user' });
             }
         );
@@ -208,7 +220,6 @@ app.post('/api/auth/login', (req, res) => {
 // Store recovery codes in memory (Map: email -> { code, expires })
 const recoveryCodes = new Map();
 
-// 3. Auth: Recuperar Pass (Simulado)
 // 3. Auth: Recuperar Pass
 app.post('/api/auth/recover', (req, res) => {
     const { email } = req.body;
@@ -229,12 +240,13 @@ app.post('/api/auth/recover', (req, res) => {
             // Send Email
             if (process.env.MAIL_USER) {
                 try {
+                    const { getRecoveryEmail } = require('./helpers/emailTemplates');
                     transporter.sendMail({
-                        from: '"Soporte" <' + process.env.MAIL_USER + '>',
+                        from: process.env.MAIL_FROM || `"Soporte" <${process.env.MAIL_USER}>`,
                         to: email,
                         subject: 'Recuperación de Contraseña',
                         text: `Tu código de recuperación es: ${code}`,
-                        html: `<b>Tu código de recuperación es: ${code}</b><br>Expira en 5 minutos.`
+                        html: getRecoveryEmail(code)
                     }).catch(console.error);
                 } catch (e) { console.error("Mail error", e); }
             } else {
