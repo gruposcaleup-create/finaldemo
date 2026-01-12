@@ -696,7 +696,7 @@ app.delete('/api/coupons/:id', (req, res) => {
 
 // Categories
 app.get('/api/categories', (req, res) => {
-    db.all(`SELECT name FROM categories`, [], (err, rows) => {
+    db.all(`SELECT name FROM categories UNION SELECT DISTINCT category as name FROM courses WHERE category IS NOT NULL AND category != ''`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows.map(r => r.name));
     });
@@ -875,6 +875,15 @@ app.put('/api/users/:uid/enrollments/:cid/status', (req, res) => {
     const { uid, cid } = req.params;
     const { status } = req.body; // 'active' or 'paused'
     db.run(`UPDATE enrollments SET status = ? WHERE userId = ? AND courseId = ?`, [status, uid, cid], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// Admin: Remove User Enrollment (Delete)
+app.delete('/api/users/:uid/enrollments/:cid', (req, res) => {
+    const { uid, cid } = req.params;
+    db.run(`DELETE FROM enrollments WHERE userId = ? AND courseId = ?`, [uid, cid], (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });

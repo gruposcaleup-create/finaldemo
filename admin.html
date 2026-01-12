@@ -1074,7 +1074,7 @@
                 const comments = await window.API.apiGetAllComments();
                 const tbody = document.getElementById('comments-table-body');
                 tbody.innerHTML = comments.map(c => `
-            < tr class="border-b hover:bg-gray-50" >
+                    <tr class="border-b hover:bg-gray-50">
                         <td class="p-4">
                             <div class="font-medium text-slate-900">${c.firstName || 'Usuario'} ${c.lastName || ''}</div>
                             <div class="text-xs text-gray-500">${c.email || 'Sin email'}</div>
@@ -1095,7 +1095,7 @@
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
-                    </tr >
+                    </tr>
             `).join('');
                 lucide.createIcons();
             } catch (e) { console.error(e); }

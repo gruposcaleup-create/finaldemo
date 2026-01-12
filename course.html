@@ -221,7 +221,9 @@
                     <div x-show="activeTab === 'overview'" x-transition.opacity>
                         <div class="prose prose-invert max-w-none text-zinc-300 text-sm">
                             <h3 class="text-white text-lg font-bold mb-2">Descripción del Curso</h3>
-                            <p x-text="course ? course.desc : 'Sin descripción'"></p>
+                            <p
+                                x-text="course ? (course.description || course.desc || 'Sin descripción') : 'Sin descripción'">
+                            </p>
                             <div class="mt-4 pt-4 border-t border-zinc-800">
                                 <h4 class="text-white text-md font-bold mb-1">Duración Aproximada</h4>
                                 <p class="text-brandPink font-mono"

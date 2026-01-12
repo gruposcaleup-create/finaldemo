@@ -115,8 +115,8 @@ if (typeof window !== 'undefined') {
       } else {
         if (filters.search) params.append('search', filters.search);
         if (filters.category) params.append('category', filters.category);
-        if (filters.minPrice) params.append('minPrice', filters.minPrice);
-        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+        if (filters.minPrice !== undefined && filters.minPrice !== '') params.append('minPrice', filters.minPrice);
+        if (filters.maxPrice !== undefined && filters.maxPrice !== '') params.append('maxPrice', filters.maxPrice);
         if (filters.sort) params.append('sort', filters.sort);
       }
 
@@ -435,11 +435,6 @@ if (typeof window !== 'undefined') {
       apiGetOrders,
       apiDeleteOrder,
       apiGetDashboardStats,
-      apiGetAdminMetrics: async function () { return await request('/admin/metrics'); },
-      apiUpdateUserStatus: async function (userId, status) { return await request('/users/status', { method: 'POST', body: JSON.stringify({ userId, status }) }); },
-      apiGetUserEnrollments: async function (userId) { return await request(`/users/${userId}/enrollments`); },
-      apiGetUserEnrollments: async function (userId) { return await request(`/users/${userId}/enrollments`); },
-      apiDeleteUserEnrollment: async function (userId, courseId) { return await request(`/users/${userId}/enrollments/${courseId}`, { method: 'DELETE' }); },
       apiUpdateEnrollmentStatus: async function (userId, courseId, status) { return await request(`/users/${userId}/enrollments/${courseId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }); },
       apiSaveSettings: async function (settings) { return await request('/settings', { method: 'POST', body: JSON.stringify({ settings }) }); },
 
