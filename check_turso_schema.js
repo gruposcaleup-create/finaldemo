@@ -8,7 +8,7 @@ const client = createClient({
 
 async function run() {
     try {
-        const rs = await client.execute("PRAGMA table_info(enrollments)");
+        const rs = await client.execute("PRAGMA table_info(users)");
         console.log(rs.rows);
     } catch (e) {
         console.error(e);
