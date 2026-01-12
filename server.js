@@ -19,16 +19,39 @@ if (process.env.STRIPE_SECRET_KEY) {
     console.warn("⚠️ STRIPE_SECRET_KEY missing. Payments will be disabled.");
 }
 
-// Mail Transporter
-const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.MAIL_PORT) || 587,
-    secure: process.env.MAIL_SECURE === 'true', // true for 465, false for other ports
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD || process.env.MAIL_PASS // Support both just in case
+// Email Sender (Resend API via HTTP to avoid SMTP port blocks)
+async function sendEmail({ to, subject, html, text }) {
+    if (!process.env.MAIL_PASS) {
+        console.log(`[MOCK EMAIL] To: ${to}, Subject: ${subject}`);
+        return;
     }
-});
+
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.MAIL_PASS}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: process.env.MAIL_FROM || 'onboarding@resend.dev',
+                to: [to],
+                subject: subject,
+                html: html,
+                text: text
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error(`Resend API Error: ${response.status} - ${errorData}`);
+        } else {
+            console.log(`Email sent to ${to}`);
+        }
+    } catch (err) {
+        console.error("Email Network Error:", err);
+    }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Puerto del servidor (Render injects PORT)
@@ -154,12 +177,12 @@ app.post('/api/auth/register', async (req, res) => {
                 // Send Welcome Email
                 if (process.env.MAIL_USER) {
                     const { getWelcomeEmail } = require('./helpers/emailTemplates');
-                    transporter.sendMail({
-                        from: process.env.MAIL_FROM || `"Soporte" <${process.env.MAIL_USER}>`,
+                    const { getWelcomeEmail } = require('./helpers/emailTemplates');
+                    sendEmail({
                         to: email,
                         subject: '¡Bienvenido a la Comunidad!',
                         html: getWelcomeEmail(firstName || 'Estudiante')
-                    }).catch(err => console.error("Welcome Email Error:", err));
+                    });
                 }
 
                 res.json({ id: this.lastID, email, firstName, lastName, role: 'user' });
@@ -241,13 +264,12 @@ app.post('/api/auth/recover', (req, res) => {
             if (process.env.MAIL_USER) {
                 try {
                     const { getRecoveryEmail } = require('./helpers/emailTemplates');
-                    transporter.sendMail({
-                        from: process.env.MAIL_FROM || `"Soporte" <${process.env.MAIL_USER}>`,
+                    sendEmail({
                         to: email,
                         subject: 'Recuperación de Contraseña',
-                        text: `Tu código de recuperación es: ${code}`,
-                        html: getRecoveryEmail(code)
-                    }).catch(console.error);
+                        html: getRecoveryEmail(code),
+                        text: `Tu código de recuperación es: ${code}`
+                    });
                 } catch (e) { console.error("Mail error", e); }
             } else {
                 console.log(`[MOCK EMAIL] To: ${email}, Code: ${code}`);
