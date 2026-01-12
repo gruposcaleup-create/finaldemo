@@ -90,10 +90,14 @@ if (typeof window !== 'undefined') {
     }
 
     function _currentUser() {
-      return JSON.parse(localStorage.getItem('currentUser'));
+      const u = localStorage.getItem('currentUser');
+      // Debug log enabled to trace session issues
+      // console.log('[API] Read currentUser:', u); 
+      return JSON.parse(u);
     }
 
     function _setCurrentUser(u) {
+      console.log('[API] Setting currentUser:', u);
       localStorage.setItem('currentUser', JSON.stringify(u));
     }
 

@@ -159,6 +159,12 @@
 <script>
     window.registerForm = function () {
         return {
+            init() {
+                // Force logout to ensure clean state for new account (Manual clear to avoid redirect)
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('cart'); // Start with fresh cart for new user
+                console.log("Sesión y carrito limpiados para nuevo registro.");
+            },
             firstName: '',
             lastName: '',
             email: '',

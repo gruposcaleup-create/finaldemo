@@ -67,6 +67,16 @@ console.log(`MAIL_PASS: ${process.env.MAIL_PASS ? 'SET (OK)' : 'MISSING (Emails 
 console.log("--------------------------------------------------");
 
 app.use(cors());
+
+// FORCE NO-CACHE for all API routes to prevent sensitive data leakage (Vercel/CDN caching)
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    next();
+});
+
 // app.options removed for Express 5 compatibility (cors middleware handles it)
 
 // Health Check (No DB) - Proves server is running
@@ -171,6 +181,7 @@ app.get('/api/db-check', (req, res) => {
 // 1. Auth: Registro
 app.post('/api/auth/register', async (req, res) => {
     const { email, password, firstName, lastName } = req.body;
+    console.log(`[AUTH] Registering new user: ${email}`);
     if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
 
     try {
@@ -179,9 +190,12 @@ app.post('/api/auth/register', async (req, res) => {
             [email, hash, firstName || '', lastName || ''],
             function (err) {
                 if (err) {
+                    console.error("[AUTH] Register Error:", err.message);
                     if (err.message.includes('UNIQUE')) return res.status(400).json({ error: 'El email ya está registrado' });
                     return res.status(500).json({ error: err.message });
                 }
+                const newId = this.lastID;
+                console.log(`[AUTH] Registered User ID: ${newId} (${email})`);
 
                 // Send Welcome Email
                 if (process.env.MAIL_USER) {
@@ -193,7 +207,7 @@ app.post('/api/auth/register', async (req, res) => {
                     });
                 }
 
-                res.json({ id: this.lastID, email, firstName, lastName, role: 'user' });
+                res.json({ id: newId, email, firstName, lastName, role: 'user' });
             }
         );
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -202,6 +216,7 @@ app.post('/api/auth/register', async (req, res) => {
 // 2. Auth: Login
 app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
+    console.log(`[AUTH] Login attempt for: ${email}`);
     db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!row) return res.status(401).json({ error: 'Credenciales inválidas' });
