@@ -307,7 +307,7 @@ app.get('/api/courses', (req, res) => {
     }
 
     if (category) {
-        query += " AND category = ?";
+        query += " AND LOWER(category) = LOWER(?)";
         params.push(category);
     }
 
