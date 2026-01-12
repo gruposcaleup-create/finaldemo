@@ -21,12 +21,15 @@ const baseTemplate = (content) => `
     h1 { font-size: 24px; margin-bottom: 10px; color: #ffffff !important; }
     p { line-height: 1.6; color: #e4e4e7 !important; }
     .code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: ${BRAND_COLOR}; margin: 20px 0; }
+    .btn { display: inline-block; background-color: ${BRAND_COLOR}; color: #ffffff !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }
+    a { color: ${BRAND_COLOR}; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
-      <img src="https://www.gjuarezlopez.com.mx/images/LOGOMORADOJULG.png" alt="Gonzalo Juárez" style="display: block; margin: 0 auto 20px auto; max-width: 180px; height: auto;" />
+      <img src="https://www.gjuarezlopez.com.mx/images/LOGOMORADOJULG.png" alt="Gonzalo Juárez" style="display: block; margin: 0 auto 10px auto; max-width: 150px; height: auto;" />
+      <div style="text-align: center; color: #ffffff; font-weight: bold; font-family: 'Arial', sans-serif; font-size: 14px; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase;">Gonzalo Juárez López JR.</div>
       ${content}
     </div>
     <div class="footer">
