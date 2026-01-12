@@ -177,7 +177,6 @@ app.post('/api/auth/register', async (req, res) => {
                 // Send Welcome Email
                 if (process.env.MAIL_USER) {
                     const { getWelcomeEmail } = require('./helpers/emailTemplates');
-                    const { getWelcomeEmail } = require('./helpers/emailTemplates');
                     sendEmail({
                         to: email,
                         subject: '¡Bienvenido a la Comunidad!',
