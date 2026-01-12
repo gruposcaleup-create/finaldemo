@@ -151,7 +151,8 @@
         </div>
     </nav>
 
-    <main class="flex-1 w-full max-w-[1400px] mx-auto pt-6 sm:pt-8 pb-20 px-4 sm:px-6">
+    <main class="flex-1 w-full max-w-[1400px] mx-auto pt-6 sm:pt-8 pb-20 px-4 sm:px-6" x-data="productsGrid()"
+        x-init="init()">
 
         <div class="mb-6 sm:mb-8">
             <h1 class="text-2xl sm:text-3xl font-bold text-center mb-4 sm:mb-6">Todos los cursos</h1>
@@ -292,8 +293,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-data="productsGrid()"
-                    x-init="init()">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                     <template x-for="product in products" :key="product.id">
                         <article
@@ -312,7 +312,7 @@
                             <div class="p-4 flex flex-col flex-1">
                                 <h3 class="text-sm font-bold text-white leading-tight mb-1" x-text="product.name"></h3>
                                 <p class="text-[10px] text-zinc-500 mb-2"
-                                    x-text="product.description.substring(0, 50) + '...'"></p>
+                                    x-text="(product.description || '').substring(0, 50) + '...'"></p>
 
                                 <div class="mt-auto mb-4">
                                     <template
