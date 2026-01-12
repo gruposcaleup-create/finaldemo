@@ -22,7 +22,9 @@ if (process.env.STRIPE_SECRET_KEY) {
 // Email Sender (Resend API via HTTP to avoid SMTP port blocks)
 async function sendEmail({ to, subject, html, text }) {
     if (!process.env.MAIL_PASS) {
-        console.log(`[MOCK EMAIL] To: ${to}, Subject: ${subject}`);
+        console.error(`[ERROR] EMAIL NOT SENT. Missing 'MAIL_PASS' (Resend API Key) in environment variables.`);
+        // Fallback log for dev
+        console.log(`[MOCK EMAIL Content] To: ${to}, Subject: ${subject}`);
         return;
     }
 
@@ -56,6 +58,13 @@ async function sendEmail({ to, subject, html, text }) {
 const app = express();
 const PORT = process.env.PORT || 3000; // Puerto del servidor (Render injects PORT)
 const APP_URL = process.env.APP_URL || process.env.CLIENT_URL || 'http://localhost:3000'; // Fallback order
+
+// Log Email Config Status at Startup
+console.log("--------------------------------------------------");
+console.log("EMAIL SYSTEM CONFIGURATION:");
+console.log(`MAIL_FROM: ${process.env.MAIL_FROM || 'MISSING (Defaults to onboarding@resend.dev)'}`);
+console.log(`MAIL_PASS: ${process.env.MAIL_PASS ? 'SET (OK)' : 'MISSING (Emails will be MOCKED/NOT SENT)'}`);
+console.log("--------------------------------------------------");
 
 app.use(cors());
 // app.options removed for Express 5 compatibility (cors middleware handles it)
