@@ -80,9 +80,27 @@ if (typeof window !== 'undefined') {
       });
     }
 
+    // Detect context: admin vs store
+    function _getContext() {
+      // Check if we're on admin.html
+      return window.location.pathname.includes('admin.html') ? 'admin' : 'store';
+    }
+
+    function _getStorageKey() {
+      const context = _getContext();
+      return context === 'admin' ? 'adminCurrentUser' : 'storeCurrentUser';
+    }
+
     function apiLogout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
+      const key = _getStorageKey();
+      localStorage.removeItem(key);
+
+      // Redirect based on context
+      if (_getContext() === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'index.html';
+      }
     }
 
     function isLoggedIn() {
@@ -90,15 +108,21 @@ if (typeof window !== 'undefined') {
     }
 
     function _currentUser() {
-      const u = localStorage.getItem('currentUser');
-      // Debug log enabled to trace session issues
-      // console.log('[API] Read currentUser:', u); 
-      return JSON.parse(u);
+      const key = _getStorageKey();
+      const u = localStorage.getItem(key);
+      if (!u || u === 'undefined' || u === 'null') return null;
+      try {
+        return JSON.parse(u);
+      } catch (e) {
+        console.error('[API] Error parsing user from localStorage:', e);
+        return null;
+      }
     }
 
     function _setCurrentUser(u) {
-      console.log('[API] Setting currentUser:', u);
-      localStorage.setItem('currentUser', JSON.stringify(u));
+      const key = _getStorageKey();
+      console.log(`[API] Setting ${key}:`, u.email, 'Role:', u.role);
+      localStorage.setItem(key, JSON.stringify(u));
     }
 
 

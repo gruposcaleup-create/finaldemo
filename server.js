@@ -1234,40 +1234,79 @@ app.post('/api/progress', (req, res) => {
 // 10. Comentarios (Admin & User)
 app.get('/api/comments', (req, res) => {
     const { courseId, lessonId } = req.query;
-    db.all(`SELECT c.*, u.firstName, u.lastName, u.email 
+    db.all(`SELECT c.*, u.firstName, u.lastName, u.email, u.role as userRole 
             FROM comments c 
             JOIN users u ON c.userId = u.id 
             WHERE c.courseId = ? AND c.lessonId = ? 
-            ORDER BY c.createdAt DESC`, [courseId, lessonId], (err, rows) => {
+            ORDER BY c.createdAt ASC`, [courseId, lessonId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+
+        // Organize comments into parent-child structure
+        const parentComments = rows.filter(c => !c.parentId);
+        const childComments = rows.filter(c => c.parentId);
+
+        // Attach replies to their parents
+        const commentsWithReplies = parentComments.map(parent => ({
+            ...parent,
+            replies: childComments.filter(child => child.parentId === parent.id)
+        }));
+
+        res.json(commentsWithReplies);
     });
 });
 
 app.post('/api/comments', (req, res) => {
-    const { userId, courseId, lessonId, content } = req.body;
-    db.run(`INSERT INTO comments (userId, courseId, lessonId, content) VALUES (?, ?, ?, ?)`,
-        [userId, courseId, lessonId, content], function (err) {
-            if (err) return res.status(500).json({ error: err.message });
+    const { userId, courseId, lessonId, content, parentId } = req.body;
 
-            // Return full comment data with user info so frontend can display immediately
-            db.get(`SELECT c.*, u.firstName, u.lastName FROM comments c 
-                    JOIN users u ON c.userId = u.id 
-                    WHERE c.id = ?`, [this.lastID], (err, row) => {
-                res.json(row);
+    // Get user role first to cache it
+    db.get(`SELECT role FROM users WHERE id = ?`, [userId], (err, user) => {
+        if (err || !user) return res.status(500).json({ error: 'User not found' });
+
+        const userRole = user.role;
+
+        db.run(`INSERT INTO comments (userId, courseId, lessonId, content, parentId, userRole) VALUES (?, ?, ?, ?, ?, ?)`,
+            [userId, courseId, lessonId, content, parentId || null, userRole], function (err) {
+                if (err) return res.status(500).json({ error: err.message });
+
+                // Return full comment data with user info so frontend can display immediately
+                db.get(`SELECT c.*, u.firstName, u.lastName, u.role as userRole FROM comments c 
+                        JOIN users u ON c.userId = u.id 
+                        WHERE c.id = ?`, [this.lastID], (err, row) => {
+                    res.json(row);
+                });
             });
-        });
+    });
 });
 
 // Admin: Get All Comments
 app.get('/api/admin/comments', (req, res) => {
-    db.all(`SELECT c.*, u.firstName, u.lastName, u.email, co.title as courseTitle 
+    db.all(`SELECT c.*, u.firstName, u.lastName, u.email, u.role as userRole, co.title as courseTitle 
             FROM comments c 
             LEFT JOIN users u ON c.userId = u.id 
             LEFT JOIN courses co ON c.courseId = co.id 
+            WHERE c.parentId IS NULL
             ORDER BY c.createdAt DESC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+
+        // For each parent comment, get its replies
+        const commentIds = rows.map(r => r.id);
+        if (commentIds.length === 0) return res.json([]);
+
+        const placeholders = commentIds.map(() => '?').join(',');
+        db.all(`SELECT c.*, u.firstName, u.lastName, u.email, u.role as userRole 
+                FROM comments c 
+                LEFT JOIN users u ON c.userId = u.id 
+                WHERE c.parentId IN (${placeholders})`, commentIds, (err, replies) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            // Attach replies to their parents
+            const commentsWithReplies = rows.map(parent => ({
+                ...parent,
+                replies: replies.filter(reply => reply.parentId === parent.id)
+            }));
+
+            res.json(commentsWithReplies);
+        });
     });
 });
 

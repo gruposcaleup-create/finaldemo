@@ -76,18 +76,28 @@
 
     <script src="./api.js"></script>
     <script>
-        // Simple initialization check
+        // Simple initialization check with session isolation
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.API) {
                 console.log('✅ API loaded');
+
+                // Check if logged in using admin context
                 if (window.API.isLoggedIn()) {
                     try {
                         const profile = await window.API.apiGetProfile();
-                        if (profile.role !== 'admin' && profile.role !== 'editor') {
+                        console.log('Profile loaded:', profile);
+
+                        // CRITICAL: Block non-admin users from accessing admin panel
+                        if (!profile || (profile.role !== 'admin' && profile.role !== 'editor')) {
+                            console.warn('⛔ Access denied: User role is not admin/editor');
+                            alert('No tienes permisos para acceder al panel administrativo.');
                             window.location.href = 'panel.html';
+                            return;
                         }
                     } catch (e) {
                         console.error("Auth check failed", e);
+                        // If auth check fails, redirect to login
+                        window.location.href = 'admin.html';  // Will show login screen
                     }
                 }
                 window.dispatchEvent(new CustomEvent('api-ready'));
@@ -462,6 +472,7 @@
                 <dialog id="reply-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
                     <div class="p-6">
                         <h3 class="text-lg font-bold mb-4">Responder Comentario</h3>
+                        <input type="hidden" id="reply-parent-id">
                         <input type="hidden" id="reply-course-id">
                         <input type="hidden" id="reply-lesson-id">
                         <div class="space-y-4">
@@ -682,7 +693,7 @@
             if (viewName === 'coupons') renderCoupons();
             if (viewName === 'resources') renderResources();
             if (viewName === 'courses') renderCoursesList();
-            if (viewName === 'comments') renderComments();
+            if (viewName === 'comments') renderComments();  // Add this line
             if (viewName === 'dashboard') {
                 if (state.metrics) {
                     updateDashboard(state.metrics);
@@ -1871,6 +1882,118 @@
             // Logic missing in original snippet but preserving function
             showToast('Función no implementada en backend actual', 'info');
         }
+
+        // COMMENTS MANAGEMENT
+        let state_comments = [];
+        let state_replyToComment = null;
+
+        async function renderComments() {
+            try {
+                state_comments = await window.API.apiGetAllComments();
+                const tbody = document.getElementById('comments-table-body');
+
+                if (!state_comments || state_comments.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500">No hay comentarios aún</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = state_comments.map(c => {
+                    const userName = `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email;
+                    const courseTitle = c.courseTitle || 'Curso desconocido';
+                    const date = new Date(c.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const hasReplies = c.replies && c.replies.length > 0;
+                    const repliesCount = hasReplies ? c.replies.length : 0;
+
+                    return `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-4">
+                                <div class="font-medium text-sm">${userName}</div>
+                                <div class="text-xs text-gray-400">${c.email}</div>
+                            </td>
+                            <td class="p-4">
+                                <div class="text-sm mb-1">${c.content.substring(0, 100)}${c.content.length > 100 ? '...' : ''}</div>
+                                ${hasReplies ? `
+                                    <div class="mt-2 p-2 bg-blue-50 border-l-2 border-blue-300 rounded text-xs">
+                                        <div class="font-semibold text-blue-700 mb-1">Has respondido (${repliesCount} ${repliesCount === 1 ? 'respuesta' : 'respuestas'})</div>
+                                        ${c.replies.map(r => `
+                                            <div class="text-gray-600 italic">"${r.content.substring(0, 60)}..."</div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </td>
+                            <td class="p-4 truncate max-w-xs text-xs">${courseTitle}</td>
+                            <td class="p-4 text-xs text-gray-500">${date}</td>
+                            <td class="p-4 text-right">
+                                <button onclick="openReplyModal(${c.id}, ${c.courseId}, ${c.lessonId}, '${userName.replace(/'/g, "\\'")}')" 
+                                    class="text-blue-600 hover:bg-blue-50 p-2 rounded transition mr-2" title="Responder">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteComment(${c.id})" 
+                                    class="text-red-500 hover:bg-red-50 p-2 rounded transition" title="Eliminar">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                lucide.createIcons();
+            } catch (err) {
+                console.error('Error loading comments:', err);
+                showToast('Error al cargar comentarios', 'error');
+            }
+        }
+
+        function openReplyModal(commentId, courseId, lessonId, userName) {
+            state_replyToComment = commentId;
+            document.getElementById('reply-course-id').value = courseId;
+            document.getElementById('reply-lesson-id').value = lessonId;
+            document.getElementById('reply-content').value = '';
+            document.getElementById('reply-modal').showModal();
+        }
+
+        async function sendReply() {
+            const courseId = document.getElementById('reply-course-id').value;
+            const lessonId = document.getElementById('reply-lesson-id').value;
+            const content = document.getElementById('reply-content').value.trim();
+
+            if (!content) {
+                showToast('Escribe una respuesta', 'error');
+                return;
+            }
+
+            try {
+                const user = await window.API.apiGetProfile();
+                if (!user) throw new Error('Usuario no autenticado');
+
+                await window.API.apiPostComment({
+                    userId: user.id,
+                    courseId: parseInt(courseId),
+                    lessonId: parseInt(lessonId),
+                    content: content,
+                    parentId: state_replyToComment  // This links it as a reply
+                });
+
+                document.getElementById('reply-modal').close();
+                showToast('Respuesta enviada correctamente', 'success');
+                await renderComments();  // Refresh the list
+            } catch (err) {
+                console.error('Error sending reply:', err);
+                showToast('Error al enviar respuesta', 'error');
+            }
+        }
+
+        async function deleteComment(id) {
+            if (!confirm('¿Eliminar este comentario?')) return;
+            try {
+                await window.API.apiDeleteComment(id);
+                showToast('Comentario eliminado', 'success');
+                await renderComments();
+            } catch (err) {
+                console.error('Error deleting comment:', err);
+                showToast('Error al eliminar comentario', 'error');
+            }
+        }
+
 
         // TOAST SYSTEM
         function showToast(msg, type = 'info') {
