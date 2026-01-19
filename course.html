@@ -699,7 +699,16 @@
                             this.newComment = '';
                             this.fetchComments();
                         } else {
-                            alert('Error al publicar comentario');
+                            try {
+                                const errData = await res.json();
+                                alert(errData.error || 'Error al publicar comentario');
+                                if (res.status === 404 && errData.error && errData.error.includes('Usuario')) {
+                                    // Optional: Auto logout if user not found
+                                    // window.API.apiLogout();
+                                }
+                            } catch (e) {
+                                alert('Error al publicar comentario (Status ' + res.status + ')');
+                            }
                         }
                     } catch (e) { console.error(e); }
                 },

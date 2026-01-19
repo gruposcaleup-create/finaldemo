@@ -17,6 +17,9 @@ try {
     console.log("[STARTUP] Migration script error or executed internally:", e.message);
 }
 
+// Ignore favicon
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 let stripe;
 if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
