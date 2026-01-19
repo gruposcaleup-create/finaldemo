@@ -17,9 +17,6 @@ try {
     console.log("[STARTUP] Migration script error or executed internally:", e.message);
 }
 
-// Ignore favicon
-app.get('/favicon.ico', (req, res) => res.status(204).end());
-
 let stripe;
 if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -67,6 +64,8 @@ async function sendEmail({ to, subject, html, text }) {
 }
 
 const app = express();
+// Ignore favicon
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 const PORT = process.env.PORT || 3000; // Puerto del servidor (Render injects PORT)
 const APP_URL = process.env.APP_URL || process.env.CLIENT_URL || 'http://localhost:3000'; // Fallback order
 
@@ -1129,45 +1128,46 @@ app.get('/api/my-courses', (req, res) => {
 app.get('/api/admin/metrics', (req, res) => {
     const metrics = {};
 
-    db.parallelize(() => {
-        // 1. Total Revenue
-        db.get(`SELECT SUM(total) as revenue FROM orders WHERE status = 'paid'`, (err, row) => {
-            metrics.revenue = row ? row.revenue || 0 : 0;
-        });
+    // Remove db.parallelize() as it is not supported by the Turso adapter
+    // 1. Total Revenue
+    db.get(`SELECT SUM(total) as revenue FROM orders WHERE status = 'paid'`, (err, row) => {
+        metrics.revenue = row ? row.revenue || 0 : 0;
 
         // 2. Total Students (Role user)
         db.get(`SELECT COUNT(*) as count FROM users WHERE role = 'user'`, (err, row) => {
             metrics.students = row ? row.count : 0;
-        });
 
-        // 3. Active Courses
-        db.get(`SELECT COUNT(*) as count FROM courses WHERE status = 'active'`, (err, row) => {
-            metrics.activeCourses = row ? row.count : 0;
+            // 3. Active Courses
+            db.get(`SELECT COUNT(*) as count FROM courses WHERE status = 'active'`, (err, row) => {
+                metrics.activeCourses = row ? row.count : 0;
 
-            // 4. Monthly Revenue (Current Year)
-            db.all(`SELECT total, createdAt FROM orders WHERE status = 'paid'`, (err, rows) => {
-                const monthly = new Array(12).fill(0);
-                const currentYear = new Date().getFullYear();
+                // 4. Monthly Revenue (Current Year)
+                db.all(`SELECT total, createdAt FROM orders WHERE status = 'paid'`, (err, rows) => {
+                    const monthly = new Array(12).fill(0);
+                    const currentYear = new Date().getFullYear();
 
-                rows.forEach(r => {
-                    const d = new Date(r.createdAt);
-                    if (d.getFullYear() === currentYear) {
-                        monthly[d.getMonth()] += r.total;
+                    if (rows) {
+                        rows.forEach(r => {
+                            const d = new Date(r.createdAt);
+                            if (d.getFullYear() === currentYear) {
+                                monthly[d.getMonth()] += r.total;
+                            }
+                        });
                     }
-                });
-                metrics.monthlyRevenue = monthly;
+                    metrics.monthlyRevenue = monthly;
 
-                // 5. Recent Sales (Last 5)
-                db.all(`
-                    SELECT o.id, o.total, o.createdAt, u.firstName, u.lastName, u.email 
-                    FROM orders o 
-                    JOIN users u ON o.userId = u.id 
-                    WHERE o.status = 'paid'
-                    ORDER BY o.createdAt DESC 
-                    LIMIT 5
-                `, (err, rows) => {
-                    metrics.recentSales = rows || [];
-                    res.json(metrics);
+                    // 5. Recent Sales (Last 5)
+                    db.all(`
+                        SELECT o.id, o.total, o.createdAt, u.firstName, u.lastName, u.email 
+                        FROM orders o 
+                        JOIN users u ON o.userId = u.id 
+                        WHERE o.status = 'paid'
+                        ORDER BY o.createdAt DESC 
+                        LIMIT 5
+                    `, (err, rows) => {
+                        metrics.recentSales = rows || [];
+                        res.json(metrics);
+                    });
                 });
             });
         });
