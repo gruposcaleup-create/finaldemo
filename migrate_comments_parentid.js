@@ -1,46 +1,20 @@
+// Migration logic modified to be safe for require()
 const db = require('./database');
 
-console.log('🔄 Adding parentId column to comments table...');
+console.log('🔄 Checking/Migrating comments table schema...');
 
 db.serialize(() => {
-    // Add parentId column (nullable, references comments.id)
+    // Add parentId column (nullable)
     db.run(`ALTER TABLE comments ADD COLUMN parentId INTEGER DEFAULT NULL`, (err) => {
-        if (err) {
-            if (err.message.includes('duplicate column')) {
-                console.log('✅ Column parentId already exists');
-            } else {
-                console.error('❌ Error adding parentId column:', err.message);
-            }
-        } else {
-            console.log('✅ Column parentId added successfully');
-        }
+        if (!err) console.log('✅ Column parentId added/checked');
+        else if (!err.message.includes('duplicate')) console.error('❌ Error adding parentId:', err.message);
     });
 
-    // Add role column to comments table to cache the user's role
+    // Add userRole column
     db.run(`ALTER TABLE comments ADD COLUMN userRole TEXT DEFAULT 'user'`, (err) => {
-        if (err) {
-            if (err.message.includes('duplicate column')) {
-                console.log('✅ Column userRole already exists');
-            } else {
-                console.error('❌ Error adding userRole column:', err.message);
-            }
-        } else {
-            console.log('✅ Column userRole added successfully');
-        }
+        if (!err) console.log('✅ Column userRole added/checked');
+        else if (!err.message.includes('duplicate')) console.error('❌ Error adding userRole:', err.message);
     });
 });
-
-// Wait a moment then verify
-setTimeout(() => {
-    db.all(`PRAGMA table_info(comments)`, [], (err, rows) => {
-        if (err) {
-            console.error('Error checking schema:', err);
-        } else {
-            console.log('\n📋 Current comments table schema:');
-            rows.forEach(col => {
-                console.log(`  - ${col.name} (${col.type}) ${col.notnull ? 'NOT NULL' : 'NULL'} ${col.dflt_value ? `DEFAULT ${col.dflt_value}` : ''}`);
-            });
-        }
-        db.close();
-    });
-}, 1000);
+// Removed db.close() to prevent closing shared connection if singleton, or just to be safe.
+// Node process exit/server run will handle connection lifecycle usually.

@@ -9,6 +9,14 @@ const Stripe = require('stripe');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 
+// AUTO-MIGRATE: Ensure database schema is up to date (Critical for Render)
+try {
+    const migration = require('./migrate_comments_parentid');
+    console.log("[STARTUP] Migration script loaded.");
+} catch (e) {
+    console.log("[STARTUP] Migration script error or executed internally:", e.message);
+}
+
 let stripe;
 if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
