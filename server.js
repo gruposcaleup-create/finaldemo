@@ -1233,16 +1233,23 @@ app.get('/api/admin/metrics', (req, res) => {
                 db.all(`SELECT total, createdAt FROM orders WHERE status = 'paid'`, (err, rows) => {
                     const monthly = new Array(12).fill(0);
                     const currentYear = new Date().getFullYear();
+                    const currentMonth = new Date().getMonth();
+                    let salesThisMonth = 0;
 
                     if (rows) {
                         rows.forEach(r => {
                             const d = new Date(r.createdAt);
                             if (d.getFullYear() === currentYear) {
                                 monthly[d.getMonth()] += r.total;
+                                // Count sales for current month
+                                if (d.getMonth() === currentMonth) {
+                                    salesThisMonth++;
+                                }
                             }
                         });
                     }
                     metrics.monthlyRevenue = monthly;
+                    metrics.salesThisMonth = salesThisMonth;
 
                     // 5. Recent Sales (Last 5)
                     db.all(`

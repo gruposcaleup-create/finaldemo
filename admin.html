@@ -222,7 +222,7 @@
                         <div class="flex justify-between items-center mb-2"><span
                                 class="text-sm font-medium text-gray-500">Ventas Mes</span><i data-lucide="credit-card"
                                 class="w-4 h-4 text-gray-400"></i></div>
-                        <div class="text-2xl font-bold">+5</div>
+                        <div id="month-sales" class="text-2xl font-bold">0</div>
                     </div>
                     <div class="bg-white p-6 rounded-xl border shadow-sm">
                         <div class="flex justify-between items-center mb-2"><span
@@ -1525,6 +1525,11 @@
             if (!metrics) return;
             document.getElementById('kpi-revenue').textContent = '$' + (metrics.revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('kpi-students').textContent = '+' + (metrics.students || 0);
+
+            // Fix: Use salesThisMonth from API, or fallback to 0. Do NOT use recentSales.length.
+            const monthSales = metrics.salesThisMonth !== undefined ? metrics.salesThisMonth : 0;
+            document.getElementById('month-sales').textContent = '+' + monthSales;
+
             document.getElementById('kpi-active-courses').textContent = metrics.activeCourses || 0;
         }
 

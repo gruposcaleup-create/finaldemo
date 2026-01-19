@@ -21,7 +21,24 @@ if (USE_TURSO) {
 
     // ADAPTER: Wraps Turso client to look like sqlite3
     db = {
-        serialize: (cb) => { if (cb) cb(); }, // Turso is async, serialization is implicit/await based
+        serialize: (cb) => {
+            // For Turso, we can run the repair logic here as initialization
+            const repair = async () => {
+                try {
+                    console.log("🛠️ Checking/Repairing 'comments' table schema...");
+                    // Force add columns if missing (sqlite doesn't support IF NOT EXISTS for columns easily in one statement, so we try/catch)
+                    await client.execute('ALTER TABLE comments ADD COLUMN parentId INTEGER');
+                    console.log("✅ Added parentId column");
+                } catch (e) { /* ignore if exists */ }
+
+                try {
+                    await client.execute('ALTER TABLE comments ADD COLUMN userRole TEXT');
+                    console.log("✅ Added userRole column");
+                } catch (e) { /* ignore if exists */ }
+            };
+            repair(); // Fire and forget or allow async
+            if (cb) cb();
+        },
         run: function (sql, params, callback) {
             if (typeof params === 'function') { callback = params; params = []; }
             if (!params) params = [];
@@ -74,9 +91,10 @@ if (USE_TURSO) {
         close: () => { /* client.close() if needed */ }
     };
 
-    // Auto-init (schema check) handled below? 
-    // Turso schema was already migrated, but initDatabase is good for double check if we want safety.
-    console.log("✅ Custom Adapter for Turso Ready");
+    // Auto-Repair Trigger
+    db.serialize();
+
+    console.log("✅ Custom Adapter for Turso Ready + Repair Logic Injected");
 
 } else {
     // FALLBACK: Local SQLite
