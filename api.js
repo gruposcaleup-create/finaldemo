@@ -478,6 +478,13 @@ if (typeof window !== 'undefined') {
       apiCreateCheckoutSession,
       apiAssignMembership: async function (userId) {
         return await request(`/admin/users/${userId}/membership`, { method: 'POST' });
+      },
+      apiRestoreSession: function (user) {
+        if (user && user.id) {
+          _setCurrentUser(user);
+          return true;
+        }
+        return false;
       }
     };
   })();

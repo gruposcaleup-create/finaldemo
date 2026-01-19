@@ -94,6 +94,12 @@
                             window.location.href = 'panel.html';
                             return;
                         }
+
+                        // Show App, Hide Login (Persistence Fix)
+                        document.getElementById('login-view').classList.add('hide');
+                        document.getElementById('app-layout').classList.remove('hide');
+                        if (window.loadAdminData) window.loadAdminData();
+
                     } catch (e) {
                         console.error("Auth check failed", e);
                         // If auth check fails, redirect to login

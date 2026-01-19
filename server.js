@@ -684,21 +684,23 @@ app.post('/api/checkout/verify-session', async (req, res) => {
                             const items = JSON.parse(row.items);
                             items.forEach(item => {
                                 if (item.id === 'membership-annual') {
-                                    // Handle membership
+                                    // Handle membership logic if needed here (usually webhook handles it better, but good fallback)
+                                    // We can duplicate the webhook logic here for immediate access if webhook is slow
+                                    const startDate = new Date().toISOString();
+                                    const endDate = new Date();
+                                    endDate.setFullYear(endDate.getFullYear() + 1);
+                                    db.run(`INSERT INTO memberships (userId, status, startDate, endDate, paymentId) VALUES (?, ?, ?, ?, ?)`,
+                                        [userId, 'active', startDate, endDate.toISOString(), dbId], (e) => { if (e) console.error(e); });
                                 } else {
                                     const courseId = item.id;
-                                    // Check existence
                                     db.get(`SELECT id FROM enrollments WHERE userId = ? AND courseId = ?`, [userId, courseId], (e, r) => {
                                         if (!r) {
                                             db.run(`INSERT INTO enrollments (userId, courseId, progress, totalHoursSpent) VALUES (?, ?, 0, 0)`,
                                                 [userId, courseId],
                                                 (errEnroll) => {
                                                     if (errEnroll) console.error("[Verify] Enrollment failed", errEnroll);
-                                                    else console.log(`[Verify] Enrolled user ${userId} in course ${courseId}`);
                                                 }
                                             );
-                                        } else {
-                                            console.log(`[Verify] User ${userId} already enrolled in ${courseId}`);
                                         }
                                     });
                                 }
@@ -710,7 +712,21 @@ app.post('/api/checkout/verify-session', async (req, res) => {
                 });
             });
 
-            return res.json({ success: true, status: 'paid' });
+            // CRITICAL FIX: Return user data to restore session in frontend
+            db.get(`SELECT * FROM users WHERE id = ?`, [userId], (err, user) => {
+                if (err || !user) {
+                    // Fallback if user not found (should not happen)
+                    return res.json({ success: true, status: 'paid', user: null });
+                }
+                const { password, ...userWithoutPass } = user;
+
+                // Check membership for the returned user object
+                db.get(`SELECT * FROM memberships WHERE userId = ? AND status = 'active' AND endDate > CURRENT_TIMESTAMP ORDER BY endDate DESC LIMIT 1`, [user.id], (mErr, membership) => {
+                    if (membership) userWithoutPass.membership = { active: true, endDate: membership.endDate };
+                    res.json({ success: true, status: 'paid', user: userWithoutPass });
+                });
+            });
+
         } else {
             return res.json({ success: false, status: session.payment_status });
         }

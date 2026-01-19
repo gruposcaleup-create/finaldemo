@@ -602,8 +602,11 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="./api.js"></script>
     <script>
-        // Redirigir a login si no está autenticado
-        if (!(window.API && window.API.isLoggedIn ? window.API.isLoggedIn() : false)) {
+        // Redirigir a login si no está autenticado, EXCEPTO si viene de pago exitoso (que restaurará sesión)
+        const params = new URLSearchParams(window.location.search);
+        const isPaymentSuccess = params.get('payment_success') === 'true';
+
+        if (!isPaymentSuccess && !(window.API && window.API.isLoggedIn ? window.API.isLoggedIn() : false)) {
             window.location.href = 'login.html';
         }
 
@@ -798,6 +801,14 @@
                                     body: JSON.stringify({ sessionId })
                                 });
                                 const verifyData = await verifyRes.json();
+
+                                if (verifyData.success && verifyData.user) {
+                                    // RESTORE SESSION
+                                    if (window.API && window.API.apiRestoreSession) {
+                                        window.API.apiRestoreSession(verifyData.user);
+                                        console.log("Session restored from payment verification");
+                                    }
+                                }
                                 console.log("Verification result:", verifyData);
 
                                 // Authenticated User? If so, we are good.
