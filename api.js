@@ -416,6 +416,10 @@ if (typeof window !== 'undefined') {
       });
     }
 
+    async function apiGetAdminMetrics() {
+      return await request('/admin/metrics');
+    }
+
     // Expose
     window.API = {
       apiRegister,
@@ -485,7 +489,8 @@ if (typeof window !== 'undefined') {
           return true;
         }
         return false;
-      }
+      },
+      apiGetAdminMetrics // EXPOSED MISSING FUNCTION
     };
   })();
 } else {

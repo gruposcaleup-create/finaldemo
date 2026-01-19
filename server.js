@@ -1284,9 +1284,14 @@ app.post('/api/comments', (req, res) => {
 
     // Get user role first to cache it
     db.get(`SELECT role FROM users WHERE id = ?`, [userId], (err, user) => {
-        if (err || !user) return res.status(500).json({ error: 'User not found' });
+        // If error or no user, handle gracefully or default
+        if (err) return res.status(500).json({ error: err.message });
 
-        const userRole = user.role;
+        // If user deleted or weird state, default to 'user' to allow comment (or block?)
+        // Better to verify user exists. If not user, we can't post.
+        if (!user) return res.status(404).json({ error: 'Usuario no encontrado para comentar' });
+
+        const userRole = user.role || 'user'; // Fallback
 
         db.run(`INSERT INTO comments (userId, courseId, lessonId, content, parentId, userRole) VALUES (?, ?, ?, ?, ?, ?)`,
             [userId, courseId, lessonId, content, parentId || null, userRole], function (err) {
@@ -1296,6 +1301,7 @@ app.post('/api/comments', (req, res) => {
                 db.get(`SELECT c.*, u.firstName, u.lastName, u.role as userRole FROM comments c 
                         JOIN users u ON c.userId = u.id 
                         WHERE c.id = ?`, [this.lastID], (err, row) => {
+                    if (err) return res.status(500).json({ error: "Comentario creado pero error al retornar: " + err.message });
                     res.json(row);
                 });
             });
