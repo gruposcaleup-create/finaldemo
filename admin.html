@@ -194,14 +194,9 @@
         <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-8 w-full" id="main-content">
             <div id="view-dashboard" class="view-section fade-in">
                 <h1 class="text-3xl font-bold text-slate-800">Dashboard</h1>
-                <div class="space-x-2">
-                    <button onclick="resetMetrics()"
-                        class="bg-red-100 text-red-600 px-4 py-2 rounded hover:bg-red-200 text-sm font-medium">
-                        <i data-lucide="trash-2" class="w-4 h-4 inline mr-1"></i> Borrar Ventas/Pruebas
-                    </button>
-                    <div class="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded shadow-sm">
-                        <span id="current-date"></span>
-                    </div>
+                <h1 class="text-3xl font-bold text-slate-800">Dashboard</h1>
+                <div class="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded shadow-sm">
+                    <span id="current-date"></span>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div class="bg-white p-6 rounded-xl border shadow-sm">
@@ -1497,27 +1492,6 @@
         function togglePassword() {
             const input = document.getElementById('password');
             input.type = input.type === "password" ? "text" : "password";
-        }
-
-        // DASHBOARD ACTIONS
-        async function resetMetrics() {
-            if (!confirm("⚠️ AVISO: Esto eliminará TODAS las órdenes, inscripciones y membresías de la base de datos.\n\nÚselo para limpiar datos de prueba.\n\n¿Confirmar?")) return;
-
-            try {
-                // Manual fetch because api.js might not have this endpoint exposed yet, or we use request helper
-                // But window.API is available. Let's add it there or just fetch here for speed.
-                const res = await fetch('/api/admin/orders/reset', { method: 'DELETE' });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast('Datos reiniciados correctamente', 'success');
-                    window.location.reload();
-                } else {
-                    showToast('Error: ' + data.error, 'error');
-                }
-            } catch (e) {
-                console.error(e);
-                showToast('Error de conexión', 'error');
-            }
         }
 
         // DASHBOARD

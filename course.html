@@ -517,15 +517,17 @@
 
                 async init() {
                     // FIX: Ensure session detection is robust (Use correct key 'currentUser')
+                    // FIX: Use API to get current user (handles correct storage keys 'storeCurrentUser')
                     try {
-                        const userStr = localStorage.getItem('currentUser');
-                        if (userStr && userStr !== 'undefined') {
-                            this.user = JSON.parse(userStr);
+                        this.user = await window.API.apiGetProfile();
+                        if (this.user) {
                             console.log("Usuario detectado:", this.user.email);
                         } else {
-                            console.warn("No se detectó sesión de usuario en localStorage (key: currentUser)");
+                            console.warn("No se detectó sesión activa.");
                         }
-                    } catch (e) { console.error("Error parseando usuario:", e); }
+                    } catch (e) {
+                        console.error("Error obteniendo perfil:", e);
+                    }
 
                     const params = new URLSearchParams(window.location.search);
                     const courseId = params.get('id');

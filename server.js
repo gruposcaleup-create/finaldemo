@@ -844,18 +844,7 @@ app.delete('/api/orders/:id', (req, res) => {
     });
 });
 
-// Admin: Reset Data (Useful for dev/demos)
-app.delete('/api/admin/orders/reset', (req, res) => {
-    // Also clear enrollments? Maybe. User asked to "clear sales".
-    // Let's clear orders and reset stats.
-    db.serialize(() => {
-        db.run('DELETE FROM orders');
-        db.run('DELETE FROM enrollments'); // Assuming we want full clean slate for sales/courses
-        db.run('DELETE FROM memberships');
-        // Do NOT delete Users or Courses usually
-    });
-    res.json({ success: true, message: 'Base de datos de ventas reiniciada' });
-});
+
 
 // 7. Cupones
 app.get('/api/coupons', (req, res) => {
