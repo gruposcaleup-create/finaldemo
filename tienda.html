@@ -514,23 +514,46 @@
                     const response = await fetch(`/api/resources/${res.id}/download`);
                     if (!response.ok) throw new Error('Error de red');
 
-                    const fullRes = await response.json();
-
-                    if (fullRes.dataUrl) {
-                        const a = document.createElement('a');
-                        a.href = fullRes.dataUrl;
-                        a.download = fullRes.name;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                    } else if (fullRes.url) {
-                        window.open(fullRes.url, '_blank');
-                    } else {
-                        showToast('El recurso no tiene contenido descargable');
+                    const contentType = response.headers.get('content-type');
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                         // It's a JSON response (likely an error or url-only fallback)
+                         const fullRes = await response.json();
+                         if (fullRes.error) throw new Error(fullRes.error);
+                         if (fullRes.url) {
+                            window.open(fullRes.url, '_blank');
+                            return;
+                         }
                     }
+
+                    // Treat as file blob
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    
+                    // Try to get filename from header
+                    let filename = res.name || 'download';
+                    const disposition = response.headers.get('Content-Disposition');
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                        var matches = filenameRegex.exec(disposition);
+                        if (matches != null && matches[1]) { 
+                            filename = matches[1].replace(/['"]/g, '');
+                            // Decode if encoded
+                            try { filename = decodeURIComponent(filename); } catch(e){}
+                        }
+                    }
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+
                 } catch (e) {
                     console.error(e);
-                    showToast('Error al descargar');
+                    showToast('Error al descargar: ' + e.message);
                 }
             }
         }

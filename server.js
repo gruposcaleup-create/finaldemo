@@ -13,6 +13,13 @@ const nodemailer = require('nodemailer');
 try {
     const migration = require('./migrate_comments_parentid');
     console.log("[STARTUP] Migration script loaded.");
+
+    // Quick Local SQLite Migration for phoneNumber
+    if (db && db.run && !process.env.TURSO_DATABASE_URL) {
+        db.run("ALTER TABLE users ADD COLUMN phoneNumber TEXT", (err) => {
+            // Ignore error if column exists
+        });
+    }
 } catch (e) {
     console.log("[STARTUP] Migration script error or executed internally:", e.message);
 }
@@ -190,14 +197,29 @@ app.get('/api/db-check', (req, res) => {
 
 // 1. Auth: Registro
 app.post('/api/auth/register', async (req, res) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, phoneNumber } = req.body;
     console.log(`[AUTH] Registering new user: ${email}`);
     if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
 
     try {
         const hash = await bcrypt.hash(password, 10);
-        db.run(`INSERT INTO users (email, password, firstName, lastName) VALUES (?, ?, ?, ?)`,
-            [email, hash, firstName || '', lastName || ''],
+        // Ensure column exists for SQLite local (Turso handled in database.js, but local needs check or lazy add)
+        // For simplicity we assume it exists or we add it on the fly if we could, 
+        // but standard SQLite `run` will fail if column missing.
+        // We really should use a migration for local sqlite too.
+        // Let's rely on a quick check or just try insert. 
+        // If local sqlite usage implies `database.js` plain sqlite, we missed the repair logic there.
+        // Let's add specific repair for local SQLite in database.js or just try-catch here?
+        // Better: We added repair logic in database.js specifically for Turso.
+        // We should double check if local sqlite needs it.
+        // For now, let's assume we can add it safely.
+
+        // Dynamic insert based on column availability is hard without migration system.
+        // Let's try to add the column if it fails? No, better to have a migration.
+        // I will add a migration snippet at top of server.js for Local SQLite safety too.
+
+        db.run(`INSERT INTO users (email, password, firstName, lastName, phoneNumber) VALUES (?, ?, ?, ?, ?)`,
+            [email, hash, firstName || '', lastName || '', phoneNumber || ''],
             function (err) {
                 if (err) {
                     console.error("[AUTH] Register Error:", err.message);

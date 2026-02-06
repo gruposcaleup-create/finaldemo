@@ -39,10 +39,10 @@ if (typeof window !== 'undefined') {
     }
 
     // --- Auth ---
-    async function apiRegister(email, password, firstName, lastName) {
+    async function apiRegister(email, password, firstName, lastName, phoneNumber) {
       const user = await request('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, firstName, lastName })
+        body: JSON.stringify({ email, password, firstName, lastName, phoneNumber })
       });
       _setCurrentUser(user);
       return user;

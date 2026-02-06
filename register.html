@@ -72,6 +72,11 @@
                             class="w-full bg-inputBg border border-inputBorder focus:border-inputFocus focus:outline-none transition-colors duration-200 px-3 py-2 rounded text-xs text-white font-light placeholder-zinc-600">
                     </div>
 
+                    <div>
+                        <input type="tel" placeholder="Número de Teléfono" x-model="phoneNumber"
+                            class="w-full bg-inputBg border border-inputBorder focus:border-inputFocus focus:outline-none transition-colors duration-200 px-3 py-2 rounded text-xs text-white font-light placeholder-zinc-600">
+                    </div>
+
                     <div class="relative">
                         <input :type="showPassword ? 'text' : 'password'" placeholder="Crea tu contraseña"
                             x-model="password"
@@ -167,6 +172,7 @@
             },
             firstName: '',
             lastName: '',
+            phoneNumber: '',
             email: '',
             password: '',
             passwordConfirm: '',
@@ -191,7 +197,13 @@
                     const api = window.API || (window.__loadAPI ? await window.__loadAPI() : null);
                     if (!api) throw new Error("Error de conexión. Intenta recargar.");
 
-                    const response = await api.apiRegister(this.email, this.password, this.firstName, this.lastName);
+                    if (!this.phoneNumber) {
+                        this.error = 'El número de teléfono es requerido';
+                        this.loading = false;
+                        return;
+                    }
+
+                    const response = await api.apiRegister(this.email, this.password, this.firstName, this.lastName, this.phoneNumber);
                     // Redirigir a login
                     window.location.href = 'login.html';
                 } catch (err) {
