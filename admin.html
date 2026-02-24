@@ -244,7 +244,7 @@
                         <p class="text-gray-500">Gestiona tu catálogo educativo.</p>
                     </div>
                     <button onclick="resetAndCreateCourse()"
-                        class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800"><i
+                        class="bg-brandPink text-white px-4 py-2 rounded-md flex items-center hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95"><i
                             data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Crear Curso</button>
                 </div>
                 <div id="courses-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -261,7 +261,7 @@
                         </div>
                     </div>
                     <button onclick="saveCourse()"
-                        class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800">
+                        class="bg-brandPink text-white px-4 py-2 rounded-md flex items-center hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95">
                         <i data-lucide="save" class="w-4 h-4 mr-2"></i>
                         <span id="form-save-btn-text">Guardar Curso</span>
                     </button>
@@ -364,7 +364,7 @@
             <div id="view-coupons" class="view-section hide fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold">Cupones</h1><button onclick="openCouponModal()"
-                        class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800"><i
+                        class="bg-brandPink text-white px-4 py-2 rounded-md flex items-center hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95"><i
                             data-lucide="plus" class="w-4 h-4 mr-2"></i> Crear Cupón</button>
                 </div>
                 <dialog id="coupon-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
@@ -382,7 +382,8 @@
                             <div class="flex justify-end gap-2 mt-6"><button
                                     onclick="document.getElementById('coupon-modal').close()"
                                     class="px-4 py-2 border rounded">Cancelar</button><button onclick="saveCoupon()"
-                                    class="px-4 py-2 bg-slate-900 text-white rounded">Guardar</button></div>
+                                    class="px-4 py-2 bg-brandPink text-white rounded hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95">Guardar</button>
+                            </div>
                         </div>
                     </div>
                 </dialog>
@@ -404,7 +405,7 @@
             <div id="view-resources" class="view-section hide fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold">Recursos Gratuitos</h1><button onclick="openResourceModal()"
-                        class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800"><i
+                        class="bg-brandPink text-white px-4 py-2 rounded-md flex items-center hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95"><i
                             data-lucide="upload-cloud" class="w-4 h-4 mr-2"></i> Subir Recurso</button>
                 </div>
                 <div class="bg-white rounded-lg border shadow-sm overflow-hidden overflow-x-auto">
@@ -435,7 +436,7 @@
                                 onkeyup="filterMembers(this.value)">
                         </div>
                         <button onclick="openCreateUserModal()"
-                            class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800">
+                            class="bg-brandPink text-white px-4 py-2 rounded-md flex items-center hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95">
                             <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Nuevo Usuario
                         </button>
                     </div>
@@ -490,7 +491,8 @@
                             <div class="flex justify-end gap-2">
                                 <button onclick="document.getElementById('reply-modal').close()"
                                     class="px-4 py-2 border rounded">Cancelar</button>
-                                <button onclick="sendReply()" class="px-4 py-2 bg-slate-900 text-white rounded">Enviar
+                                <button onclick="sendReply()"
+                                    class="px-4 py-2 bg-brandPink text-white rounded hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95">Enviar
                                     Respuesta</button>
                             </div>
                         </div>
@@ -518,7 +520,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-3xl font-bold">Configuración</h1>
                     <button onclick="saveSettings()"
-                        class="bg-slate-900 text-white px-4 py-2 rounded-md flex items-center hover:bg-slate-800"><i
+                        class="bg-brandPink text-white px-4 py-2 rounded-md flex items-center hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95"><i
                             data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar Cambios</button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -580,10 +582,10 @@
                         </div>
                         <div class="flex justify-end gap-2 mt-6">
                             <button onclick="document.getElementById('resource-modal').close()"
-                                class="px-4 py-2 border rounded">Cancelar</button>
+                                class="px-4 py-2 border rounded hover:bg-gray-50 transition-colors">Cancelar</button>
                             <button onclick="saveResource()" id="save-resource-btn"
-                                class="px-4 py-2 bg-slate-900 text-white rounded flex items-center gap-2"> <i
-                                    data-lucide="save" class="w-4 h-4"></i> Guardar</button>
+                                class="px-4 py-2 bg-brandPink text-white rounded flex items-center gap-2 hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95">
+                                <i data-lucide="save" class="w-4 h-4"></i> Guardar</button>
                         </div>
                     </div>
                 </div>
@@ -624,7 +626,7 @@
                             <button onclick="document.getElementById('create-user-modal').close()"
                                 class="px-4 py-2 border rounded">Cancelar</button>
                             <button onclick="createNewUser()"
-                                class="px-4 py-2 bg-slate-900 text-white rounded flex items-center gap-2">Crear</button>
+                                class="px-4 py-2 bg-brandPink text-white rounded hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95 flex items-center gap-2">Crear</button>
                         </div>
                     </div>
                 </div>
@@ -673,7 +675,7 @@
                         <button onclick="document.getElementById('role-modal').close()"
                             class="px-4 py-2 border rounded">Cancelar</button>
                         <button onclick="confirmRoleChange()"
-                            class="px-4 py-2 bg-slate-900 text-white rounded">Guardar</button>
+                            class="px-4 py-2 bg-brandPink text-white rounded hover:bg-brandPinkHover shadow-lg shadow-pink-900/20 transition-all active:scale-95">Guardar</button>
                     </div>
                 </div>
             </dialog>

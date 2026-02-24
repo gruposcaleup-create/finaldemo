@@ -409,10 +409,11 @@
                 x-init="loadResources()">
                 <template x-for="resource in resources" :key="resource.id">
                     <article
-                        class="bg-zinc-900/50 backdrop-blur-sm rounded-xl border border-zinc-800 overflow-hidden hover:border-brandPink/50 hover:bg-zinc-900 transition-all duration-300 group relative shadow-lg hover:shadow-brandPink/10 flex flex-col h-full">
+                        class="bg-card rounded-xl overflow-hidden border border-borderDark hover:border-brandPink/30 hover:shadow-2xl hover:shadow-brandPink/5 transition-all duration-300 group flex flex-col h-full cursor-default">
 
                         <!-- Resource Image / Icon -->
-                        <div class="relative h-40 bg-zinc-800 flex items-center justify-center overflow-hidden">
+                        <div
+                            class="relative h-40 bg-zinc-900/50 flex items-center justify-center overflow-hidden border-b border-borderDark">
                             <template x-if="resource.image">
                                 <img :src="resource.image"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -427,29 +428,25 @@
                                     </svg>
                                 </div>
                             </template>
-                            <span
-                                class="absolute top-3 right-3 text-[10px] bg-black/60 backdrop-blur-md text-zinc-300 px-2 py-1 rounded uppercase font-bold tracking-wider border border-white/10"
-                                x-text="resource.type ? (resource.type.split('/')[1] ? resource.type.split('/')[1].toUpperCase() : 'FILE') : 'FILE'"></span>
-                        </div>
+                            <span <div class="p-6 flex flex-col flex-1">
+                                <h3 class="font-bold text-white mb-2 line-clamp-1 group-hover:text-brandPink transition-colors text-sm uppercase tracking-wide"
+                                    x-text="resource.name"></h3>
+                                <p class="text-xs text-zinc-400 mb-6 line-clamp-2 h-8 leading-relaxed"
+                                    x-text="resource.description || 'Sin descripción disponible.'"></p>
 
-                        <div class="p-6 flex flex-col flex-1">
-                            <h3 class="font-bold text-white mb-2 line-clamp-1 group-hover:text-brandPink transition-colors"
-                                x-text="resource.name"></h3>
-                            <p class="text-xs text-zinc-400 mb-6 line-clamp-2 h-8"
-                                x-text="resource.description || 'Sin descripción disponible.'"></p>
-
-                            <div class="mt-auto">
-                                <button
-                                    @click="isLoggedIn() ? downloadResource(resource) : window.location.href = 'register.html?redirect=tienda&msg=resource'"
-                                    class="w-full py-3 rounded-lg border border-zinc-700 bg-zinc-800/50 hover:bg-brandPink hover:border-brandPink hover:text-white text-zinc-300 text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                    </svg>
-                                    <span
-                                        x-text="isLoggedIn() ? 'Descargar Ahora' : 'Descargar gratis (Regístrate)'"></span>
-                                </button>
-                            </div>
+                                <div class="mt-auto">
+                                    <button
+                                        @click="isLoggedIn() ? downloadResource(resource) : window.location.href = 'register.html?redirect=tienda&msg=resource'"
+                                        class="w-full py-3 rounded-lg border border-zinc-700 bg-zinc-800/50 hover:bg-brandPink hover:border-brandPink hover:text-white text-zinc-300 text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                                            </path>
+                                        </svg>
+                                        <span
+                                            x-text="isLoggedIn() ? 'Descargar Ahora' : 'Descargar gratis (Regístrate)'"></span>
+                                    </button>
+                                </div>
                         </div>
                     </article>
                 </template>
