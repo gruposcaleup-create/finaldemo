@@ -913,9 +913,9 @@ app.post('/api/coupons/validate', (req, res) => {
 
 // 8. Recursos
 app.post('/api/resources', (req, res) => {
-    const { name, type, dataUrl, description, access } = req.body;
-    db.run(`INSERT INTO resources (name, type, dataUrl, description, access) VALUES (?, ?, ?, ?, ?)`,
-        [name, type, dataUrl, description || '', access || 'public'],
+    const { name, type, dataUrl, description, access, image } = req.body;
+    db.run(`INSERT INTO resources (name, type, dataUrl, description, access, image) VALUES (?, ?, ?, ?, ?, ?)`,
+        [name, type, dataUrl, description || '', access || 'public', image || null],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });
@@ -926,11 +926,11 @@ app.get('/api/resources', (req, res) => {
     // Admin gets all, but usually user interface filters by 'public'.
     // We can add a query param ?access=public
     const access = req.query.access;
-    let sql = `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
+    let sql = `SELECT id, name, type, description, createdAt, access, image FROM resources ORDER BY createdAt DESC`;
     let params = [];
 
     if (access) {
-        sql = `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
+        sql = `SELECT id, name, type, description, createdAt, access, image FROM resources WHERE access = ? ORDER BY createdAt DESC`;
         params.push(access);
     }
 
@@ -938,6 +938,30 @@ app.get('/api/resources', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         const processed = rows.map(r => ({ ...r, url: `/api/resources/${r.id}/download` }));
         res.json(processed);
+    });
+});
+
+app.put('/api/resources/:id', (req, res) => {
+    const { name, type, dataUrl, description, access, image } = req.body;
+    const resourceId = req.params.id;
+
+    let fields = [];
+    let values = [];
+
+    if (name !== undefined) { fields.push('name = ?'); values.push(name); }
+    if (type !== undefined) { fields.push('type = ?'); values.push(type); }
+    if (dataUrl !== undefined) { fields.push('dataUrl = ?'); values.push(dataUrl); }
+    if (description !== undefined) { fields.push('description = ?'); values.push(description); }
+    if (access !== undefined) { fields.push('access = ?'); values.push(access); }
+    if (image !== undefined) { fields.push('image = ?'); values.push(image); }
+
+    if (fields.length === 0) return res.json({ success: true, message: 'Nothing to update' });
+
+    values.push(resourceId);
+
+    db.run(`UPDATE resources SET ${fields.join(', ')} WHERE id = ?`, values, function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 // Download Resource CORRECTED

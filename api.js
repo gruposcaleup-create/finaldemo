@@ -359,6 +359,9 @@ if (typeof window !== 'undefined') {
 
     async function apiGetResources(access) { return await request('/resources' + (access ? `?access=${access}` : '')); }
     async function apiCreateResource(data) { return await request('/resources', { method: 'POST', body: JSON.stringify(data) }); }
+    async function apiUpdateResource(id, data) {
+      return await request(`/resources/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    }
     async function apiDeleteResource(id) { return await request(`/resources/${id}`, { method: 'DELETE' }); }
 
     async function apiGetMembers() { return await request('/users'); }

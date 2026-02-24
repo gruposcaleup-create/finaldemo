@@ -412,7 +412,7 @@
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="p-4 w-16">Tipo</th>
-                                <th class="p-4">Nombre</th>
+                                <th class="p-4">Nombre / Descripción</th>
                                 <th class="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -545,8 +545,24 @@
             <!-- Modal Recursos -->
             <dialog id="resource-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
                 <div class="p-6">
-                    <h3 class="text-lg font-bold mb-4">Subir Nuevo Recurso</h3>
+                    <h3 id="resource-modal-title" class="text-lg font-bold mb-4">Subir Nuevo Recurso</h3>
+                    <input type="hidden" id="resource-id">
                     <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-1 font-semibold">Portada / Imagen (Opcional)</label>
+                            <div class="flex items-center gap-4">
+                                <div id="resource-image-preview"
+                                    class="w-20 h-20 bg-gray-100 rounded border flex items-center justify-center overflow-hidden">
+                                    <i data-lucide="image" class="w-8 h-8 text-gray-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" id="resource-image-input" accept="image/*"
+                                        onchange="handleResourceImageUpload(event)"
+                                        class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                                    <p class="text-[10px] text-gray-400 mt-1">Recomendado: 400x400px</p>
+                                </div>
+                            </div>
+                        </div>
                         <div>
                             <label class="block text-sm mb-1">Nombre del Archivo</label>
                             <input type="text" id="resource-name" class="w-full border p-2 rounded"
@@ -558,16 +574,16 @@
                                 placeholder="Describe el contenido..."></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm mb-1">Archivo</label>
+                            <label class="block text-sm mb-1">Archivo (Opcional si solo editas metadatos)</label>
                             <input type="file" id="resource-file-input"
                                 class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100">
                         </div>
                         <div class="flex justify-end gap-2 mt-6">
                             <button onclick="document.getElementById('resource-modal').close()"
                                 class="px-4 py-2 border rounded">Cancelar</button>
-                            <button onclick="uploadResource()"
+                            <button onclick="saveResource()" id="save-resource-btn"
                                 class="px-4 py-2 bg-slate-900 text-white rounded flex items-center gap-2"> <i
-                                    data-lucide="upload" class="w-4 h-4"></i> Subir</button>
+                                    data-lucide="save" class="w-4 h-4"></i> Guardar</button>
                         </div>
                     </div>
                 </div>
@@ -759,13 +775,18 @@
             const tbody = document.getElementById('resources-table-body');
             tbody.innerHTML = state.resources.map(r => `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4"><i data-lucide="${r.type.includes('pdf') ? 'file-text' : 'file'}" class="w-5 h-5 text-gray-400"></i></td>
+                    <td class="p-4">
+                        ${r.image ? `<img src="${r.image}" class="w-10 h-10 object-cover rounded shadow-sm">` : `<i data-lucide="${r.type.includes('pdf') ? 'file-text' : 'file'}" class="w-5 h-5 text-gray-400"></i>`}
+                    </td>
                     <td class="p-4">
                         <div class="font-medium">${r.name}</div>
                         <div class="text-xs text-gray-500">${r.description || ''}</div>
                     </td>
                     <td class="p-4 text-right">
-                        <a href="/api/resources/${r.id}/download" download="${r.name}" class="text-blue-600 hover:text-blue-800 mr-3 px-2 py-1 rounded hover:bg-blue-50">
+                        <button onclick="openResourceModal(${r.id})" class="text-slate-600 hover:text-slate-800 mr-2 p-1 rounded hover:bg-gray-100">
+                            <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+                        </button>
+                        <a href="/api/resources/${r.id}/download" download="${r.name}" class="text-blue-600 hover:text-blue-800 mr-2 p-1 rounded hover:bg-blue-50">
                             <i data-lucide="download" class="w-4 h-4 inline"></i>
                         </a>
                         <button onclick="deleteResource(${r.id})" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50">
@@ -777,40 +798,99 @@
             lucide.createIcons();
         }
 
-        function openResourceModal() {
-            document.getElementById('resource-name').value = '';
-            document.getElementById('resource-desc').value = '';
-            document.getElementById('resource-file-input').value = '';
-            document.getElementById('resource-modal').showModal();
+        function openResourceModal(id = null) {
+            const modal = document.getElementById('resource-modal');
+            const title = document.getElementById('resource-modal-title');
+            const idInput = document.getElementById('resource-id');
+            const nameInput = document.getElementById('resource-name');
+            const descInput = document.getElementById('resource-desc');
+            const fileInput = document.getElementById('resource-file-input');
+            const imgInput = document.getElementById('resource-image-input');
+            const preview = document.getElementById('resource-image-preview');
+
+            // Reset
+            idInput.value = id || '';
+            nameInput.value = '';
+            descInput.value = '';
+            fileInput.value = '';
+            imgInput.value = '';
+            preview.innerHTML = '<i data-lucide="image" class="w-8 h-8 text-gray-300"></i>';
+            lucide.createIcons();
+
+            if (id) {
+                title.textContent = 'Editar Recurso';
+                const res = state.resources.find(r => r.id === id);
+                if (res) {
+                    nameInput.value = res.name;
+                    descInput.value = res.description || '';
+                    if (res.image) {
+                        preview.innerHTML = `<img src="${res.image}" class="w-full h-full object-cover">`;
+                    }
+                }
+            } else {
+                title.textContent = 'Subir Nuevo Recurso';
+            }
+
+            modal.showModal();
         }
 
-        async function uploadResource() {
+        function handleResourceImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('resource-image-preview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function saveResource() {
+            const id = document.getElementById('resource-id').value;
+            const name = document.getElementById('resource-name').value;
+            const desc = document.getElementById('resource-desc').value;
             const fileInput = document.getElementById('resource-file-input');
             const file = fileInput.files[0];
-            const desc = document.getElementById('resource-desc').value;
-            const name = document.getElementById('resource-name').value || (file ? file.name : 'Recurso');
+            const previewImg = document.getElementById('resource-image-preview').querySelector('img');
+            const image = previewImg ? previewImg.src : null;
 
-            if (!file) return showToast('Selecciona un archivo', 'error');
+            if (!id && !file) return showToast('Selecciona un archivo', 'error');
+            if (!name) return showToast('El nombre es obligatorio', 'error');
 
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const dataUrl = e.target.result;
+            const payload = {
+                name: name,
+                description: desc,
+                image: image
+            };
+
+            const processSave = async (dataUrl = null, type = null) => {
+                if (dataUrl) {
+                    payload.dataUrl = dataUrl;
+                    payload.type = type;
+                }
+
                 try {
-                    await window.API.apiCreateResource({
-                        name: name,
-                        description: desc,
-                        type: file.type,
-                        dataUrl: dataUrl
-                    });
-                    showToast('Recurso subido correctamente', 'success');
+                    if (id) {
+                        await window.API.apiUpdateResource(id, payload);
+                        showToast('Recurso actualizado', 'success');
+                    } else {
+                        await window.API.apiCreateResource(payload);
+                        showToast('Recurso subido correctamente', 'success');
+                    }
                     document.getElementById('resource-modal').close();
                     state.resources = await window.API.apiGetResources();
                     renderResources();
                 } catch (err) {
-                    showToast('Error al subir recurso', 'error');
+                    showToast('Error al guardar recurso', 'error');
                 }
             };
-            reader.readAsDataURL(file);
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => processSave(e.target.result, file.type);
+                reader.readAsDataURL(file);
+            } else {
+                processSave();
+            }
         }
 
         async function deleteResource(id) {
