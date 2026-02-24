@@ -49,8 +49,8 @@
             <div class="w-full max-w-xs mx-auto flex flex-col h-full justify-center">
                 <div class="text-center space-y-1 mb-5">
                     <h1 class="text-xl sm:text-2xl font-medium text-white tracking-tight">Crear tu cuenta</h1>
-                    <p class="text-[10px] sm:text-[11px] text-zinc-400 font-light">
-                        Únete a la comunidad de JULG
+                    <p class="text-[10px] sm:text-[11px] text-zinc-400 font-light"
+                        x-text="msg === 'resource' ? 'Regístrate gratis para descargar este recurso' : 'Únete a la comunidad de JULG para continuar'">
                     </p>
                 </div>
 
@@ -165,11 +165,20 @@
     window.registerForm = function () {
         return {
             init() {
-                // Force logout to ensure clean state for new account (Manual clear to avoid redirect)
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('cart'); // Start with fresh cart for new user
-                console.log("Sesión y carrito limpiados para nuevo registro.");
+                // Get redirect and msg from URL
+                const params = new URLSearchParams(window.location.search);
+                this.redirectTo = params.get('redirect') || '';
+                this.msg = params.get('msg') || '';
+
+                // Clear state ONLY IF NOT redirecting from a meaningful flow (like cart)
+                if (!this.redirectTo) {
+                    localStorage.removeItem('currentUser');
+                    // localStorage.removeItem('cart'); // Prefer to keep cart if user was exploring
+                }
+                console.log("Registro inicializado. Redirigir a:", this.redirectTo);
             },
+            redirectTo: '',
+            msg: '',
             firstName: '',
             lastName: '',
             phoneNumber: '',
@@ -204,8 +213,11 @@
                     }
 
                     const response = await api.apiRegister(this.email, this.password, this.firstName, this.lastName, this.phoneNumber);
-                    // Redirigir a login
-                    window.location.href = 'login.html';
+
+                    // Auto-login after registration if possible (assuming api returns user or we need to login)
+                    // For now, let's stick to redirecting to login with the same param
+                    const redirectUrl = this.redirectTo ? `login.html?redirect=${encodeURIComponent(this.redirectTo)}` : 'login.html';
+                    window.location.href = redirectUrl;
                 } catch (err) {
                     this.error = err.message || 'Error al crear la cuenta';
                 }

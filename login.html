@@ -143,7 +143,7 @@
                         </a>
                         <div class="text-[10px] text-zinc-500">
                             ¿No tienes cuenta? <a href="register.html"
-                                class="text-[#D40B75] hover:underline font-medium">Regístrate</a>
+                                class="text-[#D40B75] hover:underline font-medium">Crear cuenta</a>
                         </div>
                     </div>
 
@@ -297,8 +297,11 @@
                         const redirect = params.get('redirect');
 
                         // Role based redirect
-                        if (redirect === 'cart') {
-                            window.location.href = 'cart.html';
+                        if (redirect) {
+                            // Support values like 'cart', 'tienda', or full urls 'cart.html'
+                            let target = redirect;
+                            if (!target.includes('.html')) target += '.html';
+                            window.location.href = target;
                         } else if (response.role === 'admin' || response.role === 'editor') {
                             window.location.href = 'admin.html';
                         } else {

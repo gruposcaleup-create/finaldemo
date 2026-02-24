@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Curso | Plataforma Educativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="api.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #09090b;
+            color: white;
+        }
+
+        .brand-gradient {
+            background: linear-gradient(135deg, #ff2d55 0%, #ff5274 100%);
+        }
+
+        .glass {
+            background: rgba(24, 24, 27, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandPink: '#ff2d55',
+                        brandPinkHover: '#e6294d',
+                        card: '#18181b',
+                        borderDark: '#27272a'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body x-data="productPage()" class="min-h-screen">
+    <!-- Header -->
+    <header
+        class="h-20 flex items-center justify-between px-6 sm:px-12 bg-black/50 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+        <a href="index.html" class="flex items-center gap-2 group">
+            <div
+                class="w-8 h-8 rounded-lg brand-gradient flex items-center justify-center p-1.5 shadow-lg group-hover:scale-105 transition-transform">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" />
+                    <path d="M2 17L12 22L22 17" />
+                    <path d="M2 12L12 17L22 12" />
+                </svg>
+            </div>
+            <span
+                class="text-lg font-black tracking-tight text-white group-hover:text-brandPink transition-colors">PLATA<span
+                    class="text-brandPink">FORMA</span></span>
+        </a>
+        <div class="flex items-center gap-4">
+            <a href="tienda.html" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Volver a
+                la tienda</a>
+            <div class="flex items-center gap-3">
+                <a href="cart.html"
+                    class="relative w-10 h-10 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span id="cart-count"
+                        class="absolute -top-1 -right-1 bg-brandPink text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-black">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="py-12 px-6 max-w-7xl mx-auto" x-show="product" x-cloak>
+        <div class="grid lg:grid-cols-12 gap-12">
+            <!-- Left Info -->
+            <div class="lg:col-span-8 flex flex-col gap-8">
+                <nav class="flex text-xs text-zinc-500 gap-2 items-center">
+                    <a href="tienda.html" class="hover:text-white transition-colors">Tienda</a>
+                    <span>/</span>
+                    <span class="text-zinc-400" x-text="product.category || 'Curso'"></span>
+                </nav>
+
+                <h1 class="text-4xl sm:text-5xl font-black leading-tight" x-text="product.name || product.title"></h1>
+
+                <div class="flex flex-wrap items-center gap-4 py-2">
+                    <div
+                        class="flex items-center gap-2 bg-brandPink/10 px-3 py-1.5 rounded-full border border-brandPink/20">
+                        <svg class="w-4 h-4 text-brandPink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-xs font-bold text-brandPink uppercase tracking-wider"
+                            x-text="product.duration || 'Auto-dirigido'"></span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-full border border-white/5 text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-xs font-bold uppercase tracking-wider text-zinc-300">Acceso de por vida</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 bg-zinc-800 px-3 py-1.5 rounded-full border border-white/5 text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                        </svg>
+                        <span class="text-xs font-bold uppercase tracking-wider text-zinc-300">Certificado
+                            incluido</span>
+                    </div>
+                </div>
+
+                <div class="aspect-video rounded-3xl overflow-hidden glass shadow-2xl relative group">
+                    <img :src="product.image"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                        :alt="product.name">
+                    <div
+                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div
+                            class="w-20 h-20 rounded-full brand-gradient flex items-center justify-center p-1 shadow-2xl scale-90 group-hover:scale-100 transition-transform">
+                            <svg class="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs/Sections -->
+                <div class="mt-8 space-y-10">
+                    <section>
+                        <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                            <span class="w-1.5 h-8 brand-gradient rounded-full"></span>
+                            Sobre este curso
+                        </h2>
+                        <div class="bg-card/50 p-8 rounded-3xl border border-white/5 leading-relaxed text-zinc-400 text-lg space-y-4"
+                            x-html="product.description || product.desc">
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                            <span class="w-1.5 h-8 brand-gradient rounded-full"></span>
+                            Lo que aprenderás
+                        </h2>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <template x-for="i in 4">
+                                <div
+                                    class="flex items-start gap-4 p-5 bg-zinc-900/50 rounded-2xl border border-white/5">
+                                    <div
+                                        class="mt-1 w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 text-green-500">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="text-sm font-medium text-zinc-300">Dominio completo de las herramientas
+                                        y metodologías profesionales.</span>
+                                </div>
+                            </template>
+                        </div>
+                    </section>
+
+                    <!-- Modules -->
+                    <section x-show="product.modules && product.modules.length > 0">
+                        <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
+                            <span class="w-1.5 h-8 brand-gradient rounded-full"></span>
+                            Contenido del programa
+                        </h2>
+                        <div class="space-y-4">
+                            <template x-for="(module, index) in product.modules">
+                                <div class="bg-zinc-900 border border-white/5 rounded-2xl overflow-hidden">
+                                    <div class="p-5 flex items-center justify-between">
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-zinc-600 font-bold"
+                                                x-text="(index + 1).toString().padStart(2, '0')"></span>
+                                            <span class="font-bold text-white text-base"
+                                                x-text="module.name || module.title"></span>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest"
+                                            x-text="(module.lessons ? module.lessons.length : 0) + ' lecciones'"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="lg:col-span-4 lg:sticky lg:top-28 h-fit">
+                <div class="glass p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
+                    <!-- Price Tag -->
+                    <div class="mb-8">
+                        <template
+                            x-if="product.priceOffer && parseFloat(product.priceOffer) < parseFloat(product.price)">
+                            <div class="flex flex-col">
+                                <span class="text-zinc-500 line-through text-sm mb-1"
+                                    x-text="'Precio normal: US$' + parseFloat(product.price).toFixed(2)"></span>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-5xl font-black text-white"
+                                        x-text="'$' + parseFloat(product.priceOffer).toFixed(2)"></span>
+                                    <span
+                                        class="bg-green-500/10 text-green-500 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider">Ahorra
+                                        20%</span>
+                                </div>
+                            </div>
+                        </template>
+                        <template
+                            x-if="!product.priceOffer || parseFloat(product.priceOffer) >= parseFloat(product.price)">
+                            <span class="text-5xl font-black text-white"
+                                x-text="'$' + parseFloat(product.price).toFixed(2)"></span>
+                        </template>
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-4">Inversión única •
+                            Pago seguro</p>
+                    </div>
+
+                    <!-- CTAs -->
+                    <div class="space-y-4">
+                        <button @click="addToCart('checkout')"
+                            class="w-full brand-gradient text-white font-black py-5 rounded-2xl shadow-xl shadow-brandPink/30 hover:scale-[1.02] active:scale-95 transition-all text-lg uppercase tracking-tighter">
+                            Comprar Ahora
+                        </button>
+                        <button @click="addToCart('cart')"
+                            class="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-5 rounded-2xl border border-white/10 transition-all text-lg active:scale-95">
+                            Agregar al carrito
+                        </button>
+                    </div>
+
+                    <!-- Features -->
+                    <ul class="mt-8 space-y-4 pt-8 border-t border-white/10">
+                        <li class="flex items-center gap-3 text-sm text-zinc-300">
+                            <svg class="w-5 h-5 text-brandPink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
+                            </svg>
+                            Pago cifrado de seguridad SSL
+                        </li>
+                        <li class="flex items-center gap-3 text-sm text-zinc-300">
+                            <svg class="w-5 h-5 text-brandPink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Acceso inmediato al campus
+                        </li>
+                    </ul>
+
+                    <!-- Membership Promo Mini -->
+                    <div
+                        class="mt-10 p-5 bg-gradient-to-br from-zinc-800 to-black rounded-3xl border border-brandPink/20 group">
+                        <p class="text-[10px] font-bold text-brandPink uppercase mb-2">Opción recomendada</p>
+                        <h4
+                            class="text-sm font-bold text-white mb-2 underline decoration-brandPink decoration-2 underline-offset-4">
+                            ¿Quieres acceso ilimitado?</h4>
+                        <p class="text-[10px] text-zinc-400 mb-4 leading-relaxed">Suscríbete a nuestra membresía anual y
+                            obtén este curso y todos los demás por un precio único.</p>
+                        <a href="membership.html"
+                            class="flex items-center justify-between text-[11px] font-black text-white hover:text-brandPink transition-colors uppercase italic group-hover:translate-x-1 transition-transform">
+                            Saber más
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M13 5l7 7-7 7M5 12h14"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-20 py-16 border-t border-white/5 glass text-center">
+        <div class="max-w-xl mx-auto px-6">
+            <h3 class="text-lg font-bold mb-4">Plataforma Educativa de Alto Rendimiento</h3>
+            <p class="text-zinc-500 text-sm mb-8 leading-relaxed">Estamos comprometidos con la excelencia y la formación
+                continua de profesionales en todo el mundo.</p>
+            <div class="flex justify-center gap-6">
+                <!-- Social Icons simplified -->
+                <div
+                    class="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center p-2 text-zinc-600 hover:text-brandPink hover:bg-zinc-800 transition-all cursor-pointer">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-zinc-700 text-[10px] mt-12 uppercase tracking-[0.2em]">&copy; 2026 Plataforma Educativa Pro.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function productPage() {
+            return {
+                product: null,
+                async init() {
+                    const params = new URLSearchParams(window.location.search);
+                    const id = params.get('id');
+                    if (!id) {
+                        window.location.href = 'tienda.html';
+                        return;
+                    }
+                    try {
+                        this.product = await API.apiGetProduct(id);
+                        if (!this.product) throw new Error('Product not found');
+                        this.updateCartCountUI();
+                    } catch (e) {
+                        console.error('Error loading product:', e);
+                        window.location.href = 'tienda.html';
+                    }
+                },
+                async addToCart(type = 'cart') {
+                    if (!this.product) return;
+                    try {
+                        await API.apiAddToCart(this.product.id, 1);
+                        this.updateCartCountUI();
+                        if (type === 'checkout') {
+                            window.location.href = 'cart.html';
+                        } else {
+                            // Visual feedback
+                            const btn = event.target;
+                            const originalText = btn.innerText;
+                            btn.innerText = '¡Agregado!';
+                            btn.classList.replace('bg-white/5', 'bg-green-500/20');
+                            setTimeout(() => {
+                                btn.innerText = originalText;
+                                btn.classList.replace('bg-green-500/20', 'bg-white/5');
+                            }, 2000);
+                        }
+                    } catch (e) {
+                        alert('Error: ' + e.message);
+                    }
+                },
+                async updateCartCountUI() {
+                    try {
+                        const cart = await API.apiGetCart();
+                        const countEl = document.getElementById('cart-count');
+                        if (countEl) countEl.innerText = cart.items.length;
+                    } catch (e) { }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

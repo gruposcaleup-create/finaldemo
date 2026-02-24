@@ -291,9 +291,9 @@
                         </button>
                     </div>
 
-                    <button @click="checkout()" :disabled="!isLoggedIn() || cart.items.length === 0"
+                    <button @click="checkout()" :disabled="cart.items.length === 0"
                         class="w-full bg-gradient-to-r from-brandPink to-[#9c0856] hover:from-[#b00961] hover:to-[#7a0643] disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-bold tracking-wide shadow-lg shadow-pink-900/20 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02]"
-                        x-text="!isLoggedIn() ? 'Inicia sesión para comprar' : cart.items.length === 0 ? 'Carrito vacío' : 'Proceder al pago'">
+                        x-text="cart.items.length === 0 ? 'Carrito vacío' : isLoggedIn() ? 'Proceder al pago' : 'Registrarse para finalizar compra'">
                         Proceder al pago
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="3">
@@ -555,7 +555,7 @@
             if (window.API && window.API.isLoggedIn()) {
                 window.location.href = 'panel.html?tab=configuracion';
             } else {
-                window.location.href = 'login.html';
+                window.location.href = 'register.html';
             }
         }
     </script>
