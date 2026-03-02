@@ -574,7 +574,7 @@ app.post('/api/checkout/session', async (req, res) => {
                         resolve(s);
                     });
                 });
-                const rawPrice = settings['membership_price_offer'] || settings['membership_price'] || 999;
+                const rawPrice = settings['membership_price_offer'] || settings['membership_price'] || 2500;
                 price = parseFloat(rawPrice);
                 product = { title: 'Membresía Anual (Todo Incluido)', image: 'https://placehold.co/600x400?text=VIP' };
                 console.log(`[Checkout] Membership Base Price: ${price} (Raw: ${rawPrice})`);

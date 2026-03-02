@@ -197,7 +197,7 @@ if (typeof window !== 'undefined') {
         try {
           // Check if we can fetch settings
           const settings = await request('/settings');
-          const newPrice = settings.membership_price_offer || settings.membership_price || 999;
+          const newPrice = settings.membership_price_offer || settings.membership_price || 2500;
           // If price changed, update it
           if (parseFloat(membershipItem.price) !== parseFloat(newPrice)) {
             console.log(`Updating membership price in cart: ${membershipItem.price} -> ${newPrice}`);
@@ -244,7 +244,7 @@ if (typeof window !== 'undefined') {
 
         try {
           const settings = await apiGetSettings();
-          const price = settings.membership_price_offer || settings.membership_price || 999;
+          const price = settings.membership_price_offer || settings.membership_price || 2500;
 
           raw.items.push({
             productId: 'membership-annual',

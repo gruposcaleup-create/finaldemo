@@ -438,15 +438,19 @@
                                 Anual</span>
                             <div class="flex items-center justify-center gap-1 my-2">
                                 <span class="text-3xl font-bold text-slate-900"
-                                    x-text="'$' + parseFloat(membershipPrice).toLocaleString()">$2,499</span>
+                                    x-text="'$' + parseFloat(membershipPrice).toLocaleString('es-MX')">$2,500</span>
                                 <span class="text-sm text-slate-500 font-medium">/año</span>
                             </div>
-                            <p class="text-xs text-green-600 font-bold mb-6 bg-green-100 py-1 rounded-full">¡Ahorras
-                                $4,500 al año!</p>
+                            <p class="text-xs text-green-600 font-bold mb-6 bg-green-100 py-1 rounded-full">Todo
+                                incluido — ¡ahorra más del 60%!</p>
 
                             <button @click="comprarMembresia()"
-                                class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                                Obtener Membresía
+                                class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Obtener Membresía Ahora
                             </button>
                             <p class="text-[10px] text-slate-400 mt-3 text-center">Garantía de 7 días o devolución</p>
                         </div>
@@ -806,7 +810,7 @@
             return {
                 isLoggedIn: false,
                 mobileMenuOpen: false,
-                membershipPrice: 2499, // Default backup
+                membershipPrice: 2500, // Default backup
                 async init() {
                     this.isLoggedIn = window.API?.isLoggedIn?.() || isLoggedIn?.() || false;
                     await this.loadSettings();

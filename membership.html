@@ -38,9 +38,53 @@
 </head>
 
 <body x-data="membershipPage()">
+
+    <!-- Modal: Membresía agregada al carrito -->
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        @keydown.escape.window="showModal = false">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showModal = false"></div>
+        <div class="relative bg-zinc-900 border border-brandPink/20 rounded-3xl p-8 max-w-md w-full shadow-2xl"
+            x-show="showModal" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
+            <div class="text-center mb-6">
+                <div
+                    class="w-20 h-20 brand-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brandPink/30">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-black text-white mb-2">¡Membresía Anual Agregada!</h3>
+                <p class="text-zinc-400 text-sm">Tu membresía VIP está lista en el carrito. ¿Deseas proceder al pago
+                    ahora?</p>
+            </div>
+            <div class="bg-zinc-800/50 rounded-2xl p-4 mb-6 border border-white/5">
+                <div class="flex justify-between items-center">
+                    <span class="text-zinc-300 text-sm font-medium">Membresía Anual Todo Incluido</span>
+                    <span class="text-white font-black" x-text="'$' + price + '/año'"></span>
+                </div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button @click="window.location.href='cart.html'"
+                    class="w-full brand-gradient text-white font-black py-4 rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-brandPink/20 text-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                        </path>
+                    </svg>
+                    Ir al carrito y pagar
+                </button>
+                <button @click="showModal = false"
+                    class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 font-medium py-3 rounded-xl transition-all border border-white/10">
+                    Seguir explorando
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header
         class="h-[70px] sm:h-[80px] bg-white px-4 sm:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm border-b border-gray-100">
+
         <a href="index.html" class="flex items-center cursor-pointer flex-shrink-0 group">
             <img src="images/LOGOMORADOJULG.png" alt="JULG Logo" width="40" height="40"
                 class="object-contain sm:w-[45px] sm:h-[45px]">
@@ -89,11 +133,15 @@
 
             <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <div class="text-left bg-zinc-900/50 p-6 rounded-2xl border border-white/5 backdrop-blur-sm">
-                    <span class="text-zinc-500 text-xs block mb-1">Precio normal: $1,299.00</span>
+                    <span class="text-zinc-500 text-xs block mb-1 line-through">Precio individual de cursos:
+                        $3,500+</span>
                     <div class="flex items-end gap-2">
                         <span class="text-4xl font-black" x-text="'$' + price"></span>
                         <span class="text-zinc-500 text-sm mb-1">/ año</span>
                     </div>
+                    <span
+                        class="inline-block mt-2 bg-green-500/10 text-green-400 text-xs font-bold px-3 py-1 rounded-full">Todo
+                        incluido — ahorra más del 60%</span>
                 </div>
                 <button @click="addToCart()"
                     class="brand-gradient text-white font-black py-6 px-12 rounded-2xl shadow-2xl shadow-brandPink/30 hover:scale-[1.02] active:scale-95 transition-all text-xl">
@@ -109,6 +157,7 @@
                 Acceso inmediato tras el pago
             </p>
         </div>
+
 
         <!-- Benefits Grid -->
         <div class="grid md:grid-cols-3 gap-8 mb-20">
@@ -185,11 +234,12 @@
     <script>
         function membershipPage() {
             return {
-                price: '999.00',
+                price: '2,500.00',
+                showModal: false,
                 benefits: [
                     {
                         title: 'Todos los Cursos',
-                        desc: 'Acceso a más de 50 cursos técnicos y creativos sin pagar un peso extra.',
+                        desc: 'Acceso a todos los cursos técnicos y de actualización fiscal sin pagar un peso extra.',
                         icon: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>'
                     },
                     {
@@ -206,8 +256,8 @@
                 async init() {
                     try {
                         const settings = await API.apiGetSettings();
-                        if (settings.membership_price_offer) this.price = parseFloat(settings.membership_price_offer).toFixed(2);
-                        else if (settings.membership_price) this.price = parseFloat(settings.membership_price).toFixed(2);
+                        if (settings.membership_price_offer) this.price = parseFloat(settings.membership_price_offer).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+                        else if (settings.membership_price) this.price = parseFloat(settings.membership_price).toLocaleString('es-MX', { minimumFractionDigits: 2 });
                         this.updateCartCountUI();
                     } catch (e) {
                         console.error('Error loading settings:', e);
@@ -216,7 +266,8 @@
                 async addToCart() {
                     try {
                         await API.apiAddToCart('membership-annual', 1);
-                        window.location.href = 'cart.html';
+                        await this.updateCartCountUI();
+                        this.showModal = true;
                     } catch (err) {
                         alert('Error al agregar al carrito: ' + err.message);
                     }
@@ -225,7 +276,7 @@
                     try {
                         const cart = await API.apiGetCart();
                         const countEl = document.getElementById('cart-count');
-                        if (countEl) countEl.innerText = cart.items.length;
+                        if (countEl) countEl.innerText = cart.items.reduce((a, i) => a + i.quantity, 0);
                     } catch (e) { }
                 }
             }
