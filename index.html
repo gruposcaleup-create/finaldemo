@@ -65,6 +65,16 @@
             border-bottom-left-radius: 60px;
             border-bottom-right-radius: 60px;
         }
+
+        /* Hide scrollbar but keep scrollable */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 
@@ -342,20 +352,24 @@
 
         <div class="container mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             <div class="aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600"
-                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=95&w=800"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy" decoding="async" alt="Servicios contables">
             </div>
             <div class="aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=600"
-                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=95&w=800"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy" decoding="async" alt="Consultoría fiscal">
             </div>
             <div class="aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1611095790444-1dfa35e37b52?auto=format&fit=crop&q=80&w=600"
-                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                <img src="https://images.unsplash.com/photo-1611095790444-1dfa35e37b52?auto=format&fit=crop&q=95&w=800"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy" decoding="async" alt="Formación fiscal">
             </div>
             <div class="aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=600"
-                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105">
+                <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=95&w=800"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy" decoding="async" alt="Planeación fiscal">
             </div>
         </div>
     </section>
@@ -393,9 +407,9 @@
                     <article
                         class="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-center shrink-0 bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/10 hover:border-brand/60 transition-all duration-300 group flex flex-col h-full">
                         <div class="relative h-44 overflow-hidden bg-zinc-900">
-                            <img :src="curso.image || 'https://images.unsplash.com/photo-1554224154-260327c00c4b?auto=format&fit=crop&q=80&w=500'"
+                            <img :src="curso.image || 'https://images.unsplash.com/photo-1554224154-260327c00c4b?auto=format&fit=crop&q=95&w=600'"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                :alt="curso.name">
+                                loading="lazy" decoding="async" :alt="curso.name">
                             <span
                                 class="absolute top-3 left-3 bg-white/90 backdrop-blur text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
                                 En stock

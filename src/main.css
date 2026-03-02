@@ -107,3 +107,32 @@ button:hover {
 section {
     @apply scroll-smooth;
 }
+
+/* ===== IMAGE QUALITY IMPROVEMENTS ===== */
+/* Crisp, high-quality rendering for all images */
+img {
+    image-rendering: auto;
+    image-rendering: high-quality;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* Prevent blur during hover scale transitions */
+img.transition-transform,
+[class*="group-hover:scale"] img,
+[class*="hover:scale"] img {
+    will-change: transform;
+    -webkit-transform: translateZ(0) scale(1);
+    transform: translateZ(0) scale(1);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
