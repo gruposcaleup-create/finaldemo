@@ -70,6 +70,47 @@
 
 <body class="bg-white text-slate-900" x-data="indexPage()">
 
+    <!-- ✅ Modal Global: Producto Agregado al Carrito -->
+    <div id="global-cart-modal"
+        style="display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:1rem;"
+        onclick="if(event.target===this)closeCartModal()">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);"></div>
+        <div id="global-cart-modal-inner"
+            style="position:relative;background:#18181b;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:2rem;max-width:380px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,0.5);transform:scale(0.85);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+            <div style="text-align:center;margin-bottom:1.5rem;">
+                <div
+                    style="width:64px;height:64px;background:rgba(16,185,129,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <svg style="width:32px;height:32px;color:#34d399;" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
+                        </path>
+                    </svg>
+                </div>
+                <h3 style="font-size:1.2rem;font-weight:900;color:white;margin:0 0 0.5rem;">¡Agregado al Carrito!</h3>
+                <p id="modal-product-name" style="color:#a1a1aa;font-size:0.85rem;margin:0 0 0.25rem;"></p>
+                <p id="modal-product-price" style="color:#D40B75;font-size:1.1rem;font-weight:800;margin:0;"></p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <button onclick="window.location.href='cart.html'"
+                    style="width:100%;background:linear-gradient(135deg,#D40B75,#9c0856);color:white;font-weight:800;padding:0.9rem;border-radius:14px;border:none;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 8px 24px rgba(212,11,117,0.3);transition:opacity 0.2s;"
+                    onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
+                    </svg>
+                    Ir al carrito y pagar
+                </button>
+                <button onclick="closeCartModal()"
+                    style="width:100%;background:rgba(255,255,255,0.06);color:#d4d4d8;font-weight:600;padding:0.75rem;border-radius:14px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:0.9rem;transition:background 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                    Seguir explorando
+                </button>
+            </div>
+        </div>
+    </div>
+
     <header
         class="w-full h-[70px] sm:h-[80px] bg-white px-4 sm:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm">
 
@@ -362,20 +403,45 @@
                         </div>
 
                         <div class="p-4 flex flex-col flex-1">
-                            <h3 class="text-sm font-bold text-white leading-tight mb-1" x-text="curso.name"></h3>
-                            <p class="text-[10px] text-slate-500 mb-2 uppercase tracking-wider" x-text="curso.category">
-                            </p>
+                            <p class="text-[10px] text-pink-500 font-bold mb-1 uppercase tracking-wider"
+                                x-text="curso.category"></p>
+                            <h3 class="text-sm font-bold text-white leading-tight mb-2" x-text="curso.name"></h3>
 
                             <div class="mt-auto mb-4">
-                                <span class="text-lg font-bold text-white"
-                                    x-text="'$' + curso.price.toLocaleString()"></span>
+                                <template x-if="curso.priceOffer">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg font-black text-white"
+                                            x-text="'$' + parseFloat(curso.priceOffer).toLocaleString('es-MX')"></span>
+                                        <span class="text-xs text-slate-500 line-through"
+                                            x-text="'$' + parseFloat(curso.price).toLocaleString('es-MX')"></span>
+                                    </div>
+                                </template>
+                                <template x-if="!curso.priceOffer">
+                                    <span class="text-lg font-black text-white"
+                                        x-text="'$' + parseFloat(curso.price).toLocaleString('es-MX')"></span>
+                                </template>
                             </div>
 
-                            <div class="flex gap-2 mt-auto">
-                                <button @click="agregarCarrito(curso.id)"
-                                    class="flex-1 bg-brand hover:bg-brand-dark text-white text-xs font-bold rounded py-2 transition-colors uppercase tracking-wide shadow-lg shadow-brand/20">
-                                    Ver curso
+                            <div class="flex gap-2">
+                                <button @click.stop="agregarCarrito(curso)"
+                                    class="flex-1 bg-brand hover:bg-brand-dark active:scale-95 text-white text-xs font-bold rounded-lg py-2.5 transition-all uppercase tracking-wide shadow-lg shadow-brand/20 flex items-center justify-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Al carrito
                                 </button>
+                                <a :href="'product-details.html?id=' + curso.id"
+                                    class="flex items-center justify-center px-3 py-2.5 rounded-lg border border-white/20 hover:bg-white/10 transition-all text-white">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                        </path>
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     </article>
@@ -383,12 +449,14 @@
             </div>
 
             <div class="flex justify-center mt-12">
-                <a href="tienda.html">
-                    <button
-                        class="border border-white/30 px-6 py-2 rounded-full text-xs font-medium hover:bg-white hover:text-black transition-colors flex items-center gap-2 uppercase tracking-wide">
-                        ver todos los cursos
-                        <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
-                    </button>
+                <a href="tienda.html"
+                    class="inline-flex items-center gap-2 border border-white/30 px-8 py-3 rounded-full text-sm font-semibold hover:bg-white hover:text-black transition-all uppercase tracking-wide group">
+                    Ver todos los cursos
+                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
                 </a>
             </div>
         </div>
@@ -839,21 +907,53 @@
                     try {
                         const api = window.API || (await window.__loadAPI());
                         const products = await api.apiGetProducts();
-                        // Find membership product or fallback
-                        let membership = products.find(p => p.id === 'membership-annual' || p.title.toLowerCase().includes('membresía') || p.title.toLowerCase().includes('anual'));
-
-                        // If not found in product list, we can try adding directly by ID if backend supports it
-                        // attempting to add 'membership-annual' even if not in product list (apiAddToCart handles it now)
+                        let membership = products.find(p => p.id === 'membership-annual' || (p.title || p.name || '').toLowerCase().includes('anual'));
                         const targetId = membership ? membership.id : 'membership-annual';
-
                         await api.apiAddToCart(targetId, 1);
-                        window.location.href = 'cart.html';
+                        // Update cart count
+                        const cart = await api.apiGetCart();
+                        const total = cart.items.reduce((acc, it) => acc + it.quantity, 0);
+                        const el = document.getElementById('cart-count'); if (el) el.textContent = total;
+                        // Show modal
+                        showCartModal('Membresía Anual Todo Incluido', '$' + parseFloat(this.membershipPrice).toLocaleString('es-MX'));
                     } catch (e) {
                         alert("Error al agregar al carrito: " + e.message);
+                    }
+                },
+                handleUserIconClick() {
+                    if (window.API && window.API.isLoggedIn()) {
+                        window.location.href = 'panel.html?tab=configuracion';
+                    } else {
+                        window.location.href = 'login.html';
                     }
                 }
             }
         }
+
+        // ✅ Global Cart Modal Functions (vanilla JS, no Alpine dependency)
+        function showCartModal(productName, productPrice) {
+            const modal = document.getElementById('global-cart-modal');
+            const inner = document.getElementById('global-cart-modal-inner');
+            document.getElementById('modal-product-name').textContent = '«' + productName + '»';
+            document.getElementById('modal-product-price').textContent = productPrice;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => {
+                inner.style.transform = 'scale(1)';
+                inner.style.opacity = '1';
+            });
+        }
+        function closeCartModal() {
+            const modal = document.getElementById('global-cart-modal');
+            const inner = document.getElementById('global-cart-modal-inner');
+            inner.style.transform = 'scale(0.85)';
+            inner.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 280);
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCartModal(); });
 
         window.cursosList = function () {
             return {
@@ -864,7 +964,7 @@
                     try {
                         const api = window.API || (await window.__loadAPI());
                         const data = await api.apiGetProducts();
-                        this.cursos = data ? data.filter(p => p.id !== 'membership-annual') : [];
+                        this.cursos = data ? data.filter(p => p.id !== 'membership-annual').slice(0, 8) : [];
                     } catch (err) {
                         console.error('Error cargando cursos:', err);
                         this.error = 'Error cargando cursos';
@@ -872,23 +972,24 @@
                         this.loading = false;
                     }
                 },
-                async agregarCarrito(productId) {
+                async agregarCarrito(curso) {
+                    const productId = typeof curso === 'object' ? curso.id : curso;
+                    const productName = typeof curso === 'object' ? (curso.name || curso.title || 'Curso') : 'Curso';
+                    const productPrice = typeof curso === 'object' ? '$' + parseFloat(curso.priceOffer || curso.price || 0).toLocaleString('es-MX') : '';
                     try {
                         const api = window.API || (await window.__loadAPI());
-                        const result = await api.apiAddToCart(productId, 1);
+                        await api.apiAddToCart(productId, 1);
+                        // Update cart count
                         const cart = await api.apiGetCart();
                         const total = cart.items.reduce((acc, it) => acc + it.quantity, 0);
                         const el = document.getElementById('cart-count');
                         if (el) el.textContent = total;
-                        const msg = document.createElement('div');
-                        msg.textContent = '✅ Curso agregado al carrito';
-                        msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:12px 20px;border-radius:6px;z-index:9999;font-weight:bold;';
-                        document.body.appendChild(msg);
-                        setTimeout(() => msg.remove(), 3000);
+                        // Show global modal
+                        showCartModal(productName, productPrice);
                     } catch (err) {
                         const msg = document.createElement('div');
                         msg.textContent = '❌ Error: ' + (err.message || 'Error al agregar');
-                        msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:12px 20px;border-radius:6px;z-index:9999;font-weight:bold;';
+                        msg.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:12px 20px;border-radius:12px;z-index:9999;font-weight:bold;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
                         document.body.appendChild(msg);
                         console.error('Error:', err);
                         setTimeout(() => msg.remove(), 3000);

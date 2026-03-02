@@ -39,42 +39,47 @@
 
 <body x-data="membershipPage()">
 
-    <!-- Modal: Membresía agregada al carrito -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-        @keydown.escape.window="showModal = false">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showModal = false"></div>
-        <div class="relative bg-zinc-900 border border-brandPink/20 rounded-3xl p-8 max-w-md w-full shadow-2xl"
-            x-show="showModal" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100">
-            <div class="text-center mb-6">
+    <!-- ✅ Modal Global: Producto Agregado al Carrito -->
+    <div id="global-cart-modal"
+        style="display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:1rem;"
+        onclick="if(event.target===this)closeCartModal()">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);"></div>
+        <div id="global-cart-modal-inner"
+            style="position:relative;background:#18181b;border:1px solid rgba(212,11,117,0.2);border-radius:24px;padding:2rem;max-width:420px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,0.5);transform:scale(0.85);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+            <div style="text-align:center;margin-bottom:1.5rem;">
                 <div
-                    class="w-20 h-20 brand-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brandPink/30">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    style="width:72px;height:72px;background:linear-gradient(135deg,#D40B75,#9c0856);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 8px 24px rgba(212,11,117,0.4);">
+                    <svg style="width:36px;height:36px;color:white;" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
+                        </path>
                     </svg>
                 </div>
-                <h3 class="text-2xl font-black text-white mb-2">¡Membresía Anual Agregada!</h3>
-                <p class="text-zinc-400 text-sm">Tu membresía VIP está lista en el carrito. ¿Deseas proceder al pago
-                    ahora?</p>
+                <h3 style="font-size:1.3rem;font-weight:900;color:white;margin:0 0 0.5rem;">¡Membresía Anual Agregada!
+                </h3>
+                <p id="modal-product-name" style="color:#a1a1aa;font-size:0.85rem;margin:0 0 0.25rem;"></p>
+                <p id="modal-product-price" style="color:#D40B75;font-size:1.2rem;font-weight:900;margin:0;"></p>
             </div>
-            <div class="bg-zinc-800/50 rounded-2xl p-4 mb-6 border border-white/5">
-                <div class="flex justify-between items-center">
-                    <span class="text-zinc-300 text-sm font-medium">Membresía Anual Todo Incluido</span>
-                    <span class="text-white font-black" x-text="'$' + price + '/año'"></span>
-                </div>
+            <div
+                style="background:rgba(212,11,117,0.08);border:1px solid rgba(212,11,117,0.15);border-radius:16px;padding:1rem;margin-bottom:1.25rem;">
+                <p style="color:#a1a1aa;font-size:0.8rem;text-align:center;margin:0;">Acceso ilimitado a todos los
+                    cursos · Actualizaciones fiscales · Soporte prioritario</p>
             </div>
-            <div class="flex flex-col gap-3">
-                <button @click="window.location.href='cart.html'"
-                    class="w-full brand-gradient text-white font-black py-4 rounded-2xl hover:opacity-90 transition-all shadow-lg shadow-brandPink/20 text-lg flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <button onclick="window.location.href='cart.html'"
+                    style="width:100%;background:linear-gradient(135deg,#D40B75,#9c0856);color:white;font-weight:800;padding:1rem;border-radius:14px;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;box-shadow:0 8px 24px rgba(212,11,117,0.35);"
+                    onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
                         </path>
                     </svg>
                     Ir al carrito y pagar
                 </button>
-                <button @click="showModal = false"
-                    class="w-full bg-white/5 hover:bg-white/10 text-zinc-300 font-medium py-3 rounded-xl transition-all border border-white/10">
+                <button onclick="closeCartModal()"
+                    style="width:100%;background:rgba(255,255,255,0.06);color:#d4d4d8;font-weight:600;padding:0.75rem;border-radius:14px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:0.9rem;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.06)'">
                     Seguir explorando
                 </button>
             </div>
@@ -235,7 +240,6 @@
         function membershipPage() {
             return {
                 price: '2,500.00',
-                showModal: false,
                 benefits: [
                     {
                         title: 'Todos los Cursos',
@@ -267,7 +271,8 @@
                     try {
                         await API.apiAddToCart('membership-annual', 1);
                         await this.updateCartCountUI();
-                        this.showModal = true;
+                        // Show global vanilla JS modal
+                        showCartModal('Membresía Anual Todo Incluido', '$' + this.price + '/año');
                     } catch (err) {
                         alert('Error al agregar al carrito: ' + err.message);
                     }
@@ -281,7 +286,33 @@
                 }
             }
         }
+
+        // ✅ Global Cart Modal Functions
+        function showCartModal(productName, productPrice) {
+            const modal = document.getElementById('global-cart-modal');
+            const inner = document.getElementById('global-cart-modal-inner');
+            document.getElementById('modal-product-name').textContent = '«' + productName + '»';
+            document.getElementById('modal-product-price').textContent = productPrice;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => {
+                inner.style.transform = 'scale(1)';
+                inner.style.opacity = '1';
+            });
+        }
+        function closeCartModal() {
+            const modal = document.getElementById('global-cart-modal');
+            const inner = document.getElementById('global-cart-modal-inner');
+            inner.style.transform = 'scale(0.85)';
+            inner.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 280);
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCartModal(); });
     </script>
+
 </body>
 
 </html>
