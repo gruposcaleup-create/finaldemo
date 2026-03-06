@@ -42,6 +42,9 @@
                 window.location.href = 'login.html';
             }
         }
+        function isLoggedIn() {
+            return window.API && window.API.isLoggedIn ? window.API.isLoggedIn() : false;
+        }
     </script>
 
     <style>

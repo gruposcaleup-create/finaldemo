@@ -926,11 +926,11 @@ app.get('/api/resources', (req, res) => {
     // Admin gets all, but usually user interface filters by 'public'.
     // We can add a query param ?access=public
     const access = req.query.access;
-    let sql = `SELECT id, name, type, description, createdAt, access, image FROM resources ORDER BY createdAt DESC`;
+    let sql = `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
     let params = [];
 
     if (access) {
-        sql = `SELECT id, name, type, description, createdAt, access, image FROM resources WHERE access = ? ORDER BY createdAt DESC`;
+        sql = `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
         params.push(access);
     }
 
