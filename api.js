@@ -458,6 +458,7 @@ if (typeof window !== 'undefined') {
       apiDeleteResource,
       apiGetMembers,
       apiGetAllUsers,
+      apiGetSettings,
       apiCreateUser, // New
       apiUpdateMemberStatus,
       apiBanUser: async function (id, bannedUntil) {

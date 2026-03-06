@@ -19,6 +19,9 @@ try {
         db.run("ALTER TABLE users ADD COLUMN phoneNumber TEXT", (err) => {
             // Ignore error if column exists
         });
+        db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`, (err) => {
+            if (err) console.error("Error creating settings table:", err);
+        });
     }
 } catch (e) {
     console.log("[STARTUP] Migration script error or executed internally:", e.message);

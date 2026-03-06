@@ -35,10 +35,14 @@ if (USE_TURSO) {
                     await client.execute('ALTER TABLE comments ADD COLUMN userRole TEXT');
                     console.log("✅ Added userRole column");
                 } catch (e) { /* ignore if exists */ }
-                
-                 try {
+
+                try {
                     await client.execute('ALTER TABLE users ADD COLUMN phoneNumber TEXT');
                     console.log("✅ Added phoneNumber column to users");
+                } catch (e) { /* ignore if exists */ }
+                try {
+                    await client.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)');
+                    console.log("✅ Ensured settings table exists");
                 } catch (e) { /* ignore if exists */ }
             };
             repair(); // Fire and forget or allow async
