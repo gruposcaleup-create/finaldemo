@@ -1029,7 +1029,7 @@ app.post('/api/settings', (req, res) => {
 // 9. Usuarios (Admin)
 // 9. Usuarios (Admin)
 app.get('/api/users', (req, res) => {
-    db.all(`SELECT id, email, firstName, lastName, role, status, createdAt FROM users`, [], (err, rows) => {
+    db.all(`SELECT id, email, firstName, lastName, phoneNumber, role, status, bannedUntil, createdAt FROM users`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
 
         // Parallelize fetching extra data

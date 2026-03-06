@@ -493,7 +493,9 @@ if (typeof window !== 'undefined') {
         }
         return false;
       },
-      apiGetAdminMetrics // EXPOSED MISSING FUNCTION
+      apiGetAdminMetrics, // EXPOSED MISSING FUNCTION
+      apiUpdateResource: async function (id, data) { return await request(`/resources/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+      apiGetUserEnrollments: async function (userId) { return await request(`/users/${userId}/enrollments`); },
     };
   })();
 } else {

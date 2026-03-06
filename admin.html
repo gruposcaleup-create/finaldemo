@@ -17,7 +17,9 @@
             theme: {
                 extend: {
                     colors: {
-                        border: "hsl(214.3 31.8% 91.4%)", input: "hsl(214.3 31.8% 91.4%)", ring: "hsl(215 20.2% 65.1%)", background: "hsl(0 0% 100%)", foreground: "hsl(222.2 47.4% 11.2%)", primary: { DEFAULT: "hsl(222.2 47.4% 11.2%)", foreground: "hsl(210 40% 98%)" }, destructive: { DEFAULT: "hsl(0 100% 50%)", foreground: "hsl(210 40% 98%)" }, muted: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(215.4 16.3% 46.9%)" }
+                        border: "hsl(214.3 31.8% 91.4%)", input: "hsl(214.3 31.8% 91.4%)", ring: "hsl(215 20.2% 65.1%)", background: "hsl(0 0% 100%)", foreground: "hsl(222.2 47.4% 11.2%)", primary: { DEFAULT: "hsl(222.2 47.4% 11.2%)", foreground: "hsl(210 40% 98%)" }, destructive: { DEFAULT: "hsl(0 100% 50%)", foreground: "hsl(210 40% 98%)" }, muted: { DEFAULT: "hsl(210 40% 96.1%)", foreground: "hsl(215.4 16.3% 46.9%)" },
+                        brandPink: "#D40B75",
+                        brandPinkHover: "#b50963"
                     }
                 }
             }
@@ -147,7 +149,7 @@
     </div>
 
     <div id="app-layout" class="flex h-screen hide flex-col md:flex-row">
-        <aside class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex h-auto md:h-screen">
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen flex-shrink-0">
             <div class="p-4 sm:p-6 border-b border-gray-100">
                 <h2 class="font-bold text-lg sm:text-xl text-slate-800">JULG Panel</h2>
                 <span class="text-[10px] sm:text-xs text-gray-400">Administrador v1.0</span>
@@ -155,45 +157,45 @@
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 <button onclick="router('dashboard')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="dashboard"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Dashboard</span></button>
+                    data-target="dashboard"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Dashboard</span></button>
                 <button onclick="router('courses')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="courses"><i data-lucide="shopping-bag" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Cursos</span></button>
+                    data-target="courses"><i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span>Cursos</span></button>
                 <button onclick="router('coupons')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="coupons"><i data-lucide="ticket" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Cupones</span></button>
+                    data-target="coupons"><i data-lucide="ticket" class="w-5 h-5"></i> <span>Cupones</span></button>
                 <button onclick="router('resources')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="resources"><i data-lucide="file-box" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Recursos</span></button>
+                    data-target="resources"><i data-lucide="file-box" class="w-5 h-5"></i>
+                    <span>Recursos</span></button>
                 <button onclick="router('members')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="members"><i data-lucide="users" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Miembros</span></button>
+                    data-target="members"><i data-lucide="users" class="w-5 h-5"></i> <span>Miembros</span></button>
                 <button onclick="router('comments')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="comments"><i data-lucide="message-square" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Comentarios</span></button>
+                    data-target="comments"><i data-lucide="message-square" class="w-5 h-5"></i>
+                    <span>Comentarios</span></button>
 
                 <button onclick="router('settings')"
                     class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
-                    data-target="settings"><i data-lucide="settings" class="w-5 h-5"></i> <span
-                        class="hidden sm:inline">Configuración</span></button>
+                    data-target="settings"><i data-lucide="settings" class="w-5 h-5"></i>
+                    <span>Configuración</span></button>
+                <button onclick="router('users-db')"
+                    class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition text-sm"
+                    data-target="users-db"><i data-lucide="database" class="w-5 h-5"></i> <span>Usuarios
+                        DB</span></button>
             </nav>
             <div class="p-4 border-t border-gray-100">
                 <button onclick="logout()"
                     class="w-full flex items-center gap-2 text-red-600 hover:bg-red-50 p-2 rounded-md transition text-sm"><i
-                        data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline">Cerrar
-                        Sesión</span></button>
+                        data-lucide="log-out" class="w-4 h-4"></i> <span>Cerrar Sesión</span></button>
             </div>
         </aside>
 
         <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-8 w-full" id="main-content">
             <div id="view-dashboard" class="view-section fade-in">
-                <h1 class="text-3xl font-bold text-slate-800">Dashboard</h1>
                 <h1 class="text-3xl font-bold text-slate-800">Dashboard</h1>
                 <div class="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded shadow-sm">
                     <span id="current-date"></span>
@@ -544,6 +546,42 @@
                 </div>
             </div>
 
+            <!-- Usuarios DB View -->
+            <div id="view-users-db" class="view-section hide fade-in">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold">Usuarios</h1>
+                        <p class="text-gray-500 text-sm">Información completa de todos los usuarios registrados.</p>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+                        <input type="text" id="users-db-search" placeholder="Buscar por nombre, email..."
+                            class="pl-9 p-2 border rounded-md w-64 text-sm" onkeyup="filterUsersDB(this.value)">
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg border shadow-sm overflow-hidden overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="p-4">Nombre</th>
+                                <th class="p-4">Apellido</th>
+                                <th class="p-4">Email</th>
+                                <th class="p-4">Teléfono</th>
+                                <th class="p-4">Rol</th>
+                                <th class="p-4">Estado</th>
+                                <th class="p-4">Fecha Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-db-table-body">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-gray-400">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="users-db-count" class="text-xs text-gray-400 mt-3 text-right"></div>
+            </div>
+
             <!-- Modal Recursos -->
             <dialog id="resource-modal" class="p-0 rounded-lg shadow-xl border w-full max-w-md backdrop:bg-black/50">
                 <div class="p-6">
@@ -720,7 +758,8 @@
             if (viewName === 'coupons') renderCoupons();
             if (viewName === 'resources') renderResources();
             if (viewName === 'courses') renderCoursesList();
-            if (viewName === 'comments') renderComments();  // Add this line
+            if (viewName === 'comments') renderComments();
+            if (viewName === 'users-db') renderUsersDB();
             if (viewName === 'dashboard') {
                 if (state.metrics) {
                     updateDashboard(state.metrics);
@@ -1170,84 +1209,71 @@
             } catch (e) { showToast("Error al actualizar rol", "error"); }
         }
 
-        // --- COMENTARIOS ---
-        async function renderComments() {
+        // --- USUARIOS DB ---
+        let _allUsersDB = [];
+
+        async function renderUsersDB() {
+            const tbody = document.getElementById('users-db-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-400">Cargando...</td></tr>';
             try {
-                const comments = await window.API.apiGetAllComments();
-                const tbody = document.getElementById('comments-table-body');
-                tbody.innerHTML = comments.map(c => `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-4">
-                            <div class="font-medium text-slate-900">${c.firstName || 'Usuario'} ${c.lastName || ''}</div>
-                            <div class="text-xs text-gray-500">${c.email || 'Sin email'}</div>
-                        </td>
-                        <td class="p-4 text-sm text-gray-600 max-w-xs truncate" title="${c.content}">${c.content}</td>
-                        <td class="p-4 text-xs">
-                            <div class="font-medium">${c.courseTitle || 'Curso #' + c.courseId}</div>
-                            <div class="text-gray-500">Lección ${c.lessonId}</div>
-                        </td>
-                        <td class="p-4 text-xs text-gray-500">${new Date(c.createdAt).toLocaleDateString()}</td>
-                        <td class="p-4 text-right space-x-2">
-                            <button onclick="openReplyModal('${c.courseId}', '${c.lessonId}', '${c.firstName} ${c.lastName}')"
-                                class="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Responder">
-                                <i data-lucide="reply" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteComment(${c.id})"
-                                class="text-red-600 hover:bg-red-50 p-1 rounded" title="Eliminar">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </td>
+                _allUsersDB = await window.API.apiGetAllUsers();
+                _renderUsersDBTable(_allUsersDB);
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500">Error al cargar usuarios</td></tr>';
+                console.error('Error loading users DB:', e);
+            }
+        }
+
+        function _renderUsersDBTable(users) {
+            const tbody = document.getElementById('users-db-table-body');
+            const countEl = document.getElementById('users-db-count');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-gray-400 italic">No hay usuarios registrados.</td></tr>';
+                if (countEl) countEl.textContent = '';
+                return;
+            }
+            tbody.innerHTML = users.map(u => {
+                const roleBadge = u.role === 'admin'
+                    ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-700">Admin</span>'
+                    : u.role === 'editor'
+                        ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700">Editor</span>'
+                        : '<span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600">Usuario</span>';
+                const statusBadge = u.bannedUntil && new Date(u.bannedUntil) > new Date()
+                    ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-700">Suspendido</span>'
+                    : u.status === 'blocked'
+                        ? '<span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700">Bloqueado</span>'
+                        : '<span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">Activo</span>';
+                const phone = u.phoneNumber || '<span class="text-gray-300 italic">—</span>';
+                const createdAt = u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-ES') : '—';
+                return `
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-4 font-medium text-slate-800">${u.firstName || '—'}</td>
+                        <td class="p-4 text-slate-600">${u.lastName || '—'}</td>
+                        <td class="p-4 font-mono text-xs text-blue-700">${u.email}</td>
+                        <td class="p-4 text-slate-600">${phone}</td>
+                        <td class="p-4">${roleBadge}</td>
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4 text-xs text-gray-400">${createdAt}</td>
                     </tr>
-            `).join('');
-                lucide.createIcons();
-            } catch (e) { console.error(e); }
+                `;
+            }).join('');
+            if (countEl) countEl.textContent = `${users.length} usuario${users.length === 1 ? '' : 's'} encontrado${users.length === 1 ? '' : 's'}`;
         }
 
-        async function deleteComment(id) {
-            if (!confirm("¿Eliminar comentario?")) return;
-            try {
-                await window.API.apiDeleteComment(id);
-                showToast("Comentario eliminado", "success");
-                renderComments();
-            } catch (e) { showToast("Error al eliminar", "error"); }
-        }
-
-        function openReplyModal(courseId, lessonId, userName) {
-            document.getElementById('reply-course-id').value = courseId;
-            document.getElementById('reply-lesson-id').value = lessonId;
-            document.getElementById('reply-content').value = `@${userName} `; // Pre-fill with mention
-            document.getElementById('reply-modal').showModal();
-        }
-
-        async function sendReply() {
-            const courseId = document.getElementById('reply-course-id').value;
-            const lessonId = document.getElementById('reply-lesson-id').value;
-            const content = document.getElementById('reply-content').value;
-
-            if (!content) return showToast("Escribe una respuesta", "error");
-
-            try {
-                // Admin replies as themselves (need to be logged in effectively)
-                // We use apiPostComment which uses local currentUser.
-                // Admin panel usually has Admin logged in.
-                // FIX: Use global state.currentUser which is validated on load
-                // This prevents "identity crossing" if localStorage has a client session
-                const adminId = state.currentUser ? state.currentUser.id : null;
-                if (!adminId) return showToast("Error de sesión: Recarga la página", "error");
-
-                await window.API.apiPostComment({
-                    userId: adminId,
-                    courseId,
-                    lessonId,
-                    content
-                });
-                showToast("Respuesta enviada", "success");
-                document.getElementById('reply-modal').close();
-                renderComments();
-            } catch (e) { showToast("Error enviando respuesta", "error"); }
+        function filterUsersDB(query) {
+            const lower = query.toLowerCase();
+            const filtered = _allUsersDB.filter(u =>
+                (u.firstName || '').toLowerCase().includes(lower) ||
+                (u.lastName || '').toLowerCase().includes(lower) ||
+                (u.email || '').toLowerCase().includes(lower) ||
+                (u.phoneNumber || '').toLowerCase().includes(lower)
+            );
+            _renderUsersDBTable(filtered);
         }
 
         // --- END HELPERS ---
+
+
 
         // CARGAR TODOS LOS DATOS DEL ADMIN
         window.loadAdminData = async function () {
