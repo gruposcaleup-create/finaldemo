@@ -19,6 +19,12 @@ try {
         db.run("ALTER TABLE users ADD COLUMN phoneNumber TEXT", (err) => {
             // Ignore error if column exists
         });
+        db.run("ALTER TABLE courses ADD COLUMN status TEXT DEFAULT 'active'", (err) => {
+            // Ignore error if column exists
+        });
+        db.run("UPDATE courses SET status = 'active' WHERE status IS NULL OR status = ''", (err) => {
+            // Ignore error
+        });
         db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`, (err) => {
             if (err) console.error("Error creating settings table:", err);
         });
@@ -483,9 +489,9 @@ app.get('/api/admin/courses', (req, res) => {
 
 // Admin: Crear Curso
 app.post('/api/courses', (req, res) => {
-    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules } = req.body;
-    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modulesData, modulesCount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules || []), (modules || []).length],
+    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules, status } = req.body;
+    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modulesData, modulesCount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules || []), (modules || []).length, status || 'active'],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });

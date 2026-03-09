@@ -41,6 +41,16 @@ if (USE_TURSO) {
                     console.log("✅ Added phoneNumber column to users");
                 } catch (e) { /* ignore if exists */ }
                 try {
+                    await client.execute('ALTER TABLE courses ADD COLUMN status TEXT DEFAULT "active"');
+                    console.log("✅ Added status column to courses");
+                } catch (e) { /* ignore if exists */ }
+
+                try {
+                    await client.execute('UPDATE courses SET status = "active" WHERE status IS NULL OR status = ""');
+                    // console.log("✅ Updated missing course statuses to active");
+                } catch (e) { /* ignore */ }
+
+                try {
                     await client.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)');
                     console.log("✅ Ensured settings table exists");
                 } catch (e) { /* ignore if exists */ }
