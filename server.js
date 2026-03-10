@@ -25,6 +25,12 @@ try {
         db.run("UPDATE courses SET status = 'active' WHERE status IS NULL OR status = ''", (err) => {
             // Ignore error
         });
+        db.run("ALTER TABLE courses ADD COLUMN learningPoints TEXT DEFAULT '[]'", (err) => {
+            // Ignore error if column exists
+        });
+        db.run("ALTER TABLE resources ADD COLUMN image TEXT", (err) => {
+            // Ignore error if column exists
+        });
         db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`, (err) => {
             if (err) console.error("Error creating settings table:", err);
         });
@@ -443,12 +449,18 @@ app.get('/api/courses', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         const courses = rows.map(c => {
             let modules = [];
+            let learningPoints = [];
             try {
                 modules = c.modulesData ? JSON.parse(c.modulesData) : [];
             } catch (e) {
                 console.error(`Error parsing modules for course ${c.id}:`, e.message);
             }
-            return { ...c, modules };
+            try {
+                learningPoints = c.learningPoints ? JSON.parse(c.learningPoints) : [];
+            } catch (e) {
+                console.error(`Error parsing learningPoints for course ${c.id}:`, e.message);
+            }
+            return { ...c, modules, learningPoints };
         });
         res.json(courses);
     });
@@ -466,6 +478,11 @@ app.get('/api/courses/:id', (req, res) => {
             console.error(`Error parsing modules for course ${row.id}:`, e.message);
             row.modules = [];
         }
+        try {
+            row.learningPoints = row.learningPoints ? JSON.parse(row.learningPoints) : [];
+        } catch (e) {
+            row.learningPoints = [];
+        }
         res.json(row);
     });
 });
@@ -476,12 +493,18 @@ app.get('/api/admin/courses', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         const courses = rows.map(c => {
             let modules = [];
+            let learningPoints = [];
             try {
                 modules = c.modulesData ? JSON.parse(c.modulesData) : [];
             } catch (e) {
                 console.error(`Error parsing modules for course ${c.id}:`, e.message);
             }
-            return { ...c, modules };
+            try {
+                learningPoints = c.learningPoints ? JSON.parse(c.learningPoints) : [];
+            } catch (e) {
+                console.error(`Error parsing learningPoints for course ${c.id}:`, e.message);
+            }
+            return { ...c, modules, learningPoints };
         });
         res.json(courses);
     });
@@ -489,9 +512,9 @@ app.get('/api/admin/courses', (req, res) => {
 
 // Admin: Crear Curso
 app.post('/api/courses', (req, res) => {
-    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules, status } = req.body;
-    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modulesData, modulesCount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules || []), (modules || []).length, status || 'active'],
+    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules, status, learningPoints } = req.body;
+    db.run(`INSERT INTO courses (title, desc, price, priceOffer, image, videoPromo, category, duration, modulesData, modulesCount, status, learningPoints) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, desc, price, priceOffer, image, videoPromo, category, duration, JSON.stringify(modules || []), (modules || []).length, status || 'active', JSON.stringify(learningPoints || [])],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, success: true });
@@ -500,7 +523,7 @@ app.post('/api/courses', (req, res) => {
 
 // Admin: Editar Curso
 app.put('/api/courses/:id', (req, res) => {
-    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules, status } = req.body;
+    const { title, desc, price, priceOffer, image, videoPromo, category, duration, modules, status, learningPoints } = req.body;
     const courseId = req.params.id;
 
     // Build dynamic query to update only provided fields
@@ -512,7 +535,6 @@ app.put('/api/courses/:id', (req, res) => {
     if (price !== undefined) { fields.push('price = ?'); values.push(price); }
     if (priceOffer !== undefined) { fields.push('priceOffer = ?'); values.push(priceOffer); }
     if (image !== undefined) { fields.push('image = ?'); values.push(image); }
-    if (image !== undefined) { fields.push('image = ?'); values.push(image); }
     if (videoPromo !== undefined) { fields.push('videoPromo = ?'); values.push(videoPromo); }
     if (category !== undefined) { fields.push('category = ?'); values.push(category); }
     if (duration !== undefined) { fields.push('duration = ?'); values.push(duration); }
@@ -521,6 +543,10 @@ app.put('/api/courses/:id', (req, res) => {
         values.push(JSON.stringify(modules));
         fields.push('modulesCount = ?');
         values.push(modules.length);
+    }
+    if (learningPoints !== undefined) {
+        fields.push('learningPoints = ?');
+        values.push(JSON.stringify(learningPoints));
     }
     if (status !== undefined) { fields.push('status = ?'); values.push(status); }
 
@@ -932,14 +958,12 @@ app.post('/api/resources', (req, res) => {
 });
 
 app.get('/api/resources', (req, res) => {
-    // Admin gets all, but usually user interface filters by 'public'.
-    // We can add a query param ?access=public
     const access = req.query.access;
-    let sql = `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
+    let sql = `SELECT id, name, type, description, image, createdAt, access FROM resources ORDER BY createdAt DESC`;
     let params = [];
 
     if (access) {
-        sql = `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
+        sql = `SELECT id, name, type, description, image, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
         params.push(access);
     }
 

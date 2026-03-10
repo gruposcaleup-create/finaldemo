@@ -54,6 +54,16 @@ if (USE_TURSO) {
                     await client.execute('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)');
                     console.log("✅ Ensured settings table exists");
                 } catch (e) { /* ignore if exists */ }
+
+                try {
+                    await client.execute('ALTER TABLE resources ADD COLUMN image TEXT');
+                    console.log("✅ Added image column to resources");
+                } catch (e) { /* ignore if exists */ }
+
+                try {
+                    await client.execute("ALTER TABLE courses ADD COLUMN learningPoints TEXT DEFAULT '[]'");
+                    console.log("✅ Added learningPoints column to courses");
+                } catch (e) { /* ignore if exists */ }
             };
             repair(); // Fire and forget or allow async
             if (cb) cb();
