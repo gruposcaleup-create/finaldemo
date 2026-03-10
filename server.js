@@ -959,11 +959,11 @@ app.post('/api/resources', (req, res) => {
 
 app.get('/api/resources', (req, res) => {
     const access = req.query.access;
-    let sql = `SELECT id, name, type, description, image, createdAt, access FROM resources ORDER BY createdAt DESC`;
+    let sql = `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
     let params = [];
 
     if (access) {
-        sql = `SELECT id, name, type, description, image, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
+        sql = `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
         params.push(access);
     }
 
