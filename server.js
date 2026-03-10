@@ -959,20 +959,26 @@ app.post('/api/resources', (req, res) => {
 
 app.get('/api/resources', (req, res) => {
     const access = req.query.access;
-    let sql = `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
-    let params = [];
+    const withImage = access
+        ? `SELECT id, name, type, description, image, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`
+        : `SELECT id, name, type, description, image, createdAt, access FROM resources ORDER BY createdAt DESC`;
+    const withoutImage = access
+        ? `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`
+        : `SELECT id, name, type, description, createdAt, access FROM resources ORDER BY createdAt DESC`;
+    const params = access ? [access] : [];
 
-    if (access) {
-        sql = `SELECT id, name, type, description, createdAt, access FROM resources WHERE access = ? ORDER BY createdAt DESC`;
-        params.push(access);
-    }
-
-    db.all(sql, params, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        const processed = rows.map(r => ({ ...r, url: `/api/resources/${r.id}/download` }));
-        res.json(processed);
+    db.all(withImage, params, (err, rows) => {
+        if (err) {
+            // Fallback: image column may not exist yet in DB
+            return db.all(withoutImage, params, (err2, rows2) => {
+                if (err2) return res.status(500).json({ error: err2.message });
+                res.json(rows2.map(r => ({ ...r, url: `/api/resources/${r.id}/download` })));
+            });
+        }
+        res.json(rows.map(r => ({ ...r, url: `/api/resources/${r.id}/download` })));
     });
 });
+
 
 app.put('/api/resources/:id', (req, res) => {
     const { name, type, dataUrl, description, access, image } = req.body;
