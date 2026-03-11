@@ -1053,14 +1053,24 @@ app.post('/api/settings', (req, res) => {
     const { settings } = req.body; // { key: value, ... }
     if (!settings) return res.status(400).json({ error: 'Settings required' });
 
-    db.serialize(() => {
-        const stmt = db.prepare(`INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`);
-        for (const [key, value] of Object.entries(settings)) {
-            stmt.run(key, String(value));
-        }
-        stmt.finalize();
-        res.json({ success: true });
-    });
+    const entries = Object.entries(settings);
+    if (entries.length === 0) return res.json({ success: true });
+
+    let completed = 0;
+    let hasError = false;
+
+    for (const [key, value] of entries) {
+        db.run(`INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`, [key, String(value)], (err) => {
+            if (err && !hasError) {
+                hasError = true;
+                return res.status(500).json({ error: err.message });
+            }
+            completed++;
+            if (completed === entries.length && !hasError) {
+                res.json({ success: true });
+            }
+        });
+    }
 });
 
 
