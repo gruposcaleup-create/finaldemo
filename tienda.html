@@ -357,74 +357,62 @@
 
                     <template x-for="product in products" :key="product.id">
                         <article
-                            class="bg-card rounded-xl overflow-hidden border border-borderDark hover:border-brandPink/30 hover:shadow-2xl hover:shadow-brandPink/5 transition-all duration-300 group flex flex-col h-full cursor-pointer"
+                            class="bg-[#0f0f0f] rounded-2xl overflow-hidden border border-white/5 hover:border-brandPink/40 hover:shadow-2xl hover:shadow-brandPink/10 transition-all duration-500 group flex flex-col h-full cursor-pointer"
                             @click="window.location.href = 'product-details.html?id=' + product.id">
-                            <div class="relative h-48 overflow-hidden bg-zinc-900">
+                            <div class="relative h-48 overflow-hidden bg-zinc-900/50">
                                 <img :src="product.image || 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=95&w=800&auto=format&fit=crop'"
-                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                     loading="lazy" decoding="async" :alt="product.name">
                                 <div
-                                    class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                                    <span class="text-xs font-bold text-white bg-brandPink px-2 py-1 rounded">Ver
-                                        detalles</span>
+                                    class="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
+                                    <span class="text-[11px] font-black text-white bg-brandPink/90 px-4 py-2 rounded-xl shadow-xl transform translate-y-2 group-hover:translate-y-0 transition-transform">VER DETALLES</span>
                                 </div>
                                 <span
-                                    class="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider border border-white/10">
-                                    Disponible
+                                    class="absolute top-4 left-4 bg-black/40 backdrop-blur-md text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-white/10 shadow-lg">
+                                    EN STOCK
                                 </span>
                             </div>
 
-                            <div class="p-5 flex flex-col flex-1">
-                                <div class="mb-2">
-                                    <span class="text-[9px] font-bold text-brandPink uppercase tracking-widest"
+                            <div class="p-6 flex flex-col flex-1">
+                                <div class="mb-3">
+                                    <span class="text-[10px] font-black text-brandPink uppercase tracking-[0.15em] opacity-90"
                                         x-text="product.category || 'Curso'"></span>
-                                    <h3 class="text-base font-bold text-white leading-tight mt-1 group-hover:text-brandPink transition-colors"
+                                    <h3 class="text-[15px] font-bold text-white leading-tight mt-2 group-hover:text-brandPink transition-colors"
                                         x-text="product.name"></h3>
                                 </div>
-                                <p class="text-xs text-zinc-400 mb-4 line-clamp-2 h-8"
+                                <p class="text-[12px] text-zinc-500 mb-6 line-clamp-2 leading-relaxed"
                                     x-text="product.description || 'Domina nuevas habilidades con este curso especializado diseñado para profesionales.'">
                                 </p>
 
-                                <div class="mt-auto pt-4 border-t border-zinc-800/50">
+                                <div class="mt-auto pt-5 border-t border-white/5">
                                     <!-- Price -->
-                                    <div class="mb-3">
+                                    <div class="mb-4">
                                         <template
                                             x-if="product.priceOffer && parseFloat(product.priceOffer) < parseFloat(product.price)">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xl font-black text-white"
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-2xl font-black text-white"
                                                     x-text="'$' + parseFloat(product.priceOffer).toLocaleString('es-MX')"></span>
-                                                <span class="text-xs text-zinc-500 line-through"
+                                                <span class="text-xs text-zinc-500 line-through font-semibold"
                                                     x-text="'$' + parseFloat(product.price).toLocaleString('es-MX')"></span>
                                             </div>
                                         </template>
                                         <template
                                             x-if="!product.priceOffer || parseFloat(product.priceOffer) >= parseFloat(product.price)">
-                                            <span class="text-xl font-black text-white"
+                                            <span class="text-2xl font-black text-white"
                                                 x-text="'$' + parseFloat(product.price).toLocaleString('es-MX')"></span>
                                         </template>
                                     </div>
                                     <!-- Dual Buttons -->
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-3">
                                         <button @click.stop="addToCart(product, $event)"
-                                            class="flex-1 bg-gradient-to-r from-brandPink to-[#9c0856] hover:opacity-90 text-white text-xs font-black rounded-lg py-2.5 transition-all uppercase tracking-tight shadow-lg shadow-pink-900/20 active:scale-95 flex items-center justify-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-                                                </path>
-                                            </svg>
+                                            class="flex-1 bg-gradient-to-br from-brandPink to-[#b00961] hover:shadow-lg hover:shadow-brandPink/30 text-white text-[11px] font-black rounded-xl py-3 transition-all uppercase tracking-wider active:scale-95 flex items-center justify-center gap-2">
+                                            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
                                             Lo quiero
                                         </button>
-                                        <a :href="'product-details.html?id=' + product.id"
-                                            class="flex items-center justify-center px-3 py-2.5 rounded-lg border border-white/20 hover:bg-white/10 hover:border-brandPink/40 transition-all text-white shrink-0"
+                                        <a :href="'product-details.html?id=' + product.id" @click.stop
+                                            class="flex items-center justify-center px-4 py-3 rounded-xl border border-white/10 hover:bg-white/5 hover:border-brandPink/20 transition-all text-white/70 hover:text-white shrink-0"
                                             title="Ver detalles">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                </path>
-                                            </svg>
+                                            <i data-lucide="eye" class="w-4.5 h-4.5"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -447,43 +435,43 @@
         </div>
 
         <!-- Membership Banner -->
-        <div class="mt-16 bg-zinc-900 border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative">
-            <div class="absolute inset-0 bg-gradient-to-br from-brandPink/10 to-transparent"></div>
-            <div class="relative z-10 flex flex-col lg:flex-row items-center">
+        <div class="mt-16 bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl relative group">
+            <div class="absolute inset-0 bg-gradient-to-br from-brandPink/10 via-transparent to-purple-900/5 opacity-50"></div>
+            <div class="relative z-10 flex flex-col lg:flex-row items-stretch">
                 <!-- Banner Image -->
-                <div class="w-full lg:w-1/3 h-48 lg:h-64 relative">
+                <div class="w-full lg:w-1/3 min-h-[240px] relative overflow-hidden">
                     <img :src="membershipImage || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1074'" 
-                         class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent lg:hidden"></div>
-                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-zinc-900 hidden lg:block"></div>
+                         class="w-full h-full object-cover transition duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent lg:hidden"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-zinc-900/80 hidden lg:block"></div>
                 </div>
 
                 <!-- Banner Content -->
-                <div class="flex-1 p-8 lg:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="flex-1 p-8 lg:p-12 flex flex-col md:flex-row items-center justify-between gap-10">
                     <div class="text-center md:text-left flex-1">
-                        <div class="inline-flex items-center gap-2 bg-brandPink/20 text-brandPink px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4 border border-brandPink/30">
-                            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
-                            Acceso Total Premium
+                        <div class="inline-flex items-center gap-2 bg-brandPink/10 text-brandPink px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] mb-6 border border-brandPink/20">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-brandPink"></i>
+                            Pase Anual Ilimitado
                         </div>
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-3">Membresía Anual Todo Incluido</h2>
-                        <p class="text-zinc-400 text-sm max-w-xl leading-relaxed">
-                            Obtén acceso ilimitado a todos los cursos de la plataforma, recursos exclusivos y soporte prioritario por un año completo. La mejor inversión para tu futuro.
+                        <h2 class="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">Membresía <span class="text-transparent bg-clip-text bg-gradient-to-r from-brandPink to-purple-400">VIP Pro</span></h2>
+                        <p class="text-zinc-400 text-base max-w-xl leading-relaxed font-medium">
+                            No te pongas límites. Accede a todo nuestro catálogo, recursos y mentorías exclusivas durante un año completo. 
                         </p>
                     </div>
 
-                    <div class="flex flex-col items-center md:items-end gap-4 shrink-0">
+                    <div class="flex flex-col items-center md:items-end gap-5 shrink-0">
                         <div class="text-center md:text-right">
-                            <span class="text-zinc-500 line-through text-xs">$<span x-text="parseFloat(membershipPriceBase).toLocaleString('es-MX')"></span></span>
+                            <span class="text-zinc-500 line-through text-sm font-semibold">$<span x-text="parseFloat(membershipPriceBase).toLocaleString('es-MX')"></span></span>
                             <div class="flex items-baseline gap-1">
-                                <span class="text-3xl font-black text-white">$<span x-text="parseFloat(membershipPrice).toLocaleString('es-MX')"></span></span>
-                                <span class="text-zinc-500 text-xs font-medium">/año</span>
+                                <span class="text-5xl font-black text-white">$<span x-text="parseFloat(membershipPrice).toLocaleString('es-MX')"></span></span>
+                                <span class="text-brandPink text-sm font-bold">MXN</span>
                             </div>
                         </div>
                         <a href="membership.html"
-                            class="bg-brandPink text-white hover:bg-brandPinkHover font-bold py-3 px-8 rounded-xl shadow-lg shadow-brandPink/20 transition-all active:scale-95 text-sm flex items-center justify-center gap-2 group">
-                            <i data-lucide="zap" class="w-4 h-4"></i>
-                            Ver Detalles
-                            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            class="bg-brandPink text-white hover:bg-brandPinkHover font-bold py-4 px-10 rounded-2xl shadow-xl shadow-brandPink/20 transition-all active:scale-95 text-base flex items-center justify-center gap-3 group">
+                            <i data-lucide="zap" class="w-5 h-5 fill-white"></i>
+                            Ver Beneficios
+                            <i data-lucide="chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform opacity-70"></i>
                         </a>
                     </div>
                 </div>
@@ -510,17 +498,17 @@
                     Crear cuenta gratis
                 </a>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-data="resourcesGrid()"
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" x-data="resourcesGrid()"
                 x-init="loadResources()">
                 <template x-for="resource in resources" :key="resource.id">
                     <article
-                        class="bg-card rounded-xl overflow-hidden border border-borderDark hover:border-brandPink/30 hover:shadow-xl hover:shadow-brandPink/5 transition-all duration-300 group flex flex-col h-full">
+                        class="bg-[#0f0f0f] rounded-2xl overflow-hidden border border-white/5 hover:border-brandPink/30 hover:shadow-2xl hover:shadow-brandPink/5 transition-all duration-500 group flex flex-col h-full">
                         <!-- Resource Image -->
                         <div
-                            class="relative h-44 bg-zinc-900/50 flex items-center justify-center overflow-hidden border-b border-borderDark">
+                            class="relative h-44 bg-zinc-900/40 flex items-center justify-center overflow-hidden border-b border-white/5">
                             <template x-if="resource.image">
                                 <img :src="resource.image"
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     :alt="resource.name">
                             </template>
                             <template x-if="!resource.image">
@@ -539,47 +527,41 @@
                                 class="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Gratis</span>
                         </div>
 
-                        <div class="p-5 flex flex-col flex-1">
-                            <h3 class="font-bold text-white mb-2 line-clamp-1 group-hover:text-brandPink transition-colors text-sm uppercase tracking-wide"
+                        <div class="p-6 flex flex-col flex-1">
+                            <h3 class="font-bold text-white mb-3 line-clamp-1 group-hover:text-brandPink transition-colors text-[14px] uppercase tracking-wide"
                                 x-text="resource.name"></h3>
-                            <p class="text-xs text-zinc-400 mb-4 line-clamp-2 leading-relaxed"
+                            <p class="text-[12px] text-zinc-500 mb-6 line-clamp-2 leading-relaxed"
                                 x-text="resource.description || 'Material descargable sin costo para acelerar tu aprendizaje profesional.'">
                             </p>
 
-                            <div class="mt-auto space-y-2">
+                            <div class="mt-auto space-y-3 pt-5 border-t border-white/5">
                                 <!-- For logged in users: download directly -->
                                 <template x-if="isLoggedIn()">
                                     <button @click="downloadResource(resource)"
-                                        class="w-full py-2.5 rounded-lg bg-gradient-to-r from-brandPink to-[#9c0856] hover:opacity-90 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                                            </path>
-                                        </svg>
+                                        class="w-full py-3 rounded-xl bg-gradient-to-br from-brandPink to-[#b00961] hover:shadow-lg hover:shadow-brandPink/20 text-white text-[11px] font-black transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-wider">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
                                         Descargar Ahora
                                     </button>
                                 </template>
                                 <!-- For guests: show registration CTA -->
                                 <template x-if="!isLoggedIn()">
-                                    <div class="space-y-1.5">
+                                    <div class="space-y-3">
                                         <a href="register.html?redirect=tienda&msg=resource"
-                                            class="w-full py-2.5 rounded-lg bg-gradient-to-r from-brandPink to-[#9c0856] hover:opacity-90 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
-                                                </path>
-                                            </svg>
-                                            Regístrate y descarga gratis
+                                            class="w-full py-3 rounded-xl bg-gradient-to-br from-brandPink to-[#b00961] hover:shadow-lg hover:shadow-brandPink/20 text-white text-[11px] font-black transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-wider">
+                                            <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                            Registrar para descargar
                                         </a>
-                                        <p class="text-center text-zinc-600 text-[10px]">¿Ya tienes cuenta? <a
-                                                href="login.html" class="text-brandPink hover:underline">Inicia
+                                        <p class="text-center text-zinc-600 text-[10px] font-medium uppercase tracking-tight">¿Ya tienes cuenta? <a
+                                                href="login.html" class="text-brandPink hover:underline font-bold">Inicia
                                                 sesión</a></p>
                                     </div>
                                 </template>
                             </div>
                         </div>
                     </article>
+                    
+                    <!-- Script to trigger Lucide on Resources -->
+                    <span x-init="setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 500)"></span>
                 </template>
                 <div x-show="resources.length === 0"
                     class="col-span-full flex flex-col items-center justify-center py-16 text-zinc-500 border border-zinc-800 rounded-xl bg-zinc-900/30">

@@ -385,22 +385,22 @@
                 actualizada a lo que se busca en el mundo laboral</h3>
         </div>
 
-        <div class="container mx-auto px-6 relative max-w-7xl">
-
-            <button @click="$refs.slider.scrollBy({left: -320, behavior: 'smooth'})"
-                class="absolute left-0 lg:-left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all z-30 bg-brand text-white shadow-2xl active:scale-90 group focus:outline-none">
-                <i data-lucide="chevron-left" class="w-6 h-6 transition-transform group-hover:-translate-x-0.5"></i>
+              <button @click="$refs.slider.scrollBy({left: -320, behavior: 'smooth'})"
+                class="absolute left-0 lg:-left-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 backdrop-blur-md border border-gray-100 flex items-center justify-center hover:bg-white hover:border-brand transition-all z-30 text-slate-800 shadow-xl active:scale-90 group focus:outline-none">
+                <i data-lucide="chevron-left" class="w-6 h-6 transition-colors group-hover:text-brand"></i>
             </button>
             <button @click="$refs.slider.scrollBy({left: 320, behavior: 'smooth'})"
-                class="absolute right-0 lg:-right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all z-30 bg-brand text-white shadow-2xl active:scale-90 group focus:outline-none">
-                <i data-lucide="chevron-right" class="w-6 h-6 transition-transform group-hover:translate-x-0.5"></i>
+                class="absolute right-0 lg:-right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/95 backdrop-blur-md border border-gray-100 flex items-center justify-center hover:bg-white hover:border-brand transition-all z-30 text-slate-800 shadow-xl active:scale-90 group focus:outline-none">
+                <i data-lucide="chevron-right" class="w-6 h-6 transition-colors group-hover:text-brand"></i>
+            </button>
+nsform group-hover:translate-x-0.5"></i>
             </button>
 
             <div class="flex gap-6 overflow-x-auto snap-x scrollbar-hide pb-4 justify-start md:justify-center"
                 x-ref="slider" x-init="loadCursos()">
                 <template x-for="curso in cursos" :key="curso.id">
                     <article @click="window.location.href = 'product-details.html?id=' + curso.id"
-                        class="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-center shrink-0 bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/10 hover:border-brand/60 transition-all duration-300 group flex flex-col h-full cursor-pointer">
+                        class="min-w-[280px] w-[280px] md:min-w-[310px] md:w-[310px] snap-center shrink-0 bg-[#0f0f0f] rounded-2xl overflow-hidden border border-white/5 hover:border-brand/40 transition-all duration-500 group flex flex-col h-full cursor-pointer shadow-lg hover:shadow-brand/10">
                         <div class="relative h-44 overflow-hidden bg-zinc-900">
                             <img :src="curso.image || 'https://images.unsplash.com/photo-1554224154-260327c00c4b?auto=format&fit=crop&q=95&w=600'"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -411,10 +411,10 @@
                             </span>
                         </div>
 
-                        <div class="p-4 flex flex-col flex-1">
-                            <p class="text-[10px] text-pink-500 font-bold mb-1 uppercase tracking-wider"
+                        <div class="p-5 flex flex-col flex-1">
+                            <p class="text-[11px] text-brand font-bold mb-2 uppercase tracking-[0.1em] opacity-90"
                                 x-text="curso.category"></p>
-                            <h3 class="text-sm font-bold text-white leading-tight mb-2" x-text="curso.name"></h3>
+                            <h3 class="text-[15px] font-bold text-white leading-tight mb-3 group-hover:text-brand/90 transition-colors" x-text="curso.name"></h3>
 
                             <div class="mt-auto mb-4">
                                 <template x-if="curso.priceOffer">
@@ -441,9 +441,9 @@
                                     </svg>
                                     Al carrito
                                 </button>
-                                 <a :href="'product-details.html?id=' + curso.id" @click.stop
-                                    class="flex items-center justify-center px-3 py-2.5 rounded-lg border border-white/20 hover:bg-white/10 transition-all text-white">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                <a :href="'product-details.html?id=' + curso.id" @click.stop
+                                    class="flex items-center justify-center px-3.5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all text-white/70 hover:text-white">
+                                    <i data-lucide="eye" class="w-4.5 h-4.5"></i>
                                 </a>
                             </div>
                         </div>
@@ -466,68 +466,79 @@
     </section>
 
     <!-- Nueva Sección: Membresía Anual -->
-    <section class="py-20 bg-zinc-900 border-t border-b border-white/5 relative overflow-hidden" x-data="indexPage()">
-        <div class="absolute inset-0 bg-gradient-to-br from-brand/10 to-transparent"></div>
+    <section class="py-24 bg-black relative overflow-hidden" x-data="indexPage()">
+        <!-- Background elements -->
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] opacity-50"></div>
+        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px] opacity-30"></div>
+        
         <div class="container mx-auto px-6 relative z-10">
-            <div class="max-w-6xl mx-auto bg-zinc-800/50 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
-                <div class="flex flex-col lg:flex-row items-center">
+            <div class="max-w-6xl mx-auto bg-zinc-900/60 backdrop-blur-xl rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
+                <div class="flex flex-col lg:flex-row items-stretch">
                     <!-- Imagen de la Membresía -->
-                    <div class="w-full lg:w-1/2 p-4 lg:p-8">
-                        <div class="relative group">
-                            <div class="absolute -inset-1 bg-gradient-to-r from-brand to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                    <div class="w-full lg:w-1/2 p-6 lg:p-10">
+                        <div class="relative h-full min-h-[300px] md:min-h-[450px]">
+                            <div class="absolute -inset-2 bg-gradient-to-r from-brand to-purple-600 rounded-[2rem] blur opacity-10"></div>
                             <img :src="membershipImage || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1074'" 
                                  alt="Membresía Anual" 
-                                 class="relative rounded-2xl w-full h-[300px] md:h-[450px] object-cover shadow-2xl transition duration-500 group-hover:scale-[1.01]">
+                                 class="relative rounded-[1.8rem] w-full h-full object-cover shadow-2xl transition duration-700 hover:scale-[1.02]">
+                            <!-- Glass badge over image -->
+                            <div class="absolute top-6 left-6 bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 rounded-2xl flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
+                                <span class="text-[10px] font-bold text-white uppercase tracking-widest">Oferta Limitada</span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Contenido -->
-                    <div class="w-full lg:w-1/2 p-8 lg:p-12 lg:pl-4 text-white">
-                        <div class="inline-flex items-center gap-2 bg-brand/20 text-brand px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-6 border border-brand/30">
-                            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
-                            Acceso VIP Ilimitado
+                    <div class="w-full lg:w-1/2 p-10 lg:p-14 lg:pl-6 text-white flex flex-col justify-center">
+                        <div class="inline-flex items-center gap-2 bg-brand/10 text-brand px-5 py-2 rounded-full text-[11px] font-bold uppercase tracking-[0.15em] mb-8 border border-brand/20">
+                            <i data-lucide="star" class="w-4 h-4 fill-brand"></i>
+                            Membresía de Elite
                         </div>
                         
-                        <h2 class="text-3xl md:text-5xl font-extrabold mb-6 leading-tight">
-                            Membresía Anual <br>
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand to-purple-400">Todo Incluido</span>
+                        <h2 class="text-4xl md:text-6xl font-black mb-8 leading-[1.1]">
+                            Acceso Total <br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand to-purple-400">Anual VIP</span>
                         </h2>
                         
-                        <p class="text-slate-300 text-base md:text-lg mb-8 leading-relaxed">
-                            Únete a nuestra comunidad exclusiva y obtén acceso total a TODOS los cursos, talleres y recursos descargables durante un año completo. La mejor inversión para tu crecimiento profesional.
+                        <p class="text-slate-400 text-lg mb-10 leading-relaxed font-medium">
+                            Domina el mundo contable con acceso ilimitado a todos los cursos, talleres exclusivos y actualizaciones premium. La llave maestra para tu carrera profesional.
                         </p>
 
-                        <div class="flex flex-col sm:flex-row items-center gap-6 mb-10">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
                             <div class="flex flex-col">
-                                <span class="text-slate-500 line-through text-xs mb-1">Normal: $<small x-text="parseFloat(membershipPriceBase).toLocaleString('es-MX')"></small></span>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-4xl md:text-5xl font-black text-amber-300">$<span x-text="parseFloat(membershipPrice).toLocaleString('es-MX')"></span></span>
-                                    <span class="text-slate-400 text-sm font-medium">/año</span>
+                                <span class="text-slate-500 line-through text-sm mb-2 font-semibold tracking-wide">Normal: $<small x-text="parseFloat(membershipPriceBase).toLocaleString('es-MX')" class="text-sm font-semibold"></small></span>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-5xl md:text-6xl font-black text-white">$<span x-text="parseFloat(membershipPrice).toLocaleString('es-MX')"></span></span>
+                                    <span class="text-brand text-lg font-bold">MXN</span>
                                 </div>
                             </div>
-                            <div class="hidden sm:block h-12 w-px bg-white/10"></div>
-                            <ul class="space-y-2">
-                                <li class="flex items-center gap-2 text-slate-300 text-sm">
-                                    <i data-lucide="check-circle" class="w-4 h-4 text-brand"></i>
-                                    Más de 50 Cursos
-                                </li>
-                                <li class="flex items-center gap-2 text-slate-300 text-sm">
-                                    <i data-lucide="check-circle" class="w-4 h-4 text-brand"></i>
-                                    Soporte Prioritario
-                                </li>
-                            </ul>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-3 text-slate-300 group">
+                                    <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-brand/10 group-hover:border-brand/20 transition-all">
+                                        <i data-lucide="rocket" class="w-4 h-4 text-brand"></i>
+                                    </div>
+                                    <span class="text-sm font-semibold tracking-wide">Cursos Ilimitados</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-slate-300 group">
+                                    <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-brand/10 group-hover:border-brand/20 transition-all">
+                                        <i data-lucide="shield-check" class="w-4 h-4 text-brand"></i>
+                                    </div>
+                                    <span class="text-sm font-semibold tracking-wide">Soporte VIP 1:1</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex flex-col sm:flex-row gap-5">
                             <button @click="comprarMembresia()"
-                                class="flex-1 bg-brand text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-3">
-                                <i data-lucide="zap" class="w-5 h-5"></i>
-                                Suscribirme Ahora
+                                class="flex-[1.5] bg-brand text-white px-10 py-5 rounded-2xl font-black text-lg hover:shadow-[0_0_30px_rgba(212,11,117,0.4)] transition-all active:scale-95 flex items-center justify-center gap-4 group">
+                                <i data-lucide="zap" class="w-6 h-6 fill-white group-hover:animate-pulse"></i>
+                                OBTENER ACCESO VIP
                             </button>
                             <a href="membership.html" 
-                                class="flex-1 bg-white/5 text-white border border-white/10 px-8 py-4 rounded-2xl font-bold text-base hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
-                                Ver Detalles
-                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                                class="flex-1 bg-white/5 text-white border border-white/10 px-8 py-5 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-3 group">
+                                <span class="opacity-80 group-hover:opacity-100">Ver Más</span>
+                                <i data-lucide="chevron-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform opacity-60"></i>
                             </a>
                         </div>
                     </div>
