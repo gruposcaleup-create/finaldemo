@@ -559,6 +559,31 @@
                                 <input type="number" id="setting-membership-price-offer"
                                     class="w-full p-2 border rounded-md" placeholder="Opcional">
                             </div>
+
+                            <!-- Membresía Image -->
+                            <div class="pt-2">
+                                <label class="block text-sm font-medium mb-2">Imagen de la Membresía</label>
+                                <div onclick="document.getElementById('membership-image-input').click()"
+                                    class="relative border-2 border-dashed rounded-lg p-0 text-center cursor-pointer hover:bg-gray-50 transition overflow-hidden h-40 flex items-center justify-center group bg-gray-50">
+                                    <input type="file" id="membership-image-input" class="hidden" accept="image/*"
+                                        onchange="handleMembershipImageUpload(this)">
+
+                                    <div id="membership-placeholder" class="p-6">
+                                        <i data-lucide="image" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
+                                        <span class="text-xs text-gray-500">Subir Imagen (Membresía)</span>
+                                    </div>
+
+                                    <img id="membership-preview" src=""
+                                        class="absolute inset-0 w-full h-full object-cover hidden">
+
+                                    <div id="membership-overlay"
+                                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition hidden">
+                                        <span class="text-white text-xs font-medium"><i data-lucide="upload"
+                                                class="w-4 h-4 inline mr-1"></i> Cambiar Imagen</span>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-2 italic">Esta imagen aparecerá en el banner de la membresía en la página de inicio y tienda.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -755,7 +780,8 @@
             members: [],
             expandedUserId: null, // Track expanded user row
             tempModules: [],
-            tempLearningPoints: [] // NEW: Learning points for the current course
+            tempLearningPoints: [], // NEW: Learning points for the current course
+            membershipImage: null // NEW: For site settings
         };
 
         // ROUTER
@@ -806,21 +832,40 @@
                 if (settings) {
                     document.getElementById('setting-membership-price').value = settings.membership_price || 2500;
                     document.getElementById('setting-membership-price-offer').value = settings.membership_price_offer || '';
+                    
+                    // Handle Membership Image
+                    if (settings.membership_image) {
+                        state.membershipImage = settings.membership_image;
+                        const preview = document.getElementById('membership-preview');
+                        preview.src = settings.membership_image;
+                        preview.classList.remove('hidden');
+                        document.getElementById('membership-placeholder').classList.add('hidden');
+                        document.getElementById('membership-overlay').classList.remove('hidden');
+                    } else {
+                        state.membershipImage = null;
+                        document.getElementById('membership-preview').classList.add('hidden');
+                        document.getElementById('membership-placeholder').classList.remove('hidden');
+                        document.getElementById('membership-overlay').classList.add('hidden');
+                    }
                 }
             } catch (err) { console.error('Error fetching settings:', err); }
         }
 
         async function saveSettings() {
-            const price = document.getElementById('setting-membership-price').value;
-            const offer = document.getElementById('setting-membership-price-offer').value;
-
             if (!window.API || !window.API.apiSaveSettings) {
                 showToast('Error: API no cargada', 'error');
                 return;
             }
 
+            const price = document.getElementById('setting-membership-price').value;
+            const offer = document.getElementById('setting-membership-price-offer').value;
+
             try {
-                const result = await window.API.apiSaveSettings({ membership_price: price, membership_price_offer: offer });
+                const result = await window.API.apiSaveSettings({ 
+                    membership_price: price, 
+                    membership_price_offer: offer,
+                    membership_image: state.membershipImage 
+                });
                 console.log('Settings saved result:', result);
                 showToast('Configuración guardada correctamente', 'success');
             } catch (e) {
@@ -1622,6 +1667,22 @@
                     preview.classList.remove('hidden');
                     document.getElementById('cover-placeholder').classList.add('hidden');
                     document.getElementById('cover-overlay').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleMembershipImageUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    state.membershipImage = e.target.result;
+                    const preview = document.getElementById('membership-preview');
+                    preview.src = state.membershipImage;
+                    preview.classList.remove('hidden');
+                    document.getElementById('membership-placeholder').classList.add('hidden');
+                    document.getElementById('membership-overlay').classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
             }

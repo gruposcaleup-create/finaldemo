@@ -387,28 +387,20 @@
 
         <div class="container mx-auto px-6 relative max-w-7xl">
 
-            <button @click="$refs.slider.scrollBy({left: -300, behavior: 'smooth'})"
-                class="absolute left-0 md:-left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors z-20 bg-brand text-white shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="w-6 h-6">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
+            <button @click="$refs.slider.scrollBy({left: -320, behavior: 'smooth'})"
+                class="absolute left-0 lg:-left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all z-30 bg-brand text-white shadow-2xl active:scale-90 group focus:outline-none">
+                <i data-lucide="chevron-left" class="w-6 h-6 transition-transform group-hover:-translate-x-0.5"></i>
             </button>
-            <button @click="$refs.slider.scrollBy({left: 300, behavior: 'smooth'})"
-                class="absolute right-0 md:-right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-colors z-20 bg-brand text-white shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="w-6 h-6">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
+            <button @click="$refs.slider.scrollBy({left: 320, behavior: 'smooth'})"
+                class="absolute right-0 lg:-right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all z-30 bg-brand text-white shadow-2xl active:scale-90 group focus:outline-none">
+                <i data-lucide="chevron-right" class="w-6 h-6 transition-transform group-hover:translate-x-0.5"></i>
             </button>
 
             <div class="flex gap-6 overflow-x-auto snap-x scrollbar-hide pb-4 justify-start md:justify-center"
                 x-ref="slider" x-init="loadCursos()">
                 <template x-for="curso in cursos" :key="curso.id">
-                    <article
-                        class="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-center shrink-0 bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/10 hover:border-brand/60 transition-all duration-300 group flex flex-col h-full">
+                    <article @click="window.location.href = 'product-details.html?id=' + curso.id"
+                        class="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-center shrink-0 bg-[#0a0a0a] rounded-xl overflow-hidden border border-white/10 hover:border-brand/60 transition-all duration-300 group flex flex-col h-full cursor-pointer">
                         <div class="relative h-44 overflow-hidden bg-zinc-900">
                             <img :src="curso.image || 'https://images.unsplash.com/photo-1554224154-260327c00c4b?auto=format&fit=crop&q=95&w=600'"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -449,15 +441,9 @@
                                     </svg>
                                     Al carrito
                                 </button>
-                                <a :href="'product-details.html?id=' + curso.id"
+                                 <a :href="'product-details.html?id=' + curso.id" @click.stop
                                     class="flex items-center justify-center px-3 py-2.5 rounded-lg border border-white/20 hover:bg-white/10 transition-all text-white">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                        </path>
-                                    </svg>
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
                                 </a>
                             </div>
                         </div>
@@ -481,63 +467,68 @@
 
     <!-- Nueva Sección: Membresía Anual -->
     <section class="py-20 bg-zinc-900 border-t border-b border-white/5 relative overflow-hidden" x-data="indexPage()">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5">
-        </div>
+        <div class="absolute inset-0 bg-gradient-to-br from-brand/10 to-transparent"></div>
         <div class="container mx-auto px-6 relative z-10">
-            <div
-                class="bg-gradient-to-r from-brand to-[#831843] rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                <div class="flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div class="flex-1 text-white">
-                        <div
-                            class="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border border-white/20">
-                            Recomendado
-                        </div>
-                        <h2 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                            Membresía <span class="text-amber-300">Anual</span> Todo Incluido
-                        </h2>
-                        <p class="text-white/90 text-sm md:text-base mb-6 max-w-xl leading-relaxed">
-                            Accede a TODOS los cursos actuales y futuros por un único pago anual.
-                            Ahorra más del 60% comparado con comprar los cursos individualmente.
-                        </p>
-                        <div class="flex flex-wrap gap-4">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="check-circle" class="w-5 h-5 text-amber-300"></i>
-                                <span class="text-sm font-medium">Acceso Total</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="check-circle" class="w-5 h-5 text-amber-300"></i>
-                                <span class="text-sm font-medium">Actualizaciones Fiscales</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="check-circle" class="w-5 h-5 text-amber-300"></i>
-                                <span class="text-sm font-medium">Soporte Prioritario</span>
-                            </div>
+            <div class="max-w-6xl mx-auto bg-zinc-800/50 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                <div class="flex flex-col lg:flex-row items-center">
+                    <!-- Imagen de la Membresía -->
+                    <div class="w-full lg:w-1/2 p-4 lg:p-8">
+                        <div class="relative group">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-brand to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                            <img :src="membershipImage || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1074'" 
+                                 alt="Membresía Anual" 
+                                 class="relative rounded-2xl w-full h-[300px] md:h-[450px] object-cover shadow-2xl transition duration-500 group-hover:scale-[1.01]">
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white p-6 rounded-2xl shadow-xl w-full md:w-80 shrink-0 transform md:rotate-3 transition-transform hover:rotate-0">
-                        <div class="text-center">
-                            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wide">Precio
-                                Anual</span>
-                            <div class="flex items-center justify-center gap-1 my-2">
-                                <span class="text-3xl font-bold text-slate-900"
-                                    x-text="'$' + parseFloat(membershipPrice).toLocaleString('es-MX')">$2,500</span>
-                                <span class="text-sm text-slate-500 font-medium">/año</span>
-                            </div>
-                            <p class="text-xs text-green-600 font-bold mb-6 bg-green-100 py-1 rounded-full">Todo
-                                incluido — ¡ahorra más del 60%!</p>
+                    <!-- Contenido -->
+                    <div class="w-full lg:w-1/2 p-8 lg:p-12 lg:pl-4 text-white">
+                        <div class="inline-flex items-center gap-2 bg-brand/20 text-brand px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-6 border border-brand/30">
+                            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+                            Acceso VIP Ilimitado
+                        </div>
+                        
+                        <h2 class="text-3xl md:text-5xl font-extrabold mb-6 leading-tight">
+                            Membresía Anual <br>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand to-purple-400">Todo Incluido</span>
+                        </h2>
+                        
+                        <p class="text-slate-300 text-base md:text-lg mb-8 leading-relaxed">
+                            Únete a nuestra comunidad exclusiva y obtén acceso total a TODOS los cursos, talleres y recursos descargables durante un año completo. La mejor inversión para tu crecimiento profesional.
+                        </p>
 
+                        <div class="flex flex-col sm:flex-row items-center gap-6 mb-10">
+                            <div class="flex flex-col">
+                                <span class="text-slate-500 line-through text-xs mb-1">Normal: $<small x-text="parseFloat(membershipPriceBase).toLocaleString('es-MX')"></small></span>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl md:text-5xl font-black text-amber-300">$<span x-text="parseFloat(membershipPrice).toLocaleString('es-MX')"></span></span>
+                                    <span class="text-slate-400 text-sm font-medium">/año</span>
+                                </div>
+                            </div>
+                            <div class="hidden sm:block h-12 w-px bg-white/10"></div>
+                            <ul class="space-y-2">
+                                <li class="flex items-center gap-2 text-slate-300 text-sm">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-brand"></i>
+                                    Más de 50 Cursos
+                                </li>
+                                <li class="flex items-center gap-2 text-slate-300 text-sm">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-brand"></i>
+                                    Soporte Prioritario
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4">
                             <button @click="comprarMembresia()"
-                                class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Obtener Membresía Ahora
+                                class="flex-1 bg-brand text-white px-8 py-4 rounded-2xl font-bold text-base hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-3">
+                                <i data-lucide="zap" class="w-5 h-5"></i>
+                                Suscribirme Ahora
                             </button>
-                            <p class="text-[10px] text-slate-400 mt-3 text-center">Garantía de 7 días o devolución</p>
+                            <a href="membership.html" 
+                                class="flex-1 bg-white/5 text-white border border-white/10 px-8 py-4 rounded-2xl font-bold text-base hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
+                                Ver Detalles
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -896,19 +887,14 @@
                 isLoggedIn: false,
                 mobileMenuOpen: false,
                 membershipPrice: 2500, // Default backup
+                membershipPriceBase: 5000,
+                membershipImage: '',
                 async init() {
                     this.isLoggedIn = window.API?.isLoggedIn?.() || isLoggedIn?.() || false;
                     await this.loadSettings();
                 },
                 async loadSettings() {
                     try {
-                        // Wait for API if needed, though window.API should be there from script tag
-                        let attempts = 0;
-                        while (!window.API && attempts < 10) {
-                            await new Promise(r => setTimeout(r, 200));
-                            attempts++;
-                        }
-
                         const api = window.API;
                         if (api && api.apiGetSettings) {
                             const settings = await api.apiGetSettings();
@@ -916,6 +902,12 @@
                                 this.membershipPrice = settings.membership_price_offer;
                             } else if (settings.membership_price) {
                                 this.membershipPrice = settings.membership_price;
+                            }
+                            if (settings.membership_price) {
+                                this.membershipPriceBase = settings.membership_price;
+                            }
+                            if (settings.membership_image) {
+                                this.membershipImage = settings.membership_image;
                             }
                         }
                     } catch (e) { console.error("Error loading settings:", e); }
